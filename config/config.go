@@ -12,6 +12,7 @@ type ServerInfo struct {
 	Timeout int    `yaml:"timeout"`
 }
 
+// DBInfo db信息
 type DBInfo struct {
 	// user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local
 	Dsn          string `yaml:"dsn"`
@@ -20,9 +21,16 @@ type DBInfo struct {
 	MaxLifeTime  int    `yaml:"max_life_time"` // 单位秒
 }
 
+// ConnInfo 接入服务信息
+type ConnInfo struct {
+	Addr    string `yaml:"addr"`
+	Timeout int    `yaml:"timeout"`
+}
+
 type ServerCfg struct {
 	ServerInfo *ServerInfo `yaml:"server"`
 	DBInfo     *DBInfo     `yaml:"db"`
+	ConnInfo   *ConnInfo   `yaml:"conn"`
 }
 
 // 配置实例

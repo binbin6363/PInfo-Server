@@ -8,3 +8,7 @@ db:
   max_idle_conns: 10
   max_open_conns: 100
   max_life_time: 3600
+
+conn:
+  addr: "127.0.0.1:8080" # 接入服务地址
+  timeout: 100 # ms
