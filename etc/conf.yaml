@@ -2,9 +2,30 @@ server:
   name: im_server                #service名字
   listen: ":8081"                #服务监听地址端口
   timeout: 1000                  #请求最长处理时间 单位 毫秒
+  secret: "dfvjhklvqkvbkjhgdjavd"                     # 生成token的secret
+  token_expire: 7200             # token有效期，单位秒
+  data_center_id: 1              # 数据中心ID。0-31之间取值，用于雪花算法
+  worker_id: 1                   # 数据中心ID。0-31之间取值，用于雪花算法
+  debug_req_rsp: true           # 是否开启请求回包的debug日志打印
+  resource_root: /Users/politewang/Pictures/pim # 媒体文件资源根路径/data/pim/resource/
+  remote_url_root: http://polite.wang/img/ # 给到前端访问的远程资源根地址
 
 db:
-  dsn: ""
+  dsn: "pim:polite@123@tcp(127.0.0.1:3306)/db_pim?charset=latin1&parseTime=True&loc=Local"
   max_idle_conns: 10
   max_open_conns: 100
   max_life_time: 3600
+
+conn:
+  addr: "127.0.0.1:8080" # 接入服务地址
+  timeout: 100 # ms
+
+cos:
+  secret_id: "AKIDbB0pbGnAqkV4b9UuT7ZmjS9mHckgZJyV"
+  secret_key: "e8k8IWnSzHUVM0cNNJ1Wr5520reFqU3Q"
+  domain: "cos.ap-shanghai.myqcloud.com"
+  region: "ap-shanghai"
+  avatar_bucket: "pim-avatar-1252010140"
+  disable_ssl: false
+  force_path_style: true
+  expire: 12

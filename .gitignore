@@ -9,3 +9,7 @@
 *.njsproj
 *.sln
 *.sw?
+
+*.log
+
+etc/
