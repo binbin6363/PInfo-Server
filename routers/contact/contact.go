@@ -2,6 +2,7 @@ package contact
 
 import (
 	"PInfo-server/api"
+	"PInfo-server/service"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -9,10 +10,43 @@ import (
 
 // contactListHandler 获取好友列表服务接口
 func contactListHandler(c *gin.Context) {
+	uid, ok := c.Get("uid")
+	if !ok {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusNotFound,
+			"message": "未鉴权",
+			"data":    nil,
+		})
+		return
+	}
+
+	err, contactInfos := service.DefaultService.GetContactList(c, uid.(int64))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusNotFound,
+			"message": "内部错误，请重试",
+			"data":    nil,
+		})
+		return
+	}
+
+	contactList := api.ContactListRsp{}
+	for _, contact := range contactInfos {
+		contactInfo := api.ContactInfo{
+			Id:           contact.Id,
+			Nickname:     contact.Nickname,
+			Gender:       contact.Gender,
+			Motto:        contact.Motto,
+			Avatar:       contact.Avatar,
+			FriendRemark: contact.FriendRemark,
+			IsOnline:     1,
+		}
+		contactList.ContactList = append(contactList.ContactList, contactInfo)
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    api.ContactListRsp{},
+		"message": "ok",
+		"data":    contactList,
 	})
 }
 

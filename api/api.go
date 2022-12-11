@@ -2,7 +2,7 @@ package api
 
 // LoginReq 登录请求
 type LoginReq struct {
-	Mobile   string `json:"mobile"`
+	UserName string `json:"mobile"`
 	PassWord string `json:"password"`
 	Platform string `json:"platform"`
 }
@@ -25,6 +25,7 @@ type UserBasicInfo struct {
 
 // TalkListReq 会话列表请求
 type TalkListReq struct {
+	Uid int64
 }
 
 // TalkListRsp 会话列表回包
@@ -80,6 +81,18 @@ type UserSettingRsp struct {
 	UserInfo    UserDetailInfo `json:"user_info"`
 }
 
+// ModifyUsersSettingReq 修改用户设置
+type ModifyUsersSettingReq struct {
+	Gender   int    `json:"gender"`
+	Avatar   string `json:"avatar"`
+	Motto    string `json:"motto"`
+	NickName string `json:"nickname"`
+}
+
+// ModifyUsersSettingRsp 修改用户设置
+type ModifyUsersSettingRsp struct {
+}
+
 // UserDetailReq 用户详情请求
 type UserDetailReq struct {
 }
@@ -100,6 +113,8 @@ type UnReadNumRsp struct {
 
 // ContactListReq 联系人列表请求
 type ContactListReq struct {
+	Token string
+	Uid   int64
 }
 
 // ContactListRsp 联系人列表回包
@@ -108,7 +123,7 @@ type ContactListRsp struct {
 }
 
 type ContactInfo struct {
-	Id           int    `json:"id"`
+	Id           int64  `json:"id"`
 	Nickname     string `json:"nickname"`
 	Gender       int    `json:"gender"`
 	Motto        string `json:"motto"`
@@ -118,29 +133,15 @@ type ContactInfo struct {
 }
 
 type SendTextMsgReq struct {
-	ReceiverId int    `json:"receiver_id"`
-	TalkType   int    `json:"talk_type"`
-	Text       string `json:"text"`
+	ClientMsgId int64  `json:"client_msg_id"` // 消息去重
+	ReceiverId  int64  `json:"receiver_id"`
+	TalkType    int    `json:"talk_type"`
+	Text        string `json:"text"`
+	Uid         int64
 }
 
 type SendTextMsgRsp struct {
-	Id         int    `json:"id"`
-	TalkType   int    `json:"talk_type"`
-	ReceiverId int    `json:"receiver_id"`
-	SenderId   int    `json:"sender_id"`
-	Name       string `json:"name"`
-	RemarkName string `json:"remark_name"`
-	Avatar     string `json:"avatar"`
-	IsDisturb  int    `json:"is_disturb"`
-	IsTop      int    `json:"is_top"`
-	IsOnline   int    `json:"is_online"`
-	IsRobot    int    `json:"is_robot"`
-	UnreadNum  int    `json:"unread_num"`
-	Content    string `json:"content"`
-	DraftText  string `json:"draft_text"`
-	MsgText    string `json:"msg_text"`
-	IndexName  string `json:"index_name"`
-	CreatedAt  string `json:"created_at"`
+	Content SendTextMsgContent `json:"content"`
 }
 
 type SendTextMsgEvtRsp struct {
@@ -150,18 +151,48 @@ type SendTextMsgEvtRsp struct {
 
 type SendTextMsgContent struct {
 	Data       SendTextMsgData `json:"data"`
-	ReceiverId int             `json:"receiver_id"`
-	SenderId   int             `json:"sender_id"`
+	ReceiverId int64           `json:"receiver_id"`
+	SenderId   int64           `json:"sender_id"`
 	TalkType   int             `json:"talk_type"`
 }
 
 type SendTextMsgData struct {
-	Id         int    `json:"id"`
-	Sequence   int    `json:"sequence"`
+	Id         int64  `json:"id"`
+	Sequence   int64  `json:"sequence"`
 	TalkType   int    `json:"talk_type"`
 	MsgType    int    `json:"msg_type"`
-	UserId     int    `json:"user_id"`
-	ReceiverId int    `json:"receiver_id"`
+	UserId     int64  `json:"user_id"`
+	ReceiverId int64  `json:"receiver_id"`
+	Nickname   string `json:"nickname"`
+	Avatar     string `json:"avatar"`
+	IsRevoke   int    `json:"is_revoke"`
+	IsMark     int    `json:"is_mark"`
+	IsRead     int    `json:"is_read"`
+	Content    string `json:"content"`
+	CreatedAt  string `json:"created_at"`
+}
+
+type MsgRecordsReq struct {
+	Uid      int64
+	MinMsgId int64 // record_id
+	PeerId   int64 // receiver_id
+	TalkType int   // talk_type
+	Limit    int   // limit
+}
+
+type MsgRecordsRsp struct {
+	Limit       int          `json:"limit"`
+	MaxRecordId int64        `json:"record_id"`
+	Rows        []MessageRow `json:"rows"`
+}
+
+type MessageRow struct {
+	Id         int64  `json:"id"`
+	Sequence   int64  `json:"sequence"`
+	TalkType   int    `json:"talk_type"`
+	MsgType    int    `json:"msg_type"`
+	UserId     int64  `json:"user_id"`
+	ReceiverId int64  `json:"receiver_id"`
 	Nickname   string `json:"nickname"`
 	Avatar     string `json:"avatar"`
 	IsRevoke   int    `json:"is_revoke"`

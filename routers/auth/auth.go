@@ -3,44 +3,100 @@ package auth
 import (
 	"PInfo-server/api"
 	"PInfo-server/config"
-	"bytes"
-	"encoding/json"
-	"fmt"
+	"PInfo-server/model"
+	"PInfo-server/service"
+	"PInfo-server/utils"
+	"context"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 )
 
 func loginHandler(c *gin.Context) {
+	loginReq := &api.LoginReq{}
+	if err := c.ShouldBind(loginReq); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	// 验证用户名
+	err, detailInfo := service.DefaultService.GetUserInfo(c, loginReq.UserName)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	userInfo := &model.UserInfo{
+		UserName: loginReq.UserName,
+		Uid:      detailInfo.Uid,
+	}
+
+	enc, _ := utils.EncryptPassword(loginReq.PassWord)
+	log.Printf("enc passwd hash:%s\n", enc)
+
+	// 验证密码
+	if !utils.CheckPasswordHash(loginReq.PassWord, detailInfo.PassHash) {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    5000,
+			"message": "用户名或密码错误",
+			"data":    nil,
+		})
+		return
+	}
+	log.Printf("passwd check pass\n")
+
+	// 生成token
+	err, token := service.DefaultService.CreateJwt(context.TODO(), userInfo)
+	if err != nil {
+		log.Printf("gen token failed.")
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	rsp := api.LoginRsp{
+		Type:   "Bearer",
+		Token:  token,
+		Expire: config.AppConfig().ServerInfo.TokenExpire,
+		UserInfo: api.UserBasicInfo{
+			Uid:       detailInfo.Uid,
+			NickName:  detailInfo.NickName,
+			Signature: detailInfo.Motto,
+			Avatar:    detailInfo.Avatar,
+		},
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "Hello Welcome to PIM",
-		"data": api.LoginRsp{
-			Type:   "Bearer",
-			Token:  "1nlkasdhasdcasvderveq",
-			Expire: 7200,
-			UserInfo: api.UserBasicInfo{
-				Uid:       212332324324,
-				NickName:  "polite",
-				Signature: "我的签名",
-				Avatar:    "www.baidu.com",
-			},
-		},
+		"data":    rsp,
 	})
 
-	// 通知websocket
-	req := map[string]interface{}{
-		"platform": "102",
-		"uid":      20221113,
-	}
-	bytesData, _ := json.Marshal(req)
-	url := fmt.Sprintf("http://%s/notice/auth/login", config.AppConfig().ConnInfo.Addr)
-	_, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
-	if err != nil {
-		log.Printf("post conn failed, err:%+v\n", err)
-	} else {
-		log.Printf("post conn success, req:%+v\n", req)
-	}
+	/*
+		// 通知websocket
+		req := map[string]interface{}{
+			"platform": "102",
+			"uid":      20221113,
+		}
+		bytesData, _ := json.Marshal(req)
+		url := fmt.Sprintf("http://%s/notice/auth/login", config.AppConfig().ConnInfo.Addr)
+		_, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
+		if err != nil {
+			log.Printf("post conn failed, err:%+v\n", err)
+		} else {
+			log.Printf("post conn success, req:%+v\n", req)
+		}
+	*/
 }
 
 func logoutHandler(c *gin.Context) {

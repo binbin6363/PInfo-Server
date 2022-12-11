@@ -2,50 +2,125 @@ package users
 
 import (
 	"PInfo-server/api"
+	"PInfo-server/service"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 	"net/http"
 )
 
 func usersSettingHandler(c *gin.Context) {
+	username, ok := c.Get("username")
+	if !ok {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusNotFound,
+			"message": "未鉴权",
+			"data":    nil,
+		})
+		return
+	}
+
+	err, userInfo := service.DefaultService.GetUserInfo(c, username.(string))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusNotFound,
+			"message": "not found user",
+			"data":    nil,
+		})
+		return
+	}
+
+	user := api.UserDetailInfo{
+		IsQiYe:   false,
+		Gender:   userInfo.Gender,
+		Email:    userInfo.Email,
+		Avatar:   userInfo.Avatar,
+		Mobile:   userInfo.Phone,
+		Motto:    userInfo.Motto,
+		NickName: userInfo.NickName,
+		Uid:      userInfo.Uid,
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
+		"message": "ok",
 		"data": api.UserSettingRsp{
-			SettingInfo: api.SettingInfo{
-				KeyboardEventNotify: "",
-				NotifyCueTone:       "",
-				ThemeBagImg:         "",
-				ThemeColor:          "",
-				ThemeMode:           "",
-			},
-			UserInfo: api.UserDetailInfo{
-				IsQiYe:   false,
-				Gender:   1,
-				Email:    "12123232@qq.com",
-				Avatar:   "http://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fblog%2F202105%2F19%2F20210519212438_ced7e.jpg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1670909422&t=b2df9f38251d7ba756cbf3a789d241e2",
-				Mobile:   "1762556212",
-				Motto:    "kefu",
-				NickName: "lanlan",
-				Uid:      20221113,
-			},
+			SettingInfo: api.SettingInfo{},
+			UserInfo:    user,
 		},
 	})
 }
 
 func usersDetailHandler(c *gin.Context) {
+	username, ok := c.Get("username")
+	if !ok {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusNotFound,
+			"message": "未鉴权",
+			"data":    nil,
+		})
+		return
+	}
+
+	err, userInfo := service.DefaultService.GetUserInfo(c, username.(string))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusNotFound,
+			"message": "not found user",
+			"data":    nil,
+		})
+		return
+	}
+	user := api.UserDetailInfo{
+		IsQiYe:   false,
+		Gender:   userInfo.Gender,
+		Email:    userInfo.Email,
+		Avatar:   userInfo.Avatar,
+		Mobile:   userInfo.Phone,
+		Motto:    userInfo.Motto,
+		NickName: userInfo.NickName,
+		Uid:      userInfo.Uid,
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data": api.UserDetailInfo{
-			IsQiYe:   false,
-			Gender:   1,
-			Email:    "12123232@qq.com",
-			Avatar:   "http://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fblog%2F202105%2F19%2F20210519212438_ced7e.jpg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1670909422&t=b2df9f38251d7ba756cbf3a789d241e2",
-			Mobile:   "1762556212",
-			Motto:    "kefu",
-			NickName: "lanlan",
-			Uid:      20221113,
-		},
+		"message": "ok",
+		"data":    user,
+	})
+}
+
+func modifyUsersSettingHandler(c *gin.Context) {
+	req := &api.ModifyUsersSettingReq{}
+	err := c.ShouldBind(req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": "请求参数错误",
+			"data":    nil,
+		})
+		return
+	}
+	uid, ok := c.Get("uid")
+	if !ok {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusNotFound,
+			"message": "未鉴权",
+			"data":    nil,
+		})
+		return
+	}
+
+	err = service.DefaultService.SetUserInfo(c, cast.ToInt64(uid), req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusNotFound,
+			"message": "not found user",
+			"data":    nil,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code":    200,
+		"message": "ok",
+		"data":    nil,
 	})
 }
 
@@ -55,5 +130,6 @@ func Routers(r *gin.Engine) {
 	{
 		login.GET("/setting", usersSettingHandler)
 		login.GET("/detail", usersDetailHandler)
+		login.POST("/change/detail", modifyUsersSettingHandler)
 	}
 }
