@@ -144,7 +144,7 @@ type SendTextMsgRsp struct {
 	Content SendTextMsgContent `json:"content"`
 }
 
-type SendTextMsgEvtRsp struct {
+type SendTextMsgEvtNotice struct {
 	Event   string             `json:"event"`
 	Content SendTextMsgContent `json:"content"`
 }
@@ -200,4 +200,43 @@ type MessageRow struct {
 	IsRead     int    `json:"is_read"`
 	Content    string `json:"content"`
 	CreatedAt  string `json:"created_at"`
+}
+
+// RegisterReq 注册用户
+type RegisterReq struct {
+	NickName string `json:"nickname"`
+	UserName string `json:"mobile"`
+	Password string `json:"password"`
+	SmsCode  string `json:"sms_code"`
+	Platform string `json:"platform"`
+}
+
+type ContactSearchReq struct {
+	UserName string `json:"mobile"`
+}
+
+type ContactSearchRsp struct {
+	Uid int64 `json:"id"`
+}
+type ContactDetailReq struct {
+	Uid int64 `json:"user_id"`
+}
+type ContactDetailRsp struct {
+	Gender         int    `json:"gender"`
+	FriendStatus   int    `json:"friend_status"`
+	FriendApply    int    `json:"friend_apply"`
+	NickNameRemark string `json:"nickname_remark"`
+	Email          string `json:"email"`
+	Avatar         string `json:"avatar"`
+	UserName       string `json:"mobile"`
+	Motto          string `json:"motto"`
+	NickName       string `json:"nickname"`
+	Uid            int64  `json:"id"`
+}
+
+// CommRsp 针对请求的ack
+type CommRsp struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }

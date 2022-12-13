@@ -328,7 +328,7 @@ func sendTextMsgHandler(c *gin.Context) {
 		return
 	}
 	//
-	//rsp := api.SendTextMsgEvtRsp{
+	//rsp := api.SendTextMsgEvtNotice{
 	//	Content: api.SendTextMsgContent{
 	//		Data: api.SendTextMsgData{
 	//			Id:         1201,

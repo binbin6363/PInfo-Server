@@ -39,7 +39,7 @@ func loginHandler(c *gin.Context) {
 		Uid:      detailInfo.Uid,
 	}
 
-	enc, _ := utils.EncryptPassword(loginReq.PassWord)
+	_, enc := utils.EncryptPassword(loginReq.PassWord)
 	log.Printf("enc passwd hash:%s\n", enc)
 
 	// 验证密码
@@ -109,11 +109,23 @@ func logoutHandler(c *gin.Context) {
 
 // registerHandler 注册服务接口
 func registerHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Bye, PIM",
-		"data":    nil,
-	})
+
+	req := &api.RegisterReq{}
+	if err := c.ShouldBind(req); err != nil {
+		utils.SendJsonRsp(c, &api.CommRsp{
+			Code:    400,
+			Message: "invalid param",
+			Data:    nil,
+		})
+		return
+	}
+
+	err, rsp := service.DefaultService.RegisterUser(c, utils.GetUid(c), req)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+	utils.SendJsonRsp(c, rsp)
 }
 
 // refreshTokenHandler 刷新登录Token服务接口

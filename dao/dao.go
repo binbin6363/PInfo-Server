@@ -57,12 +57,12 @@ func (d *Dao) GetUserInfoByUserName(ctx context.Context, username string) (error
 	}
 
 	userInfo := &model.UserInfo{}
-	if err := r.Debug().Where("username=?", username).First(&userInfo).Error; err != nil {
+	if err := r.Debug().Where("username=?", username).Limit(1).Find(&userInfo).Error; err != nil {
 		log.Printf("GetUserInfoByUserName read db error(%v) username(%s)\n", err, username)
 		return err, nil
 	}
 
-	log.Printf("GetUserInfoByUserName read db ok username(%s)\n", username)
+	log.Printf("GetUserInfoByUserName read db ok username(%s), info:%+v\n", username, userInfo)
 	return nil, userInfo
 }
 
@@ -75,7 +75,7 @@ func (d *Dao) GetUserInfoByUid(ctx context.Context, uid int64) (error, *model.Us
 	}
 
 	userInfo := &model.UserInfo{}
-	if err := r.Debug().Where("uid=?", uid).First(&userInfo).Error; err != nil {
+	if err := r.Debug().Where("uid=?", uid).Limit(1).Find(&userInfo).Error; err != nil {
 		log.Printf("GetUserInfoByUid read db error(%v) uid(%d)\n", err, uid)
 		return err, nil
 	}
@@ -92,7 +92,15 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 		return errors.New("uid invalid")
 	}
 
-	if err := r.Debug().Where("uid=?", userInfo.Uid).Updates(userInfo).Error; err != nil {
+	r = r.Clauses(clause.OnConflict{
+		// key列
+		Columns: []clause.Column{{Name: "username"}},
+		// 需要更新的列
+		DoUpdates: clause.AssignmentColumns([]string{"passhash", "nickname",
+			"phone", "email", "avatar", "gender", "user_tag", "motto", "update_time"}),
+	}).Create(userInfo)
+
+	if err := r.Error; err != nil {
 		log.Printf("SetUserInfo update db error(%v) user info:%+v\n", err, userInfo)
 		return err
 	}
@@ -144,6 +152,28 @@ func (d *Dao) AddOneMessage(ctx context.Context, msg *model.SingleMessages) erro
 	return nil
 }
 
+// UpdateConversationMsg 更新会话列表及未读数
+func (d *Dao) UpdateConversationMsg(ctx context.Context, con *model.Conversations) error {
+	r := d.db(ctx)
+	if con.Uid == 0 {
+		log.Println("uid invalid")
+		return errors.New("uid invalid")
+	}
+
+	r = r.Clauses(clause.OnConflict{
+		// key列
+		Columns: []clause.Column{{Name: "uid"}, {Name: "contact_id"}},
+		// 需要更新的列。页面上仅支持这四列的手动修改。其他列的修改，都应该直接走server_list.csv更新（通用的）
+		DoUpdates: clause.AssignmentColumns([]string{"msgid", "msg_digest", "update_time"}),
+	}).Create(con)
+
+	// 未读数加1
+	r.UpdateColumn("unread", gorm.Expr("unread + ?", 1))
+
+	log.Printf("UpdateConversationMsg update db ok conversations info:%+v\n", con)
+	return nil
+}
+
 // QuerySingleMessage 拉取单人历史消息
 func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int64, limit int) (error, []*model.SingleMessages) {
 	r := d.db(ctx)
@@ -170,4 +200,58 @@ func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int
 
 	log.Printf("QuerySingleMessage ok, msg size:%d", len(msgList))
 	return nil, msgList
+}
+
+func (d *Dao) CheckUserExist(ctx context.Context, username string) (err error, exist bool) {
+	r := d.db(ctx)
+	type Result struct {
+		UserName   string `gorm:"column:username"`
+		CreateTime int64  `gorm:"column:create_time"`
+	}
+
+	res := &Result{}
+	err = r.Debug().Table("user_infos").Select([]string{"username", "create_time"}).
+		Where("username=?", username).First(&res).Error
+	if err == gorm.ErrRecordNotFound {
+		log.Printf("user not exist\n")
+		return err, false
+	}
+
+	if err != nil {
+		log.Printf("query user name failed, err:%+v\n", err)
+		return err, false
+	}
+
+	if res.UserName == "" {
+		log.Printf("user %s not exist\n", username)
+		return nil, false
+	}
+
+	log.Printf("user exist, name:%s, create time:%d", res.UserName, res.CreateTime)
+	return nil, true
+}
+
+// AllocNewUserID 获取新用户ID
+func (d *Dao) AllocNewUserID(ctx context.Context) (err error, uid int64) {
+	r := d.db(ctx)
+	type Result struct {
+		Uid int64 `gorm:"column:uid"`
+	}
+
+	res := &Result{}
+	err = r.Debug().Table("user_infos").Order(clause.OrderByColumn{
+		Column: clause.Column{
+			Name: "uid",
+		},
+		Desc: true,
+	}).Select([]string{"uid"}).Scan(&res).Error
+
+	if err != nil {
+		log.Printf("alloc user id failed, err:%+v", err)
+		return err, 0
+	}
+
+	uid = res.Uid + 1
+	log.Printf("alloc user id ok, id:%d", uid)
+	return nil, uid
 }

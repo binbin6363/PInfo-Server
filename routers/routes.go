@@ -37,7 +37,8 @@ func Cors() gin.HandlerFunc {
 func JWTAuthMiddleware() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		// 首次的登录不校验token
-		if strings.Contains(c.Request.URL.Path, "/auth/login") {
+		if strings.Contains(c.Request.URL.Path, "/auth/login") ||
+			strings.Contains(c.Request.URL.Path, "/auth/register") {
 			return
 		}
 		// 客户端携带Token有三种方式 1.放在请求头 2.放在请求体 3.放在URI

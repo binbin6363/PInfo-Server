@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -36,6 +37,24 @@ func (s *Service) AddOneMessage(ctx context.Context, req *api.SendTextMsgReq) (e
 		return err, nil
 	}
 
+	con := &model.Conversations{
+		ID:                 0,
+		Uid:                msg.Uid,
+		ContactID:          req.ReceiverId,
+		ConversationType:   1,
+		ConversationName:   "",
+		ConversationStatus: 1,
+		Unread:             0,
+		MsgDigest:          msg.Content,
+		MsgID:              msg.MsgID,
+		CreateTime:         msg.CreateTime,
+		UpdateTime:         msg.UpdateTime,
+	}
+	if err := s.dao.UpdateConversationMsg(ctx, con); err != nil {
+		log.Printf("save msg for Conversation failed! info:%+v\n", con)
+		return err, nil
+	}
+
 	// 给接收者插入消息
 	msg.Uid = req.ReceiverId
 	msg.ID = 0
@@ -43,6 +62,14 @@ func (s *Service) AddOneMessage(ctx context.Context, req *api.SendTextMsgReq) (e
 		// 此步骤只许成功，不能失败。失败要进离线队列
 		log.Printf("save msg for receiver failed! info:%+v\n", msg)
 		//return err
+	}
+
+	con.ID = 0
+	con.Uid = req.ReceiverId
+	con.ContactID = req.Uid
+	if err := s.dao.UpdateConversationMsg(ctx, con); err != nil {
+		log.Printf("save msg for Conversation failed! info:%+v\n", con)
+		return err, nil
 	}
 
 	// 前端设计不合理，消息竟然需要携带用户信息
@@ -72,15 +99,23 @@ func (s *Service) AddOneMessage(ctx context.Context, req *api.SendTextMsgReq) (e
 		},
 	}
 
+	notice := &api.SendTextMsgEvtNotice{
+		Event:   "event_talk",
+		Content: rsp.Content,
+	}
 	// 消息通知对方，走下游websocket。下游决定推送的设备
-	bytesData, _ := json.Marshal(rsp)
+	bytesData, _ := json.Marshal(notice)
 	url := fmt.Sprintf("http://%s/notice/message/text", config.AppConfig().ConnInfo.Addr)
-	_, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
+	resp, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
+	defer resp.Body.Close()
 	if err != nil {
 		log.Printf("notify conn failed, err:%+v\n", err)
 	} else {
-		log.Printf("notify conn success, req:%+v\n", req)
+		body, _ := ioutil.ReadAll(resp.Body)
+		log.Printf("notify conn success, req:%+v, rsp:%s\n", req, string(body))
 	}
+
+	// 更新会话列表
 
 	return nil, rsp
 }
