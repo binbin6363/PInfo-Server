@@ -109,25 +109,23 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 	return nil
 }
 
-// GetContactList 获取好友列表信息
-// select user_infos.uid as uid, user_infos.nickname as nickname, user_infos.phone as phone,user_infos.email
-// as email,user_infos.avatar as avatar,user_infos.gender as gender, contacts.contact_id as contact_id,
-// contacts.remark_name as remark_name from user_infos left join contacts on contacts.uid=user_infos.uid
-// where user_infos.uid=10000;
-func (d *Dao) GetContactList(ctx context.Context, uid int64) (error, []*model.UserContact) {
+// GetContactList 获取我的好友列表信息
+// SELECT contacts.uid as uid, contacts.contact_id as contact_id, user_infos.nickname as nickname, user_infos.gender as gender, user_infos.motto as motto, user_infos.avatar as avatar, contacts.remark_name as remark_name, contacts.status as status FROM `contacts` left join user_infos on contacts.uid=user_infos.uid where contacts.uid=10000\G;
+func (d *Dao) GetContactList(ctx context.Context, uid int64, status int) (error, []*model.UserContact) {
 	r := d.db(ctx)
 	if uid == 0 {
 		log.Println("uid is invalid")
 		return errors.New("uid is invalid"), nil
 	}
 
-	r.Table(model.UserInfo{}.TableName()).Select("user_infos.uid as uid, user_infos.nickname as nickname, "+
-		"user_infos.gender as gender, user_infos.motto as motto, user_infos.avatar as avatar, "+
-		"contacts.remark_name as remark_name").
-		Joins("left join contacts on contacts.uid=user_infos.uid").Where("user_infos.uid=?", uid)
+	r = r.Table(model.Contacts{}.TableName()).Select("contacts.uid as uid, contacts.contact_id as contact_id, "+
+		"user_infos.nickname as nickname, user_infos.gender as gender, user_infos.motto as motto, "+
+		"user_infos.avatar as avatar, contacts.remark_name as remark_name, contacts.status as status").
+		Joins("left join user_infos on contacts.contact_id=user_infos.uid where contacts.uid=? and contacts.status=?",
+			uid, status)
 
 	userContacts := make([]*model.UserContact, 0)
-	if err := r.Debug().Find(&userContacts).Error; err != nil {
+	if err := r.Debug().Scan(&userContacts).Error; err != nil {
 		log.Printf("GetContactList read db error(%v) uid(%d)\n", err, uid)
 		return err, nil
 	}
@@ -254,4 +252,97 @@ func (d *Dao) AllocNewUserID(ctx context.Context) (err error, uid int64) {
 	uid = res.Uid + 1
 	log.Printf("alloc user id ok, id:%d", uid)
 	return nil, uid
+}
+
+// GetContactDetailInfo 获取uid好友contactId的详细信息
+func (d *Dao) GetContactDetailInfo(ctx context.Context, uid, contactId int64) (error, *model.UserContact) {
+	r := d.db(ctx)
+	if uid == 0 {
+		log.Println("contact id is invalid")
+		return errors.New("contact id is invalid"), nil
+	}
+
+	r = r.Table(model.Contacts{}.TableName()).Select("contacts.uid as uid, contacts.contact_id as contact_id, "+
+		"user_infos.nickname as nickname, user_infos.gender as gender, user_infos.motto as motto, "+
+		"user_infos.avatar as avatar, contacts.remark_name as remark_name, contacts.status as status").
+		Joins("left join user_infos on contacts.contact_id=user_infos.uid where contacts.uid=? and contacts.contact_id=?",
+			uid, contactId)
+
+	userContacts := &model.UserContact{}
+	if err := r.Debug().First(&userContacts).Error; err != nil {
+		log.Printf("GetContactList read db error(%v) uid(%d)\n", err, uid)
+		return err, nil
+	}
+
+	log.Printf("GetContactDetailInfo read db ok uid(%d)\n", uid)
+	return nil, userContacts
+}
+
+// GetContactInfo 获取uid好友contactId的基础信息
+func (d *Dao) GetContactInfo(ctx context.Context, uid, contactId int64) (error, *model.Contacts) {
+	r := d.db(ctx)
+	if uid == 0 || contactId == 0 {
+		log.Println("contact id is invalid")
+		return errors.New("contact id is invalid"), nil
+	}
+
+	contactInfo := &model.Contacts{}
+	if err := r.Debug().Where("uid=? and contact_id=?", uid, contactId).First(&contactInfo).Error; err != nil {
+		log.Printf("GetContactInfo read db error(%v) uid(%d)\n", err, uid)
+		return err, nil
+	}
+
+	log.Printf("GetContactInfo read db ok uid(%d)\n", uid)
+	return nil, contactInfo
+}
+
+func (d *Dao) SetContactInfo(ctx context.Context, contact *model.Contacts) error {
+	r := d.db(ctx)
+	if contact.Uid == 0 || contact.ContactID == 0 {
+		log.Println("uid invalid")
+		return errors.New("uid invalid")
+	}
+
+	r = r.Clauses(clause.OnConflict{
+		// key列
+		Columns: []clause.Column{{Name: "uid"}, {Name: "contact_id"}},
+		// 需要更新的列
+		DoUpdates: clause.AssignmentColumns([]string{"remark_name", "status",
+			"sequence", "update_time"}),
+	}).Create(contact)
+
+	if err := r.Error; err != nil {
+		log.Printf("SetContactInfo update db error(%v) user info:%+v\n", err, contact)
+		return err
+	}
+
+	log.Printf("SetContactInfo update db ok user info:%+v\n", contact)
+	return nil
+}
+
+// GetConversationList 差量获取会话列表
+func (d *Dao) GetConversationList(ctx context.Context, uid, sequence int64) (error, []*model.ConversationDetails) {
+	r := d.db(ctx)
+	if uid == 0 {
+		log.Println("uid is invalid")
+		return errors.New("uid is invalid"), nil
+	}
+
+	// todo: 看起来是有bug。查到多余的数据
+	r = r.Table(model.Conversations{}.TableName()).Select("conversations.id as id, conversations.uid as uid, "+
+		"conversations.contact_id as contact_id, conversations.conversation_type as conversation_type, "+
+		"conversations.unread as unread, conversations.msg_digest as msg_digest, conversations.sequence as sequence, "+
+		"conversations.update_time as update_time, user_infos.username as username, "+
+		"contacts.remark_name as remark_name, user_infos.motto as motto, user_infos.avatar as avatar").
+		Joins("left join contacts on conversations.contact_id=contacts.contact_id and conversations.uid=contacts.uid").
+		Joins("left join user_infos on conversations.contact_id=user_infos.uid where conversations.uid=? and conversations.sequence>?", uid, sequence)
+
+	conDetails := make([]*model.ConversationDetails, 0)
+	if err := r.Debug().Scan(&conDetails).Error; err != nil {
+		log.Printf("GetConversationList read db error(%v) uid(%d)\n", err, uid)
+		return err, nil
+	}
+
+	log.Printf("GetConversationList read db ok uid(%d), sequence(%d)\n", uid, sequence)
+	return nil, conDetails
 }

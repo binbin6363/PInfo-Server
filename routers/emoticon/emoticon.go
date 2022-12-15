@@ -8,14 +8,14 @@ import (
 func emoticonListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
+		"message": "ok",
 		"data":    nil,
 	})
 }
 func emoticonSystemListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
+		"message": "ok",
 		"data":    nil,
 	})
 }

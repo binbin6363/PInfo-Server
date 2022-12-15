@@ -25,12 +25,14 @@ type UserBasicInfo struct {
 
 // TalkListReq 会话列表请求
 type TalkListReq struct {
-	Uid int64
+	Uid      int64  `json:"uid"`
+	UserName string `json:"username"`
+	Sequence int64  `json:"sequence"` // 差量拉取的序列号
 }
 
 // TalkListRsp 会话列表回包
 type TalkListRsp struct {
-	TalkList []TalkInfo `json:"items"`
+	TalkList []*TalkInfo `json:"items"`
 }
 
 // TalkInfo .
@@ -119,7 +121,7 @@ type ContactListReq struct {
 
 // ContactListRsp 联系人列表回包
 type ContactListRsp struct {
-	ContactList []ContactInfo
+	ContactList []*ContactInfo `json:"rows"`
 }
 
 type ContactInfo struct {
@@ -218,9 +220,12 @@ type ContactSearchReq struct {
 type ContactSearchRsp struct {
 	Uid int64 `json:"id"`
 }
+
 type ContactDetailReq struct {
-	Uid int64 `json:"user_id"`
+	Uid       int64 `json:"id"`
+	ContactId int64 `json:"user_id"`
 }
+
 type ContactDetailRsp struct {
 	Gender         int    `json:"gender"`
 	FriendStatus   int    `json:"friend_status"`
@@ -232,6 +237,30 @@ type ContactDetailRsp struct {
 	Motto          string `json:"motto"`
 	NickName       string `json:"nickname"`
 	Uid            int64  `json:"id"`
+}
+
+type AddContactReq struct {
+	Uid        int64  `json:"uid"`
+	UserName   string `json:"username"`
+	ContactID  int64  `json:"friend_id"`
+	RemarkName string `json:"remark"`
+}
+
+type ApplyAddContactReq struct {
+	Uid      int64  `json:"uid"` // 我的ID
+	UserName string `json:"username"`
+	ApplyId  int64  `json:"apply_id"` // 对方ID
+	Remark   string `json:"remark"`
+}
+
+type AddContactRsp struct {
+}
+
+type EditContactInfoReq struct {
+	Uid        int64  `json:"id"`        // 我的ID
+	UserName   string `json:"username"`  // 我的用户名
+	ContactId  int64  `json:"friend_id"` // 好友ID
+	RemarkName string `json:"remarks"`   // 好友备注名
 }
 
 // CommRsp 针对请求的ack

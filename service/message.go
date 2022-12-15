@@ -46,7 +46,7 @@ func (s *Service) AddOneMessage(ctx context.Context, req *api.SendTextMsgReq) (e
 		ConversationStatus: 1,
 		Unread:             0,
 		MsgDigest:          msg.Content,
-		MsgID:              msg.MsgID,
+		Sequence:           msg.MsgID,
 		CreateTime:         msg.CreateTime,
 		UpdateTime:         msg.UpdateTime,
 	}

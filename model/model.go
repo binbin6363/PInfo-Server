@@ -28,7 +28,7 @@ type Contacts struct {
 	Uid        int64  `gorm:"column:uid"`
 	ContactID  int64  `gorm:"column:contact_id"`
 	RemarkName string `gorm:"column:remark_name"`
-	Status     int    `gorm:"column:status"`
+	Status     int    `gorm:"column:status"` // 0非好友，1好友申请中，2已是好友
 	Sequence   int64  `gorm:"column:sequence"`
 	CreateTime int64  `gorm:"column:create_time"`
 	UpdateTime int64  `gorm:"column:update_time"`
@@ -39,14 +39,16 @@ func (Contacts) TableName() string {
 	return "contacts"
 }
 
-// UserContact 好友关系，联表查询结果
+// UserContact 好友关系，联表查询结果，临时数据结构
 type UserContact struct {
-	Uid          int64  `gorm:"column:uid"`
-	Nickname     string `gorm:"column:nickname"`
+	Uid          int64  `gorm:"column:uid"`        // 我的ID
+	ContactID    int64  `gorm:"column:contact_id"` // 好友ID
+	Nickname     string `gorm:"column:nickname"`   // 好友昵称
 	Gender       int    `gorm:"column:gender"`
 	Motto        string `gorm:"column:motto"`
 	Avatar       string `gorm:"column:avatar"`
-	FriendRemark string `gorm:"column:remark_name"`
+	FriendRemark string `gorm:"column:remark_name"` // 好友备注
+	Status       int    `gorm:"column:status"`
 }
 
 // Conversations 会话列表
@@ -59,7 +61,7 @@ type Conversations struct {
 	ConversationStatus int    `gorm:"column:conversation_status"`
 	Unread             int    `gorm:"column:unread"`
 	MsgDigest          string `gorm:"column:msg_digest"`
-	MsgID              int64  `gorm:"column:msgid"`
+	Sequence           int64  `gorm:"column:sequence"`
 	CreateTime         int64  `gorm:"column:create_time"`
 	UpdateTime         int64  `gorm:"column:update_time"`
 }
@@ -67,6 +69,22 @@ type Conversations struct {
 // TableName 默认是通过结构体的蛇形复数来指定表名，这里通过TableName显示定义出来，便于问题排查
 func (Conversations) TableName() string {
 	return "conversations"
+}
+
+// ConversationDetails 会话列表详情，通过多表联合查询得到，临时数据结构
+type ConversationDetails struct {
+	ID               int64  `gorm:"column:id"`
+	Uid              int64  `gorm:"column:uid"`
+	ContactID        int64  `gorm:"column:contact_id"`
+	ConversationType int    `gorm:"column:conversation_type"`
+	Unread           int    `gorm:"column:unread"`
+	MsgDigest        string `gorm:"column:msg_digest"`
+	Sequence         int64  `gorm:"column:sequence"`
+	UpdateTime       int64  `gorm:"column:update_time"`
+	UserName         string `gorm:"column:username"`
+	RemarkName       string `gorm:"column:remark_name"`
+	Motto            string `gorm:"column:motto"`
+	Avatar           string `gorm:"column:avatar"`
 }
 
 // SingleMessages 单人消息

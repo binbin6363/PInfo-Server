@@ -3,6 +3,7 @@ package chat
 import (
 	"PInfo-server/api"
 	"PInfo-server/service"
+	"PInfo-server/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 	"log"
@@ -11,108 +12,19 @@ import (
 
 // talkListHandler 获取聊天列表服务接口
 func talkListHandler(c *gin.Context) {
-	req := &api.TalkListReq{}
-	if uid, ok := c.Get("uid"); ok {
-		req.Uid = cast.ToInt64(uid)
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"code":    500,
-			"message": "参数错误",
-			"data":    nil,
-		})
+	req := &api.TalkListReq{
+		Uid: utils.GetUid(c),
+	}
+	_, req.UserName = utils.GetUserName(c)
+	// 拉取会话列表
+	err, rsp := service.DefaultService.GetConversationList(c, req)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
 		return
 	}
 
-	if req.Uid == 10000 {
-		c.JSON(http.StatusOK, gin.H{
-			"code":    200,
-			"message": "Hello Welcome to PIM",
-			"data": api.TalkListRsp{
-				TalkList: []api.TalkInfo{
-					{
-						ID:         10001,
-						Type:       1,
-						ReceiverId: 10001,
-						IsTop:      0,
-						IsDisturb:  0,
-						IsOnline:   0,
-						IsRobot:    0,
-						Name:       "anjintang",
-						Avatar:     "",
-						RemarkName: "anjin",
-						UnreadNum:  0,
-						MsgText:    "hello anjin",
-						UpdatedAt:  "2022-11-12 12:00:00",
-					},
-				},
-			},
-		})
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"code":    200,
-			"message": "Hello Welcome to PIM",
-			"data": api.TalkListRsp{
-				TalkList: []api.TalkInfo{
-					{
-						ID:         10000,
-						Type:       1,
-						ReceiverId: 10000,
-						IsTop:      1,
-						IsDisturb:  0,
-						IsOnline:   0,
-						IsRobot:    0,
-						Name:       "politewang",
-						Avatar:     "",
-						RemarkName: "polite",
-						UnreadNum:  1,
-						MsgText:    "hello polite",
-						UpdatedAt:  "2022-11-11 12:00:00",
-					},
-				},
-			},
-		})
-	}
-	/*
-		c.JSON(http.StatusOK, gin.H{
-			"code":    200,
-			"message": "success",
-			"data": api.TalkListRsp{
-				TalkList: []api.TalkInfo{
-					{
-						ID:         10001,
-						Type:       1,
-						ReceiverId: 10001,
-						IsTop:      0,
-						IsDisturb:  0,
-						IsOnline:   0,
-						IsRobot:    0,
-						Name:       "anjintang",
-						Avatar:     "",
-						RemarkName: "anjin",
-						UnreadNum:  1,
-						MsgText:    "hello polite",
-						UpdatedAt:  "2022-11-11 12:00:00",
-					},
-					{
-						ID:         10000,
-						Type:       1,
-						ReceiverId: 10000,
-						IsTop:      0,
-						IsDisturb:  0,
-						IsOnline:   0,
-						IsRobot:    0,
-						Name:       "politewang",
-						Avatar:     "",
-						RemarkName: "polite",
-						UnreadNum:  0,
-						MsgText:    "hello anjin",
-						UpdatedAt:  "2022-11-12 12:00:00",
-					},
-				},
-			},
-		})
+	utils.SendJsonRsp(c, rsp)
 
-	*/
 }
 
 // createHandler 聊天列表创建服务接口

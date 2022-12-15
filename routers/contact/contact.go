@@ -12,17 +12,7 @@ import (
 
 // contactListHandler 获取好友列表服务接口
 func contactListHandler(c *gin.Context) {
-	uid, ok := c.Get("uid")
-	if !ok {
-		c.JSON(http.StatusOK, gin.H{
-			"code":    http.StatusNotFound,
-			"message": "未鉴权",
-			"data":    nil,
-		})
-		return
-	}
-
-	err, contactInfos := service.DefaultService.GetContactList(c, uid.(int64))
+	err, contactInfos := service.DefaultService.GetContactList(c, utils.GetUid(c), 2)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    http.StatusNotFound,
@@ -34,7 +24,7 @@ func contactListHandler(c *gin.Context) {
 
 	contactList := api.ContactListRsp{}
 	for _, contact := range contactInfos {
-		contactInfo := api.ContactInfo{
+		contactInfo := &api.ContactInfo{
 			Id:           contact.Id,
 			Nickname:     contact.Nickname,
 			Gender:       contact.Gender,
@@ -86,12 +76,26 @@ func deleteContactHandler(c *gin.Context) {
 
 // editContactRemarkHandler 修改好友备注服务接口
 func editContactRemarkHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
-	})
+	req := &api.EditContactInfoReq{}
+	if err := c.ShouldBind(req); err != nil {
+		utils.SendJsonRsp(c, &api.CommRsp{
+			Code:    400,
+			Message: "param invalid",
+			Data:    nil,
+		})
+		return
+	}
+
+	req.Uid = utils.GetUid(c)
+	_, req.UserName = utils.GetUserName(c)
+	err, rsp := service.DefaultService.EditContactInfo(c, req)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
+
 }
 
 // contactDetailHandler 搜索用户信息服务接口
@@ -107,7 +111,8 @@ func contactDetailHandler(c *gin.Context) {
 		return
 	}
 
-	req.Uid = cast.ToInt64(c.Query("user_id"))
+	req.Uid = utils.GetUid(c)
+	req.ContactId = cast.ToInt64(c.Query("user_id"))
 	err, rsp := service.DefaultService.ContactDetail(c, req)
 	if err != nil {
 		utils.SendJsonRsp(c, rsp)
@@ -115,23 +120,6 @@ func contactDetailHandler(c *gin.Context) {
 	}
 
 	utils.SendJsonRsp(c, rsp)
-	/*
-		c.JSON(http.StatusOK, gin.H{
-			"code":    200,
-			"message": "Hello Welcome to PIM",
-			"data": api.UserDetailInfo{
-				IsQiYe:   false,
-				Gender:   1,
-				Email:    "12123232@qq.com",
-				Avatar:   "",
-				Mobile:   "1762556212",
-				Motto:    "kefu",
-				NickName: "lanlan",
-				Uid:      20221113,
-			},
-		})
-
-	*/
 }
 
 // unreadNumHandler 查询好友申请未读数量服务接口
@@ -148,32 +136,96 @@ func unreadNumHandler(c *gin.Context) {
 
 // recordsHandler 查询好友申请服务接口
 func recordsHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	// todo:
+	err, contactInfos := service.DefaultService.GetContactList(c, utils.GetUid(c), 1)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusNotFound,
+			"message": "内部错误，请重试",
+			"data":    nil,
+		})
+		return
+	}
+
+	contactList := api.ContactListRsp{}
+	for _, contact := range contactInfos {
+		contactInfo := &api.ContactInfo{
+			Id:           contact.Id,
+			Nickname:     contact.Nickname,
+			Gender:       contact.Gender,
+			Motto:        contact.Motto,
+			Avatar:       contact.Avatar,
+			FriendRemark: contact.FriendRemark,
+			IsOnline:     1,
+		}
+		contactList.ContactList = append(contactList.ContactList, contactInfo)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
+		"message": "ok",
+		"data":    contactList,
 	})
+
 }
 
 // addContactHandler 好友申请服务接口
 func addContactHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
-	})
+
+	req := &api.AddContactReq{}
+	if err := c.ShouldBind(req); err != nil {
+		utils.SendJsonRsp(c, &api.CommRsp{
+			Code:    400,
+			Message: "param invalid",
+			Data:    nil,
+		})
+		return
+	}
+
+	req.Uid = utils.GetUid(c)
+	_, req.UserName = utils.GetUserName(c)
+	err, rsp := service.DefaultService.AddContact(c, req)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
+
+	/*
+		log.Printf("unimplemented\n")
+		c.JSON(http.StatusOK, gin.H{
+			"code":    200,
+			"message": "Hello Welcome to PIM",
+			"data":    nil,
+		})
+
+	*/
 }
 
 // acceptContactHandler 处理好友申请服务接口
 func acceptContactHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
-	})
+
+	req := &api.ApplyAddContactReq{}
+	if err := c.ShouldBind(req); err != nil {
+		utils.SendJsonRsp(c, &api.CommRsp{
+			Code:    400,
+			Message: "param invalid",
+			Data:    nil,
+		})
+		return
+	}
+
+	req.Uid = utils.GetUid(c)
+	_, req.UserName = utils.GetUserName(c)
+	err, rsp := service.DefaultService.ApplyAddContact(c, req)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
+
 }
 
 // Routers .
