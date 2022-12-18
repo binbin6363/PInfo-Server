@@ -83,6 +83,7 @@ type ConversationDetails struct {
 	UpdateTime       int64  `gorm:"column:update_time"`
 	UserName         string `gorm:"column:username"`
 	RemarkName       string `gorm:"column:remark_name"`
+	ConversationName string `gorm:"column:conversation_name"`
 	Motto            string `gorm:"column:motto"`
 	Avatar           string `gorm:"column:avatar"`
 }
@@ -109,18 +110,55 @@ func (SingleMessages) TableName() string {
 
 // GroupMessages 群消息
 type GroupMessages struct {
-	ID         int64  `gorm:"column:id;primarykey;AUTO_INCREMENT"`
-	GroupID    int64  `gorm:"column:groupid"`
-	MsgID      int64  `gorm:"column:msgid"`
-	SenderID   int64  `gorm:"column:senderid"`
-	MsgType    int    `gorm:"column:msg_type"`
-	Content    string `gorm:"column:content"`
-	MsgStatus  int    `gorm:"column:msg_status"`
-	CreateTime int64  `gorm:"column:create_time"`
-	UpdateTime int64  `gorm:"column:update_time"`
+	ID          int64  `gorm:"column:id;primarykey;AUTO_INCREMENT"`
+	GroupID     int64  `gorm:"column:groupid"`
+	MsgID       int64  `gorm:"column:msgid"`
+	ClientMsgID int64  `gorm:"column:client_msgid"`
+	SenderID    int64  `gorm:"column:senderid"`
+	MsgType     int    `gorm:"column:msg_type"`
+	Content     string `gorm:"column:content"`
+	MsgStatus   int    `gorm:"column:msg_status"`
+	CreateTime  int64  `gorm:"column:create_time"`
+	UpdateTime  int64  `gorm:"column:update_time"`
 }
 
 // TableName 默认是通过结构体的蛇形复数来指定表名，这里通过TableName显示定义出来，便于问题排查
 func (GroupMessages) TableName() string {
 	return "group_messages"
+}
+
+// Groups 群信息列表
+type Groups struct {
+	ID            int64  `gorm:"column:id;primarykey;AUTO_INCREMENT"`
+	GroupID       int64  `gorm:"column:group_id"`
+	GroupName     string `gorm:"column:group_name"`
+	GroupStatus   int    `gorm:"column:group_status"` // 1,正常;2,封禁;3,全员禁言
+	GroupAvatar   string `gorm:"column:group_avatar"`
+	GroupTag      string `gorm:"column:group_tag"`
+	GroupAnnounce string `gorm:"column:group_announce"`
+	Sequence      int64  `gorm:"column:sequence"`
+	CreateTime    int64  `gorm:"column:create_time"`
+	UpdateTime    int64  `gorm:"column:update_time"`
+}
+
+// TableName 默认是通过结构体的蛇形复数来指定表名，这里通过TableName显示定义出来，便于问题排查
+func (Groups) TableName() string {
+	return "groups"
+}
+
+// GroupMembers 群信息列表
+type GroupMembers struct {
+	ID         int64  `gorm:"column:id;primarykey;AUTO_INCREMENT"`
+	GroupID    int64  `gorm:"column:group_id"`
+	Uid        int64  `gorm:"column:uid"`
+	UserRole   int    `gorm:"column:user_role"`   // 成员角色，1普通成员，2群管理员
+	RemarkName string `gorm:"column:remark_name"` // 用户自己备注在群里的名字
+	Sequence   int64  `gorm:"column:sequence"`
+	CreateTime int64  `gorm:"column:create_time"`
+	UpdateTime int64  `gorm:"column:update_time"`
+}
+
+// TableName 默认是通过结构体的蛇形复数来指定表名，这里通过TableName显示定义出来，便于问题排查
+func (GroupMembers) TableName() string {
+	return "group_members"
 }

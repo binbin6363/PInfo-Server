@@ -50,6 +50,19 @@ type TalkInfo struct {
 	UnreadNum  int    `json:"unread_num"`
 	MsgText    string `json:"msg_text"`
 	UpdatedAt  string `json:"updated_at"`
+	CreatedAt  string `json:"created_at"`
+}
+
+// CreateTalkReq 会话列表请求
+type CreateTalkReq struct {
+	Uid       int64  `json:"uid"`
+	UserName  string `json:"username"`
+	ContactId int64  `json:"receiver_id"`
+	TalkType  int    `json:"talk_type"`
+}
+
+type CreateTalkRsp struct {
+	TalkInfo
 }
 
 // UserSettingReq 用户设置请求
@@ -135,11 +148,11 @@ type ContactInfo struct {
 }
 
 type SendTextMsgReq struct {
+	Uid         int64  // 服务框架从token解析加上的
 	ClientMsgId int64  `json:"client_msg_id"` // 消息去重
 	ReceiverId  int64  `json:"receiver_id"`
 	TalkType    int    `json:"talk_type"`
 	Text        string `json:"text"`
-	Uid         int64
 }
 
 type SendTextMsgRsp struct {
@@ -261,6 +274,45 @@ type EditContactInfoReq struct {
 	UserName   string `json:"username"`  // 我的用户名
 	ContactId  int64  `json:"friend_id"` // 好友ID
 	RemarkName string `json:"remarks"`   // 好友备注名
+}
+
+type GroupMembersReq struct {
+	Uid      int64  `json:"id"`       // 我的ID
+	UserName string `json:"username"` // 我的用户名
+	GroupId  int64  `json:"group_id"` // 群ID
+}
+
+type GroupMemberInfo struct {
+	GroupId      int64  `json:"id"`
+	Nickname     string `json:"nickname"`
+	Gender       int    `json:"gender"`
+	Motto        string `json:"motto"`
+	Avatar       string `json:"avatar"`
+	FriendRemark string `json:"friend_remark"`
+	IsOnline     int    `json:"is_online"`
+}
+
+type CreateGroupReq struct {
+	Uid       int64  `json:"id"`       // 我的ID
+	UserName  string `json:"username"` // 我的用户名
+	Avatar    string `json:"avatar"`
+	GroupName string `json:"name"`
+	Profile   string `json:"profile"`
+	Ids       string `json:"ids"` // 群成员ID列表
+}
+
+type CreateGroupRsp struct {
+	GroupId int64 `json:"group_id"`
+}
+
+type EmoticonListRsp struct {
+	CollectEmoticon []EmoticonItem `json:"collect_emoticon"`
+	SystemEmoticon  []EmoticonItem `json:"sys_emoticon"`
+}
+
+type EmoticonItem struct {
+	MediaId int64  `json:"media_id"`
+	Src     string `json:"src"`
 }
 
 // CommRsp 针对请求的ack

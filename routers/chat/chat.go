@@ -29,12 +29,28 @@ func talkListHandler(c *gin.Context) {
 
 // createHandler 聊天列表创建服务接口
 func createHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "unimplemented",
-		"data":    nil,
-	})
+	req := &api.CreateTalkReq{
+		Uid: utils.GetUid(c),
+	}
+	_, req.UserName = utils.GetUserName(c)
+	if err := c.ShouldBind(req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	// 创建会话
+	err, rsp := service.DefaultService.CreateConversation(c, req)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
+
 }
 
 // deleteHandler 删除聊天列表服务接口
@@ -121,7 +137,7 @@ func recordsHandler(c *gin.Context) {
 				MaxRecordId: 12000,
 				Rows: []api.MessageRow{
 					{
-						Id:         1200,
+						GroupId:         1200,
 						Sequence:   2,
 						TalkType:   1,
 						MsgType:    1,
@@ -135,7 +151,7 @@ func recordsHandler(c *gin.Context) {
 						Content:    "last msg",
 						CreatedAt:  "2022-12-08 08:50:45",
 					}, {
-						Id:         1123,
+						GroupId:         1123,
 						Sequence:   1,
 						TalkType:   1,
 						MsgType:    1,
@@ -230,7 +246,7 @@ func sendTextMsgHandler(c *gin.Context) {
 	}
 
 	// 消息去重，暂时先基于mysql做去重
-	err, rsp := service.DefaultService.AddOneMessage(c, req)
+	err, rsp := service.DefaultService.SendTextMessage(c, req)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    500,
@@ -243,7 +259,7 @@ func sendTextMsgHandler(c *gin.Context) {
 	//rsp := api.SendTextMsgEvtNotice{
 	//	Content: api.SendTextMsgContent{
 	//		Data: api.SendTextMsgData{
-	//			Id:         1201,
+	//			GroupId:         1201,
 	//			Sequence:   3,
 	//			TalkType:   1,
 	//			MsgType:    1,

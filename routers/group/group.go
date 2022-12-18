@@ -1,19 +1,37 @@
 package group
 
 import (
+	"PInfo-server/api"
+	"PInfo-server/service"
+	"PInfo-server/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 	"log"
 	"net/http"
 )
 
-func groupInvitesHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+func groupMembersHandler(c *gin.Context) {
+	groupMembersReq := &api.GroupMembersReq{}
+	if err := c.ShouldBind(groupMembersReq); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
-	})
+	groupMembersReq.Uid = utils.GetUid(c)
+	groupMembersReq.GroupId = cast.ToInt64(c.Query("group_id"))
+
+	// 获取群成员列表
+	err, rsp := service.DefaultService.GetGroupMembers(c, groupMembersReq)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
 }
 
 func groupListHandler(c *gin.Context) {
@@ -37,13 +55,27 @@ func getGroupDetailHandler(c *gin.Context) {
 }
 
 func createGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	createGroupReq := &api.CreateGroupReq{}
+	if err := c.ShouldBind(createGroupReq); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
-	})
+	createGroupReq.Uid = utils.GetUid(c)
+	_, createGroupReq.UserName = utils.GetUserName(c)
+
+	// 创建群
+	err, rsp := service.DefaultService.CreateGroup(c, createGroupReq)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
 }
 
 func modifyGroupHandler(c *gin.Context) {
@@ -137,21 +169,21 @@ func editGroupNoticeHandler(c *gin.Context) {
 
 // Routers .
 func Routers(r *gin.Engine) {
-	login := r.Group("/api/v1/group/")
+	group := r.Group("/api/v1/group/")
 	{
-		login.GET("/member/invites", groupInvitesHandler)
-		login.GET("/list", groupListHandler)
-		login.GET("/detail", getGroupDetailHandler)
-		login.POST("/create", createGroupHandler)
-		login.POST("/setting", modifyGroupHandler)
-		login.POST("/invite", inviteGroupHandler)
-		login.POST("/member/remove", removeGroupMemberHandler)
-		login.POST("/dismiss", dismissGroupHandler)
-		login.POST("/secede", secedeGroupHandler)
-		login.POST("/member/remark", remarkGroupHandler)
-		//login.GET("/member/invites", getGroupMemberListHandler)
-		login.GET("/notice/list", getGroupNoticesHandler)
-		login.POST("/notice/edit", editGroupNoticeHandler)
+		group.GET("/member/invites", groupMembersHandler)
+		group.GET("/list", groupListHandler)
+		group.GET("/detail", getGroupDetailHandler)
+		group.POST("/create", createGroupHandler)
+		group.POST("/setting", modifyGroupHandler)
+		group.POST("/invite", inviteGroupHandler)
+		group.POST("/member/remove", removeGroupMemberHandler)
+		group.POST("/dismiss", dismissGroupHandler)
+		group.POST("/secede", secedeGroupHandler)
+		group.POST("/member/remark", remarkGroupHandler)
+		//group.GET("/member/invites", getGroupMemberListHandler)
+		group.GET("/notice/list", getGroupNoticesHandler)
+		group.POST("/notice/edit", editGroupNoticeHandler)
 
 	}
 }

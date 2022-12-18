@@ -2,7 +2,9 @@ package service
 
 import (
 	"PInfo-server/api"
+	"PInfo-server/model"
 	"context"
+	"gorm.io/gorm"
 	"log"
 	"time"
 )
@@ -30,7 +32,7 @@ func (s *Service) GetConversationList(ctx context.Context, req *api.TalkListReq)
 			ReceiverId: con.ContactID,
 			IsTop:      0,
 			IsDisturb:  0,
-			IsOnline:   0,
+			IsOnline:   1,
 			IsRobot:    0,
 			Name:       con.UserName,
 			Avatar:     con.Avatar,
@@ -39,11 +41,129 @@ func (s *Service) GetConversationList(ctx context.Context, req *api.TalkListReq)
 			MsgText:    con.MsgDigest,
 			UpdatedAt:  time.Unix(con.UpdateTime, 0).Format("2006-01-02 15:04:05"),
 		}
+		if talkInfo.RemarkName == "" {
+			talkInfo.RemarkName = con.ConversationName
+		}
 		listRsp.TalkList = append(listRsp.TalkList, talkInfo)
 	}
 
 	rsp.Data = listRsp
 
 	log.Printf("[INFO] get conversation req:%+v, rsp:%+v", req, rsp)
+	return nil, rsp
+}
+
+func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq) (err error, rsp *api.CommRsp) {
+
+	rsp = &api.CommRsp{
+		Code:    0,
+		Message: "ok",
+		Data:    nil,
+	}
+	err, conversationInfo := s.dao.GetConversation(ctx, req.Uid, req.ContactId)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			log.Printf("[INFO] conversation not exist, need create")
+		} else {
+			rsp.Code = 400
+			rsp.Message = "内部错误"
+			log.Printf("search user by user name failed, err:%v, user:%s\n", err, req.UserName)
+			return err, rsp
+		}
+	}
+
+	// 如果已存在，则直接返回信息
+	if conversationInfo != nil && conversationInfo.Uid != 0 && conversationInfo.ContactID != 0 {
+		rsp.Data = &api.TalkInfo{
+			ID:         conversationInfo.ID,
+			Type:       conversationInfo.ConversationType,
+			ReceiverId: conversationInfo.ContactID,
+			IsTop:      0,
+			IsDisturb:  0,
+			IsOnline:   0,
+			IsRobot:    0,
+			Name:       conversationInfo.ConversationName,
+			Avatar:     "",
+			RemarkName: conversationInfo.ConversationName,
+			UnreadNum:  0,
+			MsgText:    conversationInfo.MsgDigest,
+			UpdatedAt:  time.Unix(conversationInfo.UpdateTime, 0).Format("2006-01-02 15:04:05"),
+			CreatedAt:  time.Unix(conversationInfo.CreateTime, 0).Format("2006-01-02 15:04:05"),
+		}
+		return nil, rsp
+	}
+
+	// 不存在，则新建
+	conversationName := "新建群聊天"
+	conversationAvatar := ""
+	if req.TalkType == 1 {
+		// 获取联系人备注信息
+		err, contactInfo := s.dao.GetContactInfo(ctx, req.Uid, req.ContactId)
+		if err != nil {
+			rsp.Code = 400
+			rsp.Message = "联系人获取失败"
+			log.Printf("get contact info failed, err:%v, %d => %d\n", err, req.Uid, req.ContactId)
+			return err, rsp
+		}
+		conversationName = contactInfo.RemarkName
+		err, userInfo := s.dao.GetUserInfoByUid(ctx, req.ContactId)
+		if err != nil {
+			rsp.Code = 400
+			rsp.Message = "联系人获取失败"
+			log.Printf("get contact info failed, err:%v, %d => %d\n", err, req.Uid, req.ContactId)
+			return err, rsp
+		}
+		conversationAvatar = userInfo.Avatar
+	} else if req.TalkType == 2 {
+		err, groupInfo := s.dao.GetGroupInfo(ctx, req.Uid, req.ContactId)
+		if err != nil {
+			rsp.Code = 400
+			rsp.Message = "群信息获取失败"
+			log.Printf("get group info failed, err:%v, %d => %d\n", err, req.Uid, req.ContactId)
+			return err, rsp
+		}
+		conversationName = groupInfo.GroupName
+	}
+
+	nowTime := time.Now().Unix()
+
+	conversationInfo = &model.Conversations{
+		Uid:                req.Uid,
+		ContactID:          req.ContactId,
+		ConversationType:   req.TalkType,
+		ConversationName:   conversationName,
+		ConversationStatus: 1,
+		Unread:             0,
+		MsgDigest:          "",
+		Sequence:           nowTime,
+		CreateTime:         nowTime,
+		UpdateTime:         nowTime,
+	}
+	err = s.dao.SetConversation(ctx, conversationInfo)
+	if err != nil {
+		rsp.Code = 400
+		rsp.Message = "会话创建失败"
+		log.Printf("create conversation failed, err:%v, %d => %d\n", err, req.Uid, req.ContactId)
+		return err, rsp
+	}
+
+	rsp.Data = &api.TalkInfo{
+		ID:         conversationInfo.ID,
+		Type:       req.TalkType,
+		ReceiverId: req.ContactId,
+		IsTop:      0,
+		IsDisturb:  0,
+		IsOnline:   0,
+		IsRobot:    0,
+		Name:       conversationName,
+		Avatar:     conversationAvatar,
+		RemarkName: conversationName,
+		UnreadNum:  0,
+		MsgText:    "",
+		UpdatedAt:  time.Unix(nowTime, 0).Format("2006-01-02 15:04:05"),
+		CreatedAt:  time.Unix(nowTime, 0).Format("2006-01-02 15:04:05"),
+	}
+
+	log.Printf("[INFO] create conversation req:%+v, rsp:%+v", req, *rsp)
 	return nil, rsp
 }

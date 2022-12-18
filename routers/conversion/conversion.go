@@ -1,5 +1,6 @@
 package conversion
 
+/*
 import (
 	"PInfo-server/api"
 	"github.com/gin-gonic/gin"
@@ -25,7 +26,7 @@ func talkListHandler(c *gin.Context) {
 			"code":    200,
 			"message": "Hello Welcome to PIM",
 			"data": api.TalkListRsp{
-				TalkList: []api.TalkInfo{
+				TalkList: []*api.TalkInfo{
 					{
 						ID:         10001,
 						Type:       1,
@@ -80,3 +81,6 @@ func Routers(r *gin.Engine) {
 	}
 
 }
+
+
+*/

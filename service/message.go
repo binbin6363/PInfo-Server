@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,8 +16,7 @@ import (
 	"PInfo-server/model"
 )
 
-// AddOneMessage .
-func (s *Service) AddOneMessage(ctx context.Context, req *api.SendTextMsgReq) (error, *api.SendTextMsgRsp) {
+func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMsgReq) (error, *api.SendTextMsgRsp) {
 	msg := &model.SingleMessages{
 		Uid:         req.Uid,
 		MsgID:       s.dao.GenMsgID(), // 本应该由中心服务生成，此处暂且放在本机生成
@@ -32,7 +32,7 @@ func (s *Service) AddOneMessage(ctx context.Context, req *api.SendTextMsgReq) (e
 
 	// 给发送者插入消息
 	msg.Uid = req.Uid
-	if err := s.dao.AddOneMessage(ctx, msg); err != nil {
+	if err := s.dao.AddOneSingleMessage(ctx, msg); err != nil {
 		log.Printf("save msg for sender failed! info:%+v\n", msg)
 		return err, nil
 	}
@@ -50,15 +50,14 @@ func (s *Service) AddOneMessage(ctx context.Context, req *api.SendTextMsgReq) (e
 		CreateTime:         msg.CreateTime,
 		UpdateTime:         msg.UpdateTime,
 	}
-	if err := s.dao.UpdateConversationMsg(ctx, con); err != nil {
+	if err := s.dao.UpdateConversationSingleMsg(ctx, con); err != nil {
 		log.Printf("save msg for Conversation failed! info:%+v\n", con)
 		return err, nil
 	}
 
-	// 给接收者插入消息
 	msg.Uid = req.ReceiverId
 	msg.ID = 0
-	if err := s.dao.AddOneMessage(ctx, msg); err != nil {
+	if err := s.dao.AddOneSingleMessage(ctx, msg); err != nil {
 		// 此步骤只许成功，不能失败。失败要进离线队列
 		log.Printf("save msg for receiver failed! info:%+v\n", msg)
 		//return err
@@ -67,7 +66,7 @@ func (s *Service) AddOneMessage(ctx context.Context, req *api.SendTextMsgReq) (e
 	con.ID = 0
 	con.Uid = req.ReceiverId
 	con.ContactID = req.Uid
-	if err := s.dao.UpdateConversationMsg(ctx, con); err != nil {
+	if err := s.dao.UpdateConversationSingleMsg(ctx, con); err != nil {
 		log.Printf("save msg for Conversation failed! info:%+v\n", con)
 		return err, nil
 	}
@@ -118,6 +117,111 @@ func (s *Service) AddOneMessage(ctx context.Context, req *api.SendTextMsgReq) (e
 	// 更新会话列表
 
 	return nil, rsp
+}
+
+func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsgReq) (error, *api.SendTextMsgRsp) {
+	groupId := req.ReceiverId
+	msg := &model.GroupMessages{
+		GroupID:     groupId,
+		MsgID:       s.dao.GenMsgID(), // 本应该由中心服务生成，此处暂且放在本机生成
+		ClientMsgID: req.ClientMsgId,  // 客户端发送的消息做去重
+		SenderID:    req.Uid,
+		MsgType:     1,
+		Content:     req.Text,
+		MsgStatus:   0,
+		CreateTime:  time.Now().Unix(),
+		UpdateTime:  time.Now().Unix(),
+	}
+
+	// 群消息入库
+	if err := s.dao.AddOneGroupMessage(ctx, msg); err != nil {
+		log.Printf("save group msg for sender failed! info:%+v\n", msg)
+		return err, nil
+	}
+
+	// 获取群头像
+	_, groupInfo := s.dao.GetGroupInfo(ctx, req.Uid, req.ReceiverId)
+
+	// 获取群成员ID列表
+	_, groupMembers := s.dao.GetGroupMemberList(ctx, groupId)
+	conversationList := make([]*model.Conversations, 0, len(groupMembers))
+	for _, groupMember := range groupMembers {
+		con := &model.Conversations{
+			Uid:                groupMember.Uid,
+			ContactID:          groupId, // 群ID
+			ConversationType:   2,
+			ConversationName:   groupInfo.GroupName,
+			ConversationStatus: 1,
+			Unread:             1, // 更新时基于+1操作
+			MsgDigest:          msg.Content,
+			Sequence:           msg.MsgID,
+			CreateTime:         msg.CreateTime,
+			UpdateTime:         msg.UpdateTime,
+		}
+		conversationList = append(conversationList, con)
+	}
+	if err := s.dao.UpdateConversationGroupMsg(ctx, conversationList); err != nil {
+		log.Printf("save msg for Conversation failed! group id:%d, group name:%s\n", groupId, groupInfo.GroupName)
+		return err, nil
+	}
+	// 前端设计不合理，消息竟然需要携带用户信息
+	_, userInfo := s.dao.GetUserInfoByUid(ctx, req.Uid)
+
+	// Sequence 这个字段是否需要，尚待考虑。可以不用该字段
+	rsp := &api.SendTextMsgRsp{
+		Content: api.SendTextMsgContent{
+			Data: api.SendTextMsgData{
+				Id:         msg.MsgID,
+				Sequence:   1,
+				TalkType:   req.TalkType,
+				MsgType:    1,
+				UserId:     req.Uid,
+				ReceiverId: groupId,
+				Content:    req.Text,
+				Nickname:   groupInfo.GroupName,
+				Avatar:     userInfo.Avatar,
+				IsRevoke:   0,
+				IsRead:     0,
+				IsMark:     0,
+				CreatedAt:  time.Unix(msg.CreateTime, 0).Format("2006-01-02 15:04:05"),
+			},
+			ReceiverId: req.ReceiverId,
+			SenderId:   req.Uid,
+			TalkType:   2,
+		},
+	}
+
+	notice := &api.SendTextMsgEvtNotice{
+		Event:   "event_talk",
+		Content: rsp.Content,
+	}
+	// 消息通知对方，走下游websocket。下游决定推送的设备
+	bytesData, _ := json.Marshal(notice)
+	url := fmt.Sprintf("http://%s/notice/message/text", config.AppConfig().ConnInfo.Addr)
+	resp, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
+	defer resp.Body.Close()
+	if err != nil {
+		log.Printf("notify conn failed, err:%+v\n", err)
+	} else {
+		body, _ := ioutil.ReadAll(resp.Body)
+		log.Printf("notify conn success, req:%+v, rsp:%s\n", req, string(body))
+	}
+
+	// 更新会话列表
+
+	return nil, rsp
+}
+
+// SendTextMessage .
+func (s *Service) SendTextMessage(ctx context.Context, req *api.SendTextMsgReq) (error, *api.SendTextMsgRsp) {
+	if req.TalkType == 1 {
+		return s.sendSingleTextMessage(ctx, req)
+	} else if req.TalkType == 2 {
+		return s.sendGroupTextMessage(ctx, req)
+	} else {
+		log.Printf("unsupported talk type:%d\n", req.TalkType)
+		return errors.New("unsupported talk type"), nil
+	}
 }
 
 // QueryMessage 从大往小拉取历史消息

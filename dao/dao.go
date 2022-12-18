@@ -2,9 +2,9 @@ package dao
 
 import (
 	"PInfo-server/model"
+	"PInfo-server/utils"
 	"context"
 	"errors"
-	"github.com/GUAIK-ORG/go-snowflake/snowflake"
 	"gorm.io/gorm/clause"
 	"log"
 
@@ -15,7 +15,7 @@ import (
 // Dao is Data Access Object
 type Dao struct {
 	commDB *gorm.DB
-	sf     *snowflake.Snowflake
+	sf     *utils.Snowflake
 }
 
 // New creates Dao instance
@@ -29,7 +29,7 @@ func New(dsn string, dataCenterId, WorkerId int64) *Dao {
 	}
 	d.commDB = cli
 
-	s, err := snowflake.NewSnowflake(dataCenterId, WorkerId)
+	s, err := utils.NewSnowflake(dataCenterId, WorkerId)
 	if err != nil {
 		log.Fatalf("dao: NewSnowflake error(%v), dataCenterId:%d, WorkerId:%d", err, dataCenterId, WorkerId)
 	}
@@ -45,6 +45,11 @@ func (d *Dao) db(ctx context.Context) *gorm.DB {
 
 // GenMsgID 生成消息ID。雪花算法，保证递增
 func (d *Dao) GenMsgID() int64 {
+	return d.sf.NextVal()
+}
+
+// GenGroupID 生成群ID。复用雪花
+func (d *Dao) GenGroupID() int64 {
 	return d.sf.NextVal()
 }
 
@@ -134,7 +139,8 @@ func (d *Dao) GetContactList(ctx context.Context, uid int64, status int) (error,
 	return nil, userContacts
 }
 
-func (d *Dao) AddOneMessage(ctx context.Context, msg *model.SingleMessages) error {
+// AddOneSingleMessage 添加单人消息
+func (d *Dao) AddOneSingleMessage(ctx context.Context, msg *model.SingleMessages) error {
 	r := d.db(ctx)
 	if msg.Uid == 0 || msg.MsgID == 0 {
 		log.Println("uid|msgid invalid")
@@ -142,18 +148,35 @@ func (d *Dao) AddOneMessage(ctx context.Context, msg *model.SingleMessages) erro
 	}
 
 	if err := r.Debug().Create(msg).Error; err != nil {
-		log.Printf("AddOneMessage insert db error(%v) msg:%+v\n", err, msg)
+		log.Printf("AddOneSingleMessage insert db error(%v) msg:%+v\n", err, msg)
 		return err
 	}
 
-	log.Printf("AddOneMessage insert db ok msg:%+v\n", msg)
+	log.Printf("AddOneSingleMessage insert db ok msg:%+v\n", msg)
 	return nil
 }
 
-// UpdateConversationMsg 更新会话列表及未读数
-func (d *Dao) UpdateConversationMsg(ctx context.Context, con *model.Conversations) error {
+// AddOneGroupMessage 添加群消息
+func (d *Dao) AddOneGroupMessage(ctx context.Context, msg *model.GroupMessages) error {
 	r := d.db(ctx)
-	if con.Uid == 0 {
+	if msg.GroupID == 0 || msg.MsgID == 0 {
+		log.Println("group id|msgid invalid")
+		return errors.New("group id|msgid invalid")
+	}
+
+	if err := r.Debug().Create(msg).Error; err != nil {
+		log.Printf("AddOneGroupMessage insert db error(%v) msg:%+v\n", err, msg)
+		return err
+	}
+
+	log.Printf("AddOneGroupMessage insert db ok msg:%+v\n", msg)
+	return nil
+}
+
+// UpdateConversationSingleMsg 针对单人消息更新会话列表及未读数
+func (d *Dao) UpdateConversationSingleMsg(ctx context.Context, con *model.Conversations) error {
+	r := d.db(ctx)
+	if con.Uid == 0 || con.ContactID == 0 {
 		log.Println("uid invalid")
 		return errors.New("uid invalid")
 	}
@@ -162,13 +185,36 @@ func (d *Dao) UpdateConversationMsg(ctx context.Context, con *model.Conversation
 		// key列
 		Columns: []clause.Column{{Name: "uid"}, {Name: "contact_id"}},
 		// 需要更新的列。页面上仅支持这四列的手动修改。其他列的修改，都应该直接走server_list.csv更新（通用的）
-		DoUpdates: clause.AssignmentColumns([]string{"msgid", "msg_digest", "update_time"}),
-	}).Create(con)
+		DoUpdates: clause.AssignmentColumns([]string{"sequence", "msg_digest", "update_time"}),
+	}).Debug().Create(con)
 
 	// 未读数加1
-	r.UpdateColumn("unread", gorm.Expr("unread + ?", 1))
+	r.Debug().UpdateColumn("unread", gorm.Expr("unread + ?", 1))
 
-	log.Printf("UpdateConversationMsg update db ok conversations info:%+v\n", con)
+	log.Printf("UpdateConversationSingleMsg update db ok conversations info:%+v\n", con)
+	return nil
+}
+
+// UpdateConversationGroupMsg 针对群消息更新会话列表及未读数
+func (d *Dao) UpdateConversationGroupMsg(ctx context.Context, con []*model.Conversations) error {
+	r := d.db(ctx)
+	if len(con) == 0 {
+		log.Println("group id invalid")
+		return errors.New("group id invalid")
+	}
+
+	// 更新该群下的所有用户的会话信息
+	r.Clauses(clause.OnConflict{
+		// key列
+		Columns: []clause.Column{{Name: "contact_id"}},
+		// 需要更新的列。页面上仅支持这四列的手动修改。其他列的修改，都应该直接走server_list.csv更新（通用的）
+		DoUpdates: clause.AssignmentColumns([]string{"sequence", "msg_digest", "update_time"}),
+	}).Debug().Create(con)
+
+	// 群成员未读数加1
+	r.Table(model.Conversations{}.TableName()).Debug().Where("contact_id=?", con[0].ContactID).UpdateColumn("unread", gorm.Expr("unread + ?", 1))
+
+	log.Printf("UpdateConversationGroupMsg update db ok conversations info:%+v\n", con)
 	return nil
 }
 
@@ -292,7 +338,7 @@ func (d *Dao) GetContactInfo(ctx context.Context, uid, contactId int64) (error, 
 		return err, nil
 	}
 
-	log.Printf("GetContactInfo read db ok uid(%d)\n", uid)
+	log.Printf("GetContactInfo read db ok uid(%d), contactInfo:%+v\n", uid, *contactInfo)
 	return nil, contactInfo
 }
 
@@ -332,7 +378,7 @@ func (d *Dao) GetConversationList(ctx context.Context, uid, sequence int64) (err
 	r = r.Table(model.Conversations{}.TableName()).Select("conversations.id as id, conversations.uid as uid, "+
 		"conversations.contact_id as contact_id, conversations.conversation_type as conversation_type, "+
 		"conversations.unread as unread, conversations.msg_digest as msg_digest, conversations.sequence as sequence, "+
-		"conversations.update_time as update_time, user_infos.username as username, "+
+		"conversations.update_time as update_time, user_infos.username as username,conversations.conversation_name as conversation_name, "+
 		"contacts.remark_name as remark_name, user_infos.motto as motto, user_infos.avatar as avatar").
 		Joins("left join contacts on conversations.contact_id=contacts.contact_id and conversations.uid=contacts.uid").
 		Joins("left join user_infos on conversations.contact_id=user_infos.uid where conversations.uid=? and conversations.sequence>?", uid, sequence)
@@ -345,4 +391,127 @@ func (d *Dao) GetConversationList(ctx context.Context, uid, sequence int64) (err
 
 	log.Printf("GetConversationList read db ok uid(%d), sequence(%d)\n", uid, sequence)
 	return nil, conDetails
+}
+
+func (d *Dao) GetConversation(ctx context.Context, uid, contactId int64) (error, *model.Conversations) {
+	r := d.db(ctx)
+	if uid == 0 || contactId == 0 {
+		log.Println("contact id is invalid")
+		return errors.New("contact id is invalid"), nil
+	}
+
+	conversationInfo := &model.Conversations{}
+	if err := r.Debug().Where("uid=? and contact_id=?", uid, contactId).First(&conversationInfo).Error; err != nil {
+		log.Printf("GetConversation read db error(%v) uid(%d)\n", err, uid)
+		return err, nil
+	}
+
+	log.Printf("GetConversation read db ok uid(%d), info(%+v)\n", uid, conversationInfo)
+	return nil, conversationInfo
+}
+
+func (d *Dao) SetConversation(ctx context.Context, conversationInfo *model.Conversations) error {
+	r := d.db(ctx)
+	if conversationInfo.Uid == 0 || conversationInfo.ContactID == 0 {
+		log.Println("uid invalid")
+		return errors.New("uid invalid")
+	}
+
+	r = r.Clauses(clause.OnConflict{
+		// key列
+		Columns: []clause.Column{{Name: "uid"}, {Name: "contact_id"}, {Name: "conversation_type"}},
+		// 需要更新的列
+		DoUpdates: clause.AssignmentColumns([]string{"conversation_name", "conversation_status",
+			"unread", "msg_digest", "sequence", "update_time"}),
+	}).Create(conversationInfo)
+
+	if err := r.Error; err != nil {
+		log.Printf("SetConversation update db error(%v) user info:%+v\n", err, conversationInfo)
+		return err
+	}
+
+	log.Printf("SetConversation update db ok user info:%+v\n", conversationInfo)
+	return nil
+}
+
+func (d *Dao) SetGroupInfo(ctx context.Context, groupInfo *model.Groups) error {
+	r := d.db(ctx)
+	if groupInfo.GroupID == 0 {
+		log.Println("group id invalid")
+		return errors.New("group id invalid")
+	}
+
+	r = r.Clauses(clause.OnConflict{
+		// key列
+		Columns: []clause.Column{{Name: "group_id"}},
+		// 需要更新的列
+		DoUpdates: clause.AssignmentColumns([]string{"group_status", "group_name",
+			"group_avatar", "group_tag", "group_announce", "sequence", "update_time"}),
+	}).Create(groupInfo)
+
+	if err := r.Error; err != nil {
+		log.Printf("SetGroupInfo update db error(%v) user info:%+v\n", err, groupInfo)
+		return err
+	}
+
+	log.Printf("SetGroupInfo update db ok user info:%+v\n", groupInfo)
+	return nil
+}
+
+func (d *Dao) GetGroupInfo(ctx context.Context, uid, GroupId int64) (error, *model.Groups) {
+	r := d.db(ctx)
+	if uid == 0 || GroupId == 0 {
+		log.Println("contact id is invalid")
+		return errors.New("contact id is invalid"), nil
+	}
+
+	groupInfo := &model.Groups{}
+	if err := r.Debug().Where("group_id=?", GroupId).First(&groupInfo).Error; err != nil {
+		log.Printf("GetGroupInfo read db error(%v) uid(%d)\n", err, uid)
+		return err, nil
+	}
+
+	log.Printf("GetGroupInfo read db ok uid(%d), info(%+v)\n", uid, groupInfo)
+	return nil, groupInfo
+}
+
+func (d *Dao) BatchAddGroupMember(ctx context.Context, groupMembers []*model.GroupMembers) error {
+	r := d.db(ctx)
+	if len(groupMembers) == 0 {
+		log.Println("group member empty")
+		return errors.New("group member empty")
+	}
+
+	r = r.Clauses(clause.OnConflict{
+		// key列
+		Columns: []clause.Column{{Name: "group_id"}, {Name: "uid"}},
+		// 需要更新的列
+		DoUpdates: clause.AssignmentColumns([]string{"user_role", "remark_name",
+			"sequence", "update_time"}),
+	}).Create(groupMembers)
+
+	if err := r.Error; err != nil {
+		log.Printf("BatchAddGroupMember update db error(%v) user info:%+v\n", err, groupMembers)
+		return err
+	}
+
+	log.Printf("BatchAddGroupMember update db ok user info:%+v\n", groupMembers)
+	return nil
+}
+
+func (d *Dao) GetGroupMemberList(ctx context.Context, groupId int64) (error, []*model.GroupMembers) {
+	r := d.db(ctx)
+	if groupId == 0 {
+		log.Println("group id is invalid")
+		return errors.New("group id is invalid"), nil
+	}
+
+	groupMembers := make([]*model.GroupMembers, 0)
+	if err := r.Table(model.GroupMembers{}.TableName()).Debug().Where("group_id=?", groupId).Scan(&groupMembers).Error; err != nil {
+		log.Printf("GetGroupMemberList read db error(%v) groupId(%d)\n", err, groupId)
+		return err, nil
+	}
+
+	log.Printf("GetGroupInfo read db ok groupId(%d), members size:%d\n", groupId, len(groupMembers))
+	return nil, groupMembers
 }

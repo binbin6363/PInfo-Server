@@ -1,6 +1,7 @@
 package emoticon
 
 import (
+	"PInfo-server/api"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -9,14 +10,19 @@ func emoticonListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "ok",
-		"data":    nil,
+		"data": &api.EmoticonListRsp{
+			CollectEmoticon: nil,
+			SystemEmoticon:  nil,
+		},
 	})
 }
 func emoticonSystemListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "ok",
-		"data":    nil,
+		"data": &api.EmoticonListRsp{
+			SystemEmoticon: nil,
+		},
 	})
 }
 
