@@ -14,6 +14,7 @@ type ServerInfo struct {
 	TokenExpire  int    `yaml:"token_expire"`
 	DataCenterId int64  `yaml:"data_center_id"`
 	WorkerId     int64  `yaml:"worker_id"`
+	DebugReqRsp  bool   `yaml:"debug_req_rsp"`
 }
 
 // DBInfo db信息
@@ -56,5 +57,5 @@ func Init(file string) {
 		log.Fatalf("Unmarshal conf fail, err:%v", err)
 	}
 
-	log.Printf("load conf ok, path:%s, conf:\n%v\n", file, string(configFile))
+	log.Printf("load conf ok, path:%s, conf:%v", file, string(configFile))
 }

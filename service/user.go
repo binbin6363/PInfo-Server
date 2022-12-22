@@ -2,22 +2,22 @@ package service
 
 import (
 	"PInfo-server/api"
+	"PInfo-server/log"
 	"PInfo-server/model"
 	"PInfo-server/utils"
 	"context"
 	"errors"
-	"log"
 	"time"
 )
 
 func (s *Service) GetUserInfo(ctx context.Context, username string) (error, *model.UserInfo) {
 	err, userInfo := s.dao.GetUserInfoByUserName(ctx, username)
 	if err != nil {
-		log.Printf("query user info failed, err:%v\n", err)
+		log.Infof("query user info failed, err:%v", err)
 		return err, nil
 	}
 
-	log.Printf("ok get user info:%+v", userInfo)
+	log.Infof("ok get user info:%+v", userInfo)
 	return nil, userInfo
 }
 
@@ -32,11 +32,11 @@ func (s *Service) SetUserInfo(ctx context.Context, uid int64, req *api.ModifyUse
 	userInfo.Motto = req.Motto
 	err = s.dao.SetUserInfo(ctx, userInfo)
 	if err != nil {
-		log.Printf("query user info failed, err:%v\n", err)
+		log.Infof("query user info failed, err:%v", err)
 		return err
 	}
 
-	log.Printf("ok modify user info:%+v", userInfo)
+	log.Infof("ok modify user info:%+v", userInfo)
 	return nil
 }
 
@@ -66,10 +66,10 @@ func (s *Service) RegisterUser(ctx context.Context, uid int64, req *api.Register
 	if err != nil {
 		rsp.Code = 4001
 		rsp.Message = "内部错误"
-		log.Printf("user:%s pass hash failed, pass:%s\n", req.UserName, req.Password)
+		log.Infof("user:%s pass hash failed, pass:%s", req.UserName, req.Password)
 		return errors.New("内部错误"), rsp
 	}
-	log.Printf("user:%s pass hash:%s\n", req.UserName, passHash)
+	log.Infof("user:%s pass hash:%s", req.UserName, passHash)
 
 	userInfo := &model.UserInfo{
 		UserName:   req.UserName,
@@ -88,7 +88,7 @@ func (s *Service) RegisterUser(ctx context.Context, uid int64, req *api.Register
 	// 申请用户ID
 	err, userInfo.Uid = s.dao.AllocNewUserID(ctx)
 	if err != nil {
-		log.Printf("alloc user id failed, err:%v, user info:%+v\n", err, userInfo)
+		log.Infof("alloc user id failed, err:%v, user info:%+v", err, userInfo)
 		rsp.Code = 4002
 		rsp.Message = "内部错误"
 		return errors.New("内部错误"), rsp
@@ -96,13 +96,13 @@ func (s *Service) RegisterUser(ctx context.Context, uid int64, req *api.Register
 
 	err = s.dao.SetUserInfo(ctx, userInfo)
 	if err != nil {
-		log.Printf("register user failed, err:%v, user info:%+v\n", err, userInfo)
+		log.Infof("register user failed, err:%v, user info:%+v", err, userInfo)
 		rsp.Code = 4002
 		rsp.Message = "内部错误"
 		return errors.New("内部错误"), rsp
 	}
 
-	log.Printf("[INFO] register user ok, user:%s, nick:%s, pass hash:%s\n",
+	log.Infof("register user ok, user:%s, nick:%s, pass hash:%s",
 		req.UserName, req.NickName, userInfo.PassHash)
 	return nil, rsp
 }

@@ -35,7 +35,7 @@ func groupMembersHandler(c *gin.Context) {
 }
 
 func groupListHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -45,7 +45,7 @@ func groupListHandler(c *gin.Context) {
 }
 
 func getGroupDetailHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -79,7 +79,7 @@ func createGroupHandler(c *gin.Context) {
 }
 
 func modifyGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -89,7 +89,7 @@ func modifyGroupHandler(c *gin.Context) {
 }
 
 func inviteGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -99,7 +99,7 @@ func inviteGroupHandler(c *gin.Context) {
 }
 
 func removeGroupMemberHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -109,7 +109,7 @@ func removeGroupMemberHandler(c *gin.Context) {
 }
 
 func dismissGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -119,7 +119,7 @@ func dismissGroupHandler(c *gin.Context) {
 }
 
 func secedeGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -129,7 +129,7 @@ func secedeGroupHandler(c *gin.Context) {
 }
 
 func remarkGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -139,7 +139,7 @@ func remarkGroupHandler(c *gin.Context) {
 }
 
 func getGroupMemberListHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -149,7 +149,7 @@ func getGroupMemberListHandler(c *gin.Context) {
 }
 
 func getGroupNoticesHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -159,7 +159,7 @@ func getGroupNoticesHandler(c *gin.Context) {
 }
 
 func editGroupNoticeHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "Hello Welcome to PIM",

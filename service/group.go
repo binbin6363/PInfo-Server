@@ -2,10 +2,10 @@ package service
 
 import (
 	"PInfo-server/api"
+	"PInfo-server/log"
 	"PInfo-server/model"
 	"context"
 	"github.com/spf13/cast"
-	"log"
 	"strings"
 	"time"
 )
@@ -35,7 +35,7 @@ func (s *Service) GetGroupMembers(ctx context.Context, req *api.GroupMembersReq)
 				IsOnline:     1,
 			}
 			inviteGroupRsp = append(inviteGroupRsp, mem)
-			log.Printf("==== group mem:%+v\n", mem)
+			log.Infof("==== group mem:%+v", mem)
 		}
 
 		rsp.Data = inviteGroupRsp
@@ -82,6 +82,18 @@ func (s *Service) CreateGroup(ctx context.Context, req *api.CreateGroupReq) (err
 
 	// 群成员写入db
 	groupMembers := make([]*model.GroupMembers, 0)
+	// 先加自己
+	groupMembers = append(groupMembers, &model.GroupMembers{
+		GroupID:    createGroupRsp.GroupId,
+		Uid:        req.Uid,
+		UserRole:   2, // 创建者是管理员
+		RemarkName: "",
+		Sequence:   nowTime,
+		CreateTime: nowTime,
+		UpdateTime: nowTime,
+	})
+	log.Infof("create group, admin:%v", groupMembers[0])
+
 	idList := strings.Split(req.Ids, ",")
 	for _, id := range idList {
 		uid := cast.ToInt64(id)
@@ -95,6 +107,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *api.CreateGroupReq) (err
 			UpdateTime: nowTime,
 		}
 		groupMembers = append(groupMembers, groupMember)
+		log.Infof("create group, add group user:%v", groupMember)
 	}
 
 	if err = s.dao.BatchAddGroupMember(ctx, groupMembers); err != nil {
@@ -118,12 +131,12 @@ func (s *Service) CreateGroup(ctx context.Context, req *api.CreateGroupReq) (err
 	}
 
 	if err := s.dao.UpdateConversationGroupMsg(ctx, []*model.Conversations{con}); err != nil {
-		log.Printf("save msg for Conversation failed! group id:%d, group name:%s\n", createGroupRsp.GroupId, groupInfo.GroupName)
+		log.Infof("save msg for Conversation failed! group id:%d, group name:%s", createGroupRsp.GroupId, groupInfo.GroupName)
 		return err, nil
 	}
 
 	rsp.Data = createGroupRsp
 
-	log.Printf("[INFO] create group ok, req:%+v, rsp:%+v\n", req, rsp)
+	log.Infof("create group ok, req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }

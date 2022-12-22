@@ -40,7 +40,7 @@ func loginHandler(c *gin.Context) {
 	}
 
 	_, enc := utils.EncryptPassword(loginReq.PassWord)
-	log.Printf("enc passwd hash:%s\n", enc)
+	log.Printf("enc passwd hash:%s", enc)
 
 	// 验证密码
 	if !utils.CheckPasswordHash(loginReq.PassWord, detailInfo.PassHash) {
@@ -51,7 +51,7 @@ func loginHandler(c *gin.Context) {
 		})
 		return
 	}
-	log.Printf("passwd check pass\n")
+	log.Printf("passwd check pass")
 
 	// 生成token
 	err, token := service.DefaultService.CreateJwt(context.TODO(), userInfo)
@@ -92,9 +92,9 @@ func loginHandler(c *gin.Context) {
 		url := fmt.Sprintf("http://%s/notice/auth/login", config.AppConfig().ConnInfo.Addr)
 		_, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
 		if err != nil {
-			log.Printf("post conn failed, err:%+v\n", err)
+			log.Printf("post conn failed, err:%+v", err)
 		} else {
-			log.Printf("post conn success, req:%+v\n", req)
+			log.Printf("post conn success, req:%+v", req)
 		}
 	*/
 }

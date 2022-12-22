@@ -1,13 +1,13 @@
 package dao
 
 import (
-	"PInfo-server/model"
-	"PInfo-server/utils"
 	"context"
 	"errors"
 	"gorm.io/gorm/clause"
-	"log"
 
+	"PInfo-server/log"
+	"PInfo-server/model"
+	"PInfo-server/utils"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -33,7 +33,7 @@ func New(dsn string, dataCenterId, WorkerId int64) *Dao {
 	if err != nil {
 		log.Fatalf("dao: NewSnowflake error(%v), dataCenterId:%d, WorkerId:%d", err, dataCenterId, WorkerId)
 	}
-	log.Printf("dao: NewSnowflake dataCenterId:%d, WorkerId:%d\n", dataCenterId, WorkerId)
+	log.Infof("dao: NewSnowflake dataCenterId:%d, WorkerId:%d", dataCenterId, WorkerId)
 	d.sf = s
 
 	return d
@@ -57,17 +57,17 @@ func (d *Dao) GenGroupID() int64 {
 func (d *Dao) GetUserInfoByUserName(ctx context.Context, username string) (error, *model.UserInfo) {
 	r := d.db(ctx)
 	if username == "" {
-		log.Println("username is empty, invalid")
+		log.Error("username is empty, invalid")
 		return errors.New("username is invalid"), nil
 	}
 
 	userInfo := &model.UserInfo{}
 	if err := r.Debug().Where("username=?", username).Limit(1).Find(&userInfo).Error; err != nil {
-		log.Printf("GetUserInfoByUserName read db error(%v) username(%s)\n", err, username)
+		log.Infof("GetUserInfoByUserName read db error(%v) username(%s)", err, username)
 		return err, nil
 	}
 
-	log.Printf("GetUserInfoByUserName read db ok username(%s), info:%+v\n", username, userInfo)
+	log.Infof("GetUserInfoByUserName read db ok username(%s), info:%+v", username, userInfo)
 	return nil, userInfo
 }
 
@@ -75,17 +75,17 @@ func (d *Dao) GetUserInfoByUserName(ctx context.Context, username string) (error
 func (d *Dao) GetUserInfoByUid(ctx context.Context, uid int64) (error, *model.UserInfo) {
 	r := d.db(ctx)
 	if uid == 0 {
-		log.Println("uid is invalid")
+		log.Error("uid is invalid")
 		return errors.New("uid is invalid"), nil
 	}
 
 	userInfo := &model.UserInfo{}
 	if err := r.Debug().Where("uid=?", uid).Limit(1).Find(&userInfo).Error; err != nil {
-		log.Printf("GetUserInfoByUid read db error(%v) uid(%d)\n", err, uid)
+		log.Infof("GetUserInfoByUid read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
-	log.Printf("GetUserInfoByUid read db ok uid(%d)\n", uid)
+	log.Infof("GetUserInfoByUid read db ok uid(%d)", uid)
 	return nil, userInfo
 }
 
@@ -93,7 +93,7 @@ func (d *Dao) GetUserInfoByUid(ctx context.Context, uid int64) (error, *model.Us
 func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 	r := d.db(ctx)
 	if userInfo.Uid == 0 {
-		log.Println("uid invalid")
+		log.Error("uid invalid")
 		return errors.New("uid invalid")
 	}
 
@@ -106,11 +106,11 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 	}).Create(userInfo)
 
 	if err := r.Error; err != nil {
-		log.Printf("SetUserInfo update db error(%v) user info:%+v\n", err, userInfo)
+		log.Infof("SetUserInfo update db error(%v) user info:%+v", err, userInfo)
 		return err
 	}
 
-	log.Printf("SetUserInfo update db ok user info:%+v\n", userInfo)
+	log.Infof("SetUserInfo update db ok user info:%+v", userInfo)
 	return nil
 }
 
@@ -119,7 +119,7 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 func (d *Dao) GetContactList(ctx context.Context, uid int64, status int) (error, []*model.UserContact) {
 	r := d.db(ctx)
 	if uid == 0 {
-		log.Println("uid is invalid")
+		log.Error("uid is invalid")
 		return errors.New("uid is invalid"), nil
 	}
 
@@ -131,11 +131,11 @@ func (d *Dao) GetContactList(ctx context.Context, uid int64, status int) (error,
 
 	userContacts := make([]*model.UserContact, 0)
 	if err := r.Debug().Scan(&userContacts).Error; err != nil {
-		log.Printf("GetContactList read db error(%v) uid(%d)\n", err, uid)
+		log.Infof("GetContactList read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
-	log.Printf("GetContactList read db ok uid(%d)", uid)
+	log.Infof("GetContactList read db ok uid(%d)", uid)
 	return nil, userContacts
 }
 
@@ -143,16 +143,16 @@ func (d *Dao) GetContactList(ctx context.Context, uid int64, status int) (error,
 func (d *Dao) AddOneSingleMessage(ctx context.Context, msg *model.SingleMessages) error {
 	r := d.db(ctx)
 	if msg.Uid == 0 || msg.MsgID == 0 {
-		log.Println("uid|msgid invalid")
+		log.Error("uid|msgid invalid")
 		return errors.New("uid|msgid invalid")
 	}
 
 	if err := r.Debug().Create(msg).Error; err != nil {
-		log.Printf("AddOneSingleMessage insert db error(%v) msg:%+v\n", err, msg)
+		log.Infof("AddOneSingleMessage insert db error(%v) msg:%+v", err, msg)
 		return err
 	}
 
-	log.Printf("AddOneSingleMessage insert db ok msg:%+v\n", msg)
+	log.Infof("AddOneSingleMessage insert db ok msg:%+v", msg)
 	return nil
 }
 
@@ -160,16 +160,16 @@ func (d *Dao) AddOneSingleMessage(ctx context.Context, msg *model.SingleMessages
 func (d *Dao) AddOneGroupMessage(ctx context.Context, msg *model.GroupMessages) error {
 	r := d.db(ctx)
 	if msg.GroupID == 0 || msg.MsgID == 0 {
-		log.Println("group id|msgid invalid")
+		log.Error("group id|msgid invalid")
 		return errors.New("group id|msgid invalid")
 	}
 
 	if err := r.Debug().Create(msg).Error; err != nil {
-		log.Printf("AddOneGroupMessage insert db error(%v) msg:%+v\n", err, msg)
+		log.Infof("AddOneGroupMessage insert db error(%v) msg:%+v", err, msg)
 		return err
 	}
 
-	log.Printf("AddOneGroupMessage insert db ok msg:%+v\n", msg)
+	log.Infof("AddOneGroupMessage insert db ok msg:%+v", msg)
 	return nil
 }
 
@@ -177,7 +177,7 @@ func (d *Dao) AddOneGroupMessage(ctx context.Context, msg *model.GroupMessages) 
 func (d *Dao) UpdateConversationSingleMsg(ctx context.Context, con *model.Conversations) error {
 	r := d.db(ctx)
 	if con.Uid == 0 || con.ContactID == 0 {
-		log.Println("uid invalid")
+		log.Error("uid invalid")
 		return errors.New("uid invalid")
 	}
 
@@ -191,7 +191,7 @@ func (d *Dao) UpdateConversationSingleMsg(ctx context.Context, con *model.Conver
 	// 未读数加1
 	r.Debug().UpdateColumn("unread", gorm.Expr("unread + ?", 1))
 
-	log.Printf("UpdateConversationSingleMsg update db ok conversations info:%+v\n", con)
+	log.Infof("UpdateConversationSingleMsg update db ok conversations info:%+v", con)
 	return nil
 }
 
@@ -199,7 +199,7 @@ func (d *Dao) UpdateConversationSingleMsg(ctx context.Context, con *model.Conver
 func (d *Dao) UpdateConversationGroupMsg(ctx context.Context, con []*model.Conversations) error {
 	r := d.db(ctx)
 	if len(con) == 0 {
-		log.Println("group id invalid")
+		log.Error("group id invalid")
 		return errors.New("group id invalid")
 	}
 
@@ -214,7 +214,7 @@ func (d *Dao) UpdateConversationGroupMsg(ctx context.Context, con []*model.Conve
 	// 群成员未读数加1
 	r.Table(model.Conversations{}.TableName()).Debug().Where("contact_id=?", con[0].ContactID).UpdateColumn("unread", gorm.Expr("unread + ?", 1))
 
-	log.Printf("UpdateConversationGroupMsg update db ok conversations info:%+v\n", con)
+	log.Infof("UpdateConversationGroupMsg update db ok conversations info:%+v", con)
 	return nil
 }
 
@@ -222,7 +222,7 @@ func (d *Dao) UpdateConversationGroupMsg(ctx context.Context, con []*model.Conve
 func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int64, limit int) (error, []*model.SingleMessages) {
 	r := d.db(ctx)
 	if uid == 0 || peerUid == 0 {
-		log.Println("uid|msgid invalid")
+		log.Error("uid|msgid invalid")
 		return errors.New("uid|msgid invalid"), nil
 	}
 
@@ -238,11 +238,39 @@ func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int
 
 	msgList := make([]*model.SingleMessages, 0)
 	if err := r.Debug().Find(&msgList).Error; err != nil {
-		log.Printf("QuerySingleMessage read db error(%v)\n", err)
+		log.Infof("QuerySingleMessage read db error(%v)", err)
 		return err, nil
 	}
 
-	log.Printf("QuerySingleMessage ok, msg size:%d", len(msgList))
+	log.Infof("QuerySingleMessage ok, msg size:%d", len(msgList))
+	return nil, msgList
+}
+
+// QueryGroupMessage 拉取群历史消息
+func (d *Dao) QueryGroupMessage(ctx context.Context, groupId, minMsgId int64, limit int) (error, []*model.GroupMessages) {
+	r := d.db(ctx)
+	if groupId == 0 {
+		log.Error("groupId invalid")
+		return errors.New("groupId invalid"), nil
+	}
+
+	// 如果id为0，从最大开始拉
+	if minMsgId == 0 {
+		r = r.Where("groupid=?", groupId)
+	} else {
+		r = r.Where("groupid=? and msgid<?", groupId, minMsgId)
+	}
+	// 分页，取第index页的count条数据。倒序
+	r = r.Order(clause.OrderByColumn{Column: clause.Column{Name: "msgid"}, Desc: true})
+	r = r.Limit(limit)
+
+	msgList := make([]*model.GroupMessages, 0)
+	if err := r.Debug().Find(&msgList).Error; err != nil {
+		log.Infof("QueryGroupMessage read db error(%v)", err)
+		return err, nil
+	}
+
+	log.Infof("QueryGroupMessage ok, msg size:%d", len(msgList))
 	return nil, msgList
 }
 
@@ -257,21 +285,21 @@ func (d *Dao) CheckUserExist(ctx context.Context, username string) (err error, e
 	err = r.Debug().Table("user_infos").Select([]string{"username", "create_time"}).
 		Where("username=?", username).First(&res).Error
 	if err == gorm.ErrRecordNotFound {
-		log.Printf("user not exist\n")
+		log.Infof("user not exist")
 		return err, false
 	}
 
 	if err != nil {
-		log.Printf("query user name failed, err:%+v\n", err)
+		log.Infof("query user name failed, err:%+v", err)
 		return err, false
 	}
 
 	if res.UserName == "" {
-		log.Printf("user %s not exist\n", username)
+		log.Infof("user %s not exist", username)
 		return nil, false
 	}
 
-	log.Printf("user exist, name:%s, create time:%d", res.UserName, res.CreateTime)
+	log.Infof("user exist, name:%s, create time:%d", res.UserName, res.CreateTime)
 	return nil, true
 }
 
@@ -291,12 +319,12 @@ func (d *Dao) AllocNewUserID(ctx context.Context) (err error, uid int64) {
 	}).Select([]string{"uid"}).Scan(&res).Error
 
 	if err != nil {
-		log.Printf("alloc user id failed, err:%+v", err)
+		log.Infof("alloc user id failed, err:%+v", err)
 		return err, 0
 	}
 
 	uid = res.Uid + 1
-	log.Printf("alloc user id ok, id:%d", uid)
+	log.Infof("alloc user id ok, id:%d", uid)
 	return nil, uid
 }
 
@@ -304,7 +332,7 @@ func (d *Dao) AllocNewUserID(ctx context.Context) (err error, uid int64) {
 func (d *Dao) GetContactDetailInfo(ctx context.Context, uid, contactId int64) (error, *model.UserContact) {
 	r := d.db(ctx)
 	if uid == 0 {
-		log.Println("contact id is invalid")
+		log.Error("contact id is invalid")
 		return errors.New("contact id is invalid"), nil
 	}
 
@@ -316,11 +344,11 @@ func (d *Dao) GetContactDetailInfo(ctx context.Context, uid, contactId int64) (e
 
 	userContacts := &model.UserContact{}
 	if err := r.Debug().First(&userContacts).Error; err != nil {
-		log.Printf("GetContactList read db error(%v) uid(%d)\n", err, uid)
+		log.Infof("GetContactList read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
-	log.Printf("GetContactDetailInfo read db ok uid(%d)\n", uid)
+	log.Infof("GetContactDetailInfo read db ok uid(%d)", uid)
 	return nil, userContacts
 }
 
@@ -328,24 +356,24 @@ func (d *Dao) GetContactDetailInfo(ctx context.Context, uid, contactId int64) (e
 func (d *Dao) GetContactInfo(ctx context.Context, uid, contactId int64) (error, *model.Contacts) {
 	r := d.db(ctx)
 	if uid == 0 || contactId == 0 {
-		log.Println("contact id is invalid")
+		log.Error("contact id is invalid")
 		return errors.New("contact id is invalid"), nil
 	}
 
 	contactInfo := &model.Contacts{}
 	if err := r.Debug().Where("uid=? and contact_id=?", uid, contactId).First(&contactInfo).Error; err != nil {
-		log.Printf("GetContactInfo read db error(%v) uid(%d)\n", err, uid)
+		log.Infof("GetContactInfo read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
-	log.Printf("GetContactInfo read db ok uid(%d), contactInfo:%+v\n", uid, *contactInfo)
+	log.Infof("GetContactInfo read db ok uid(%d), contactInfo:%+v", uid, *contactInfo)
 	return nil, contactInfo
 }
 
 func (d *Dao) SetContactInfo(ctx context.Context, contact *model.Contacts) error {
 	r := d.db(ctx)
 	if contact.Uid == 0 || contact.ContactID == 0 {
-		log.Println("uid invalid")
+		log.Error("uid invalid")
 		return errors.New("uid invalid")
 	}
 
@@ -358,11 +386,11 @@ func (d *Dao) SetContactInfo(ctx context.Context, contact *model.Contacts) error
 	}).Create(contact)
 
 	if err := r.Error; err != nil {
-		log.Printf("SetContactInfo update db error(%v) user info:%+v\n", err, contact)
+		log.Infof("SetContactInfo update db error(%v) user info:%+v", err, contact)
 		return err
 	}
 
-	log.Printf("SetContactInfo update db ok user info:%+v\n", contact)
+	log.Infof("SetContactInfo update db ok user info:%+v", contact)
 	return nil
 }
 
@@ -370,7 +398,7 @@ func (d *Dao) SetContactInfo(ctx context.Context, contact *model.Contacts) error
 func (d *Dao) GetConversationList(ctx context.Context, uid, sequence int64) (error, []*model.ConversationDetails) {
 	r := d.db(ctx)
 	if uid == 0 {
-		log.Println("uid is invalid")
+		log.Error("uid is invalid")
 		return errors.New("uid is invalid"), nil
 	}
 
@@ -385,35 +413,35 @@ func (d *Dao) GetConversationList(ctx context.Context, uid, sequence int64) (err
 
 	conDetails := make([]*model.ConversationDetails, 0)
 	if err := r.Debug().Scan(&conDetails).Error; err != nil {
-		log.Printf("GetConversationList read db error(%v) uid(%d)\n", err, uid)
+		log.Infof("GetConversationList read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
-	log.Printf("GetConversationList read db ok uid(%d), sequence(%d)\n", uid, sequence)
+	log.Infof("GetConversationList read db ok uid(%d), sequence(%d)", uid, sequence)
 	return nil, conDetails
 }
 
 func (d *Dao) GetConversation(ctx context.Context, uid, contactId int64) (error, *model.Conversations) {
 	r := d.db(ctx)
 	if uid == 0 || contactId == 0 {
-		log.Println("contact id is invalid")
+		log.Error("contact id is invalid")
 		return errors.New("contact id is invalid"), nil
 	}
 
 	conversationInfo := &model.Conversations{}
 	if err := r.Debug().Where("uid=? and contact_id=?", uid, contactId).First(&conversationInfo).Error; err != nil {
-		log.Printf("GetConversation read db error(%v) uid(%d)\n", err, uid)
+		log.Infof("GetConversation read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
-	log.Printf("GetConversation read db ok uid(%d), info(%+v)\n", uid, conversationInfo)
+	log.Infof("GetConversation read db ok uid(%d), info(%+v)", uid, conversationInfo)
 	return nil, conversationInfo
 }
 
 func (d *Dao) SetConversation(ctx context.Context, conversationInfo *model.Conversations) error {
 	r := d.db(ctx)
 	if conversationInfo.Uid == 0 || conversationInfo.ContactID == 0 {
-		log.Println("uid invalid")
+		log.Error("uid invalid")
 		return errors.New("uid invalid")
 	}
 
@@ -426,18 +454,18 @@ func (d *Dao) SetConversation(ctx context.Context, conversationInfo *model.Conve
 	}).Create(conversationInfo)
 
 	if err := r.Error; err != nil {
-		log.Printf("SetConversation update db error(%v) user info:%+v\n", err, conversationInfo)
+		log.Infof("SetConversation update db error(%v) user info:%+v", err, conversationInfo)
 		return err
 	}
 
-	log.Printf("SetConversation update db ok user info:%+v\n", conversationInfo)
+	log.Infof("SetConversation update db ok user info:%+v", conversationInfo)
 	return nil
 }
 
 func (d *Dao) SetGroupInfo(ctx context.Context, groupInfo *model.Groups) error {
 	r := d.db(ctx)
 	if groupInfo.GroupID == 0 {
-		log.Println("group id invalid")
+		log.Error("group id invalid")
 		return errors.New("group id invalid")
 	}
 
@@ -450,35 +478,35 @@ func (d *Dao) SetGroupInfo(ctx context.Context, groupInfo *model.Groups) error {
 	}).Create(groupInfo)
 
 	if err := r.Error; err != nil {
-		log.Printf("SetGroupInfo update db error(%v) user info:%+v\n", err, groupInfo)
+		log.Infof("SetGroupInfo update db error(%v) user info:%+v", err, groupInfo)
 		return err
 	}
 
-	log.Printf("SetGroupInfo update db ok user info:%+v\n", groupInfo)
+	log.Infof("SetGroupInfo update db ok user info:%+v", groupInfo)
 	return nil
 }
 
 func (d *Dao) GetGroupInfo(ctx context.Context, uid, GroupId int64) (error, *model.Groups) {
 	r := d.db(ctx)
 	if uid == 0 || GroupId == 0 {
-		log.Println("contact id is invalid")
+		log.Error("contact id is invalid")
 		return errors.New("contact id is invalid"), nil
 	}
 
 	groupInfo := &model.Groups{}
 	if err := r.Debug().Where("group_id=?", GroupId).First(&groupInfo).Error; err != nil {
-		log.Printf("GetGroupInfo read db error(%v) uid(%d)\n", err, uid)
+		log.Infof("GetGroupInfo read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
-	log.Printf("GetGroupInfo read db ok uid(%d), info(%+v)\n", uid, groupInfo)
+	log.Infof("GetGroupInfo read db ok uid(%d), info(%+v)", uid, groupInfo)
 	return nil, groupInfo
 }
 
 func (d *Dao) BatchAddGroupMember(ctx context.Context, groupMembers []*model.GroupMembers) error {
 	r := d.db(ctx)
 	if len(groupMembers) == 0 {
-		log.Println("group member empty")
+		log.Error("group member empty")
 		return errors.New("group member empty")
 	}
 
@@ -491,27 +519,27 @@ func (d *Dao) BatchAddGroupMember(ctx context.Context, groupMembers []*model.Gro
 	}).Create(groupMembers)
 
 	if err := r.Error; err != nil {
-		log.Printf("BatchAddGroupMember update db error(%v) user info:%+v\n", err, groupMembers)
+		log.Infof("BatchAddGroupMember update db error(%v) user info:%+v", err, groupMembers)
 		return err
 	}
 
-	log.Printf("BatchAddGroupMember update db ok user info:%+v\n", groupMembers)
+	log.Infof("BatchAddGroupMember update db ok, add user size:%d", len(groupMembers))
 	return nil
 }
 
 func (d *Dao) GetGroupMemberList(ctx context.Context, groupId int64) (error, []*model.GroupMembers) {
 	r := d.db(ctx)
 	if groupId == 0 {
-		log.Println("group id is invalid")
+		log.Error("group id is invalid")
 		return errors.New("group id is invalid"), nil
 	}
 
 	groupMembers := make([]*model.GroupMembers, 0)
 	if err := r.Table(model.GroupMembers{}.TableName()).Debug().Where("group_id=?", groupId).Scan(&groupMembers).Error; err != nil {
-		log.Printf("GetGroupMemberList read db error(%v) groupId(%d)\n", err, groupId)
+		log.Infof("GetGroupMemberList read db error(%v) groupId(%d)", err, groupId)
 		return err, nil
 	}
 
-	log.Printf("GetGroupInfo read db ok groupId(%d), members size:%d\n", groupId, len(groupMembers))
+	log.Infof("GetGroupInfo read db ok groupId(%d), members size:%d", groupId, len(groupMembers))
 	return nil, groupMembers
 }

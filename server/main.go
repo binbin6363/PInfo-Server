@@ -1,6 +1,7 @@
 package main
 
 import (
+	"PInfo-server/log"
 	"PInfo-server/routers"
 	"PInfo-server/routers/auth"
 	"PInfo-server/routers/chat"
@@ -12,7 +13,6 @@ import (
 	"PInfo-server/routers/users"
 	"PInfo-server/service"
 	"flag"
-	"log"
 
 	"PInfo-server/config"
 
@@ -21,6 +21,7 @@ import (
 
 func main() {
 	confFile := flag.String("f", "../etc/conf.yaml", "配置文件路径")
+	log.InitLogger("./info_server.log", 100, 5, 30)
 
 	flag.Parse()
 	config.Init(*confFile)
@@ -35,6 +36,6 @@ func main() {
 	service.Init()
 
 	if err := r.Run(config.AppConfig().ServerInfo.Listen); err != nil {
-		log.Fatalf("startup service failed, err:%v\n\n", err)
+		log.Fatalf("startup service failed, err:%v", err)
 	}
 }

@@ -66,7 +66,7 @@ func contactSearchHandler(c *gin.Context) {
 
 // deleteContactHandler 解除好友关系服务接口
 func deleteContactHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "Hello Welcome to PIM",
@@ -124,7 +124,7 @@ func contactDetailHandler(c *gin.Context) {
 
 // unreadNumHandler 查询好友申请未读数量服务接口
 func unreadNumHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "Hello Welcome to PIM",
@@ -193,7 +193,7 @@ func addContactHandler(c *gin.Context) {
 	utils.SendJsonRsp(c, rsp)
 
 	/*
-		log.Printf("unimplemented\n")
+		log.Printf("unimplemented")
 		c.JSON(http.StatusOK, gin.H{
 			"code":    200,
 			"message": "Hello Welcome to PIM",

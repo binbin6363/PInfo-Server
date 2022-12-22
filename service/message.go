@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
 	"PInfo-server/api"
 	"PInfo-server/config"
+	"PInfo-server/log"
 	"PInfo-server/model"
 )
 
@@ -33,7 +34,7 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 	// 给发送者插入消息
 	msg.Uid = req.Uid
 	if err := s.dao.AddOneSingleMessage(ctx, msg); err != nil {
-		log.Printf("save msg for sender failed! info:%+v\n", msg)
+		log.Infof("save msg for sender failed! info:%+v", msg)
 		return err, nil
 	}
 
@@ -51,7 +52,7 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 		UpdateTime:         msg.UpdateTime,
 	}
 	if err := s.dao.UpdateConversationSingleMsg(ctx, con); err != nil {
-		log.Printf("save msg for Conversation failed! info:%+v\n", con)
+		log.Infof("save msg for Conversation failed! info:%+v", con)
 		return err, nil
 	}
 
@@ -59,7 +60,7 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 	msg.ID = 0
 	if err := s.dao.AddOneSingleMessage(ctx, msg); err != nil {
 		// 此步骤只许成功，不能失败。失败要进离线队列
-		log.Printf("save msg for receiver failed! info:%+v\n", msg)
+		log.Infof("save msg for receiver failed! info:%+v", msg)
 		//return err
 	}
 
@@ -67,7 +68,7 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 	con.Uid = req.ReceiverId
 	con.ContactID = req.Uid
 	if err := s.dao.UpdateConversationSingleMsg(ctx, con); err != nil {
-		log.Printf("save msg for Conversation failed! info:%+v\n", con)
+		log.Infof("save msg for Conversation failed! info:%+v", con)
 		return err, nil
 	}
 
@@ -108,10 +109,10 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 	resp, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
 	defer resp.Body.Close()
 	if err != nil {
-		log.Printf("notify conn failed, err:%+v\n", err)
+		log.Infof("notify conn failed, err:%+v", err)
 	} else {
 		body, _ := ioutil.ReadAll(resp.Body)
-		log.Printf("notify conn success, req:%+v, rsp:%s\n", req, string(body))
+		log.Infof("notify conn success, req:%+v, rsp:%s", req, string(body))
 	}
 
 	// 更新会话列表
@@ -135,12 +136,16 @@ func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsg
 
 	// 群消息入库
 	if err := s.dao.AddOneGroupMessage(ctx, msg); err != nil {
-		log.Printf("save group msg for sender failed! info:%+v\n", msg)
+		log.Infof("save group msg for sender failed! info:%+v", msg)
 		return err, nil
 	}
 
 	// 获取群头像
-	_, groupInfo := s.dao.GetGroupInfo(ctx, req.Uid, req.ReceiverId)
+	err, groupInfo := s.dao.GetGroupInfo(ctx, req.Uid, groupId)
+	if err == gorm.ErrRecordNotFound {
+		log.Errorf("group not exist, group id:%d", groupId)
+		return err, nil
+	}
 
 	// 获取群成员ID列表
 	_, groupMembers := s.dao.GetGroupMemberList(ctx, groupId)
@@ -161,7 +166,7 @@ func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsg
 		conversationList = append(conversationList, con)
 	}
 	if err := s.dao.UpdateConversationGroupMsg(ctx, conversationList); err != nil {
-		log.Printf("save msg for Conversation failed! group id:%d, group name:%s\n", groupId, groupInfo.GroupName)
+		log.Infof("save msg for Conversation failed! group id:%d, group name:%s", groupId, groupInfo.GroupName)
 		return err, nil
 	}
 	// 前端设计不合理，消息竟然需要携带用户信息
@@ -201,10 +206,10 @@ func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsg
 	resp, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
 	defer resp.Body.Close()
 	if err != nil {
-		log.Printf("notify conn failed, err:%+v\n", err)
+		log.Infof("notify conn failed, err:%+v", err)
 	} else {
 		body, _ := ioutil.ReadAll(resp.Body)
-		log.Printf("notify conn success, req:%+v, rsp:%s\n", req, string(body))
+		log.Infof("notify conn success, req:%+v, rsp:%s", req, string(body))
 	}
 
 	// 更新会话列表
@@ -219,53 +224,114 @@ func (s *Service) SendTextMessage(ctx context.Context, req *api.SendTextMsgReq) 
 	} else if req.TalkType == 2 {
 		return s.sendGroupTextMessage(ctx, req)
 	} else {
-		log.Printf("unsupported talk type:%d\n", req.TalkType)
+		log.Infof("unsupported talk type:%d", req.TalkType)
 		return errors.New("unsupported talk type"), nil
 	}
 }
 
-// QueryMessage 从大往小拉取历史消息
-func (s *Service) QueryMessage(ctx context.Context, req *api.MsgRecordsReq) (err error, rsp *api.MsgRecordsRsp) {
+func (s *Service) querySingleMessage(ctx context.Context, req *api.MsgRecordsReq) (err error, rsp *api.MsgRecordsRsp) {
 	rsp = &api.MsgRecordsRsp{}
 	rsp.Limit = req.Limit
-	if req.TalkType == 1 {
-		err, msgList := s.dao.QuerySingleMessage(ctx, req.Uid, req.PeerId, req.MinMsgId, req.Limit)
-		if err != nil {
-			return err, nil
-		}
-
-		var minId int64 = 9223372036854775807
-
-		_, selfInfo := s.dao.GetUserInfoByUid(ctx, req.Uid)
-		_, peerInfo := s.dao.GetUserInfoByUid(ctx, req.PeerId)
-		for idx := range msgList {
-			msgRow := api.MessageRow{
-				Id:         msgList[idx].MsgID,
-				Sequence:   1,
-				TalkType:   req.TalkType,
-				MsgType:    msgList[idx].MsgType,
-				UserId:     msgList[idx].SenderID,
-				ReceiverId: msgList[idx].ReceiverID,
-				IsRevoke:   msgList[idx].MsgStatus,
-				IsMark:     1,
-				IsRead:     1,
-				Content:    msgList[idx].Content,
-				CreatedAt:  time.Unix(msgList[idx].CreateTime, 0).Format("2006-01-02 15:04:05"),
-			}
-			if msgList[idx].SenderID == req.Uid {
-				msgRow.Avatar = selfInfo.Avatar
-				msgRow.Nickname = selfInfo.NickName
-			} else if msgList[idx].SenderID == req.PeerId {
-				msgRow.Avatar = peerInfo.Avatar
-				msgRow.Nickname = peerInfo.NickName
-			}
-			rsp.Rows = append(rsp.Rows, msgRow)
-			if msgRow.Id < minId {
-				minId = msgRow.Id
-			}
-		}
-		rsp.MaxRecordId = minId
+	err, msgList := s.dao.QuerySingleMessage(ctx, req.Uid, req.PeerId, req.MinMsgId, req.Limit)
+	if err != nil {
+		return err, nil
 	}
 
-	return nil, rsp
+	var minId int64 = 9223372036854775807
+
+	_, selfInfo := s.dao.GetUserInfoByUid(ctx, req.Uid)
+	_, peerInfo := s.dao.GetUserInfoByUid(ctx, req.PeerId)
+	for idx := range msgList {
+		msgRow := api.MessageRow{
+			Id:         msgList[idx].MsgID,
+			Sequence:   1,
+			TalkType:   req.TalkType,
+			MsgType:    msgList[idx].MsgType,
+			UserId:     msgList[idx].SenderID,
+			ReceiverId: msgList[idx].ReceiverID,
+			IsRevoke:   msgList[idx].MsgStatus,
+			IsMark:     1,
+			IsRead:     1,
+			Content:    msgList[idx].Content,
+			CreatedAt:  time.Unix(msgList[idx].CreateTime, 0).Format("2006-01-02 15:04:05"),
+		}
+		if msgList[idx].SenderID == req.Uid {
+			msgRow.Avatar = selfInfo.Avatar
+			msgRow.Nickname = selfInfo.NickName
+		} else if msgList[idx].SenderID == req.PeerId {
+			msgRow.Avatar = peerInfo.Avatar
+			msgRow.Nickname = peerInfo.NickName
+		}
+		rsp.Rows = append(rsp.Rows, msgRow)
+		if msgRow.Id < minId {
+			minId = msgRow.Id
+		}
+	}
+	rsp.MaxRecordId = minId
+	log.Infof("get single message, uid:%d, peer id:%d, min msgid:%d, size:%d",
+		req.Uid, req.PeerId, minId, len(rsp.Rows))
+	return err, rsp
+}
+
+func (s *Service) queryGroupMessage(ctx context.Context, req *api.MsgRecordsReq) (err error, rsp *api.MsgRecordsRsp) {
+	rsp = &api.MsgRecordsRsp{}
+	rsp.Limit = req.Limit
+	err, msgList := s.dao.QueryGroupMessage(ctx, req.PeerId, req.MinMsgId, req.Limit)
+	if err != nil {
+		return err, nil
+	}
+
+	var minId int64 = 9223372036854775807
+
+	infoMap := make(map[int64]*model.UserInfo, 0)
+	for idx := range msgList {
+		msgRow := api.MessageRow{
+			Id:         msgList[idx].MsgID,
+			Sequence:   1,
+			TalkType:   req.TalkType,
+			MsgType:    msgList[idx].MsgType,
+			UserId:     msgList[idx].SenderID,
+			ReceiverId: msgList[idx].GroupID,
+			IsRevoke:   msgList[idx].MsgStatus,
+			IsMark:     1,
+			IsRead:     1,
+			Content:    msgList[idx].Content,
+			CreatedAt:  time.Unix(msgList[idx].CreateTime, 0).Format("2006-01-02 15:04:05"),
+		}
+
+		if _, ok := infoMap[msgList[idx].SenderID]; !ok {
+			err, info := s.dao.GetUserInfoByUid(ctx, msgList[idx].SenderID)
+			if err != nil {
+				log.Errorf("get group user info failed, uid:%d, err:%+v", msgList[idx].SenderID, err)
+				continue
+			}
+			infoMap[msgList[idx].SenderID] = info
+		}
+
+		info := infoMap[msgList[idx].SenderID]
+		log.Infof("show uid:%d, info:%+v", msgList[idx].SenderID, info)
+		msgRow.Avatar = info.Avatar
+		msgRow.Nickname = info.NickName
+
+		rsp.Rows = append(rsp.Rows, msgRow)
+		if msgRow.Id < minId {
+			minId = msgRow.Id
+		}
+	}
+	rsp.MaxRecordId = minId
+	log.Infof("get group message, uid:%d, group id:%d, min msgid:%d, size:%d",
+		req.Uid, req.PeerId, minId, len(rsp.Rows))
+	return err, rsp
+}
+
+// QueryMessage 从大往小拉取历史消息
+func (s *Service) QueryMessage(ctx context.Context, req *api.MsgRecordsReq) (err error, rsp *api.MsgRecordsRsp) {
+
+	if req.TalkType == 1 {
+		return s.querySingleMessage(ctx, req)
+	} else if req.TalkType == 2 {
+		return s.queryGroupMessage(ctx, req)
+	}
+
+	return errors.New("unknown talk type"), nil
 }

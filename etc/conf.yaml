@@ -6,6 +6,7 @@ server:
   token_expire: 7200             # token有效期，单位秒
   data_center_id: 1              # 数据中心ID。0-31之间取值，用于雪花算法
   worker_id: 1                   # 数据中心ID。0-31之间取值，用于雪花算法
+  debug_req_rsp: false           # 是否开启请求回包的debug日志打印
 
 db:
   dsn: "pim:polite@123@tcp(127.0.0.1:3306)/db_pim?charset=latin1&parseTime=True&loc=Local"

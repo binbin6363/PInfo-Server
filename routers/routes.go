@@ -1,10 +1,14 @@
 package routers
 
 import (
-	"PInfo-server/service"
-	"github.com/gin-gonic/gin"
+	"PInfo-server/config"
 	"net/http"
 	"strings"
+
+	"PInfo-server/log"
+	"PInfo-server/service"
+	"github.com/gin-gonic/gin"
+	gindump "github.com/tpkeeper/gin-dump"
 )
 
 type Option func(*gin.Engine)
@@ -90,6 +94,11 @@ func Init() *gin.Engine {
 	r := gin.Default()
 	r.Use(Cors())
 	r.Use(JWTAuthMiddleware())
+	if config.AppConfig().ServerInfo.DebugReqRsp {
+		r.Use(gindump.DumpWithOptions(true, true, true, false, false, func(dumpStr string) {
+			log.Info(dumpStr)
+		}))
+	}
 	for _, opt := range options {
 		opt(r)
 	}

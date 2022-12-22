@@ -7,7 +7,7 @@ import (
 )
 
 func noteClassListHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -17,7 +17,7 @@ func noteClassListHandler(c *gin.Context) {
 }
 
 func noteTagListHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -27,7 +27,7 @@ func noteTagListHandler(c *gin.Context) {
 }
 
 func noteArticleListHandler(c *gin.Context) {
-	log.Printf("unimplemented\n")
+	log.Printf("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,

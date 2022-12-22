@@ -1,11 +1,10 @@
 package utils
 
 import (
+	"PInfo-server/log"
 	"fmt"
 	"sync"
 	"time"
-
-	"github.com/golang/glog"
 )
 
 // copy from snowflake
@@ -69,7 +68,7 @@ func (s *Snowflake) NextVal() int64 {
 	t := now - epoch
 	if t > timestampMax {
 		s.Unlock()
-		glog.Errorf("epoch must be between 0 and %d", timestampMax-1)
+		log.Errorf("epoch must be between 0 and %d", timestampMax-1)
 		return 0
 	}
 	s.timestamp = now

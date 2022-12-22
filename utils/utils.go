@@ -2,11 +2,11 @@ package utils
 
 import (
 	"PInfo-server/api"
+	"PInfo-server/log"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 	"net/http"
 )
 
@@ -43,7 +43,7 @@ func GetUserName(c *gin.Context) (err error, username string) {
 // SendJsonRsp 回复json消息
 func SendJsonRsp(c *gin.Context, rsp *api.CommRsp) {
 	if rsp == nil {
-		log.Printf("[INFO] handle ok, send empty rsp\n")
+		log.Infof("handle ok, send empty rsp")
 		c.JSON(http.StatusOK, gin.H{
 			"code":    200,
 			"message": "ok",
@@ -51,10 +51,10 @@ func SendJsonRsp(c *gin.Context, rsp *api.CommRsp) {
 		})
 	} else if rsp.Code == 0 || rsp.Code == 200 {
 		rsp.Code = 200
-		log.Printf("[INFO] handle ok, send rsp:%+v\n", rsp)
+		log.Infof("handle ok, send rsp:%+v", rsp)
 		c.JSON(http.StatusOK, rsp)
 	} else {
-		log.Printf("[INFO] handle error, code:%d, message:%s\n", rsp.Code, rsp.Message)
+		log.Infof("handle error, code:%d, message:%s", rsp.Code, rsp.Message)
 		c.JSON(http.StatusOK, rsp)
 	}
 }
