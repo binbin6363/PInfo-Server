@@ -137,7 +137,7 @@ func recordsHandler(c *gin.Context) {
 				MaxRecordId: 12000,
 				Rows: []api.MessageRow{
 					{
-						GroupId:         1200,
+						Id:         1200,
 						Sequence:   2,
 						TalkType:   1,
 						MsgType:    1,
@@ -151,7 +151,7 @@ func recordsHandler(c *gin.Context) {
 						Content:    "last msg",
 						CreatedAt:  "2022-12-08 08:50:45",
 					}, {
-						GroupId:         1123,
+						Id:         1123,
 						Sequence:   1,
 						TalkType:   1,
 						MsgType:    1,
@@ -248,7 +248,7 @@ func sendTextMsgHandler(c *gin.Context) {
 	// 消息去重，暂时先基于mysql做去重
 	err, rsp := service.DefaultService.SendTextMessage(c, req)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
+		c.JSON(http.StatusForbidden, gin.H{
 			"code":    500,
 			"message": "内部错误",
 			"data":    nil,
@@ -259,7 +259,7 @@ func sendTextMsgHandler(c *gin.Context) {
 	//rsp := api.SendTextMsgEvtNotice{
 	//	Content: api.SendTextMsgContent{
 	//		Data: api.SendTextMsgData{
-	//			GroupId:         1201,
+	//			Id:         1201,
 	//			Sequence:   3,
 	//			TalkType:   1,
 	//			MsgType:    1,

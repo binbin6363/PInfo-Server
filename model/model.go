@@ -22,6 +22,15 @@ func (UserInfo) TableName() string {
 	return "user_infos"
 }
 
+type ContactType int
+
+const (
+	ContactStranger    ContactType = 1 // 陌生人
+	ContactWaitMeApply ContactType = 2 // 好友申请等我审批
+	ContactSendApply   ContactType = 3 // 我已发送好友申请
+	ContactFriend      ContactType = 4 // 已通过申请，好友关系
+)
+
 // Contacts 联系人好友
 type Contacts struct {
 	ID         int64  `gorm:"column:id;primarykey;AUTO_INCREMENT"`
@@ -49,6 +58,7 @@ type UserContact struct {
 	Avatar       string `gorm:"column:avatar"`
 	FriendRemark string `gorm:"column:remark_name"` // 好友备注
 	Status       int    `gorm:"column:status"`
+	CreateTime   int64  `gorm:"column:create_time"`
 }
 
 // Conversations 会话列表
@@ -146,6 +156,14 @@ func (Groups) TableName() string {
 	return "groups"
 }
 
+type GroupInfoList struct {
+	GroupID       int64  `gorm:"column:group_id"`
+	GroupName     string `gorm:"column:group_name"`
+	GroupAvatar   string `gorm:"column:group_avatar"`
+	GroupAnnounce string `gorm:"column:group_announce"`
+	Leader        int64  `gorm:"column:leader"`
+}
+
 // GroupMembers 群信息列表
 type GroupMembers struct {
 	ID         int64  `gorm:"column:id;primarykey;AUTO_INCREMENT"`
@@ -161,4 +179,18 @@ type GroupMembers struct {
 // TableName 默认是通过结构体的蛇形复数来指定表名，这里通过TableName显示定义出来，便于问题排查
 func (GroupMembers) TableName() string {
 	return "group_members"
+}
+
+// GroupMemberInfoList 群成员具体信息，临时数据结构
+type GroupMemberInfoList struct {
+	Uid          int64  `gorm:"column:uid"` // 我的ID
+	Gender       int    `gorm:"column:gender"`
+	Motto        string `gorm:"column:motto"`
+	Avatar       string `gorm:"column:avatar"`
+	NickName     string `gorm:"column:nickname"`    // 个人备注
+	FriendRemark string `gorm:"column:remark_name"` // 群内个人备注
+	Status       int    `gorm:"column:status"`
+	UserRole     int    `gorm:"column:user_role"`
+	CreateTime   int64  `gorm:"column:create_time"`
+	Sequence     int64  `gorm:"column:sequence"`
 }

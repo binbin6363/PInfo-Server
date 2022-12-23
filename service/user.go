@@ -84,6 +84,9 @@ func (s *Service) RegisterUser(ctx context.Context, uid int64, req *api.Register
 		CreateTime: time.Now().Unix(),
 		UpdateTime: time.Now().Unix(),
 	}
+	if req.NickName == "" {
+		userInfo.NickName = req.UserName
+	}
 
 	// 申请用户ID
 	err, userInfo.Uid = s.dao.AllocNewUserID(ctx)

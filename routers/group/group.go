@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func groupMembersHandler(c *gin.Context) {
+func memberInviteHandler(c *gin.Context) {
 	groupMembersReq := &api.GroupMembersReq{}
 	if err := c.ShouldBind(groupMembersReq); err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -25,7 +25,7 @@ func groupMembersHandler(c *gin.Context) {
 	groupMembersReq.GroupId = cast.ToInt64(c.Query("group_id"))
 
 	// 获取群成员列表
-	err, rsp := service.DefaultService.GetGroupMembers(c, groupMembersReq)
+	err, rsp := service.DefaultService.InviteGroupMember(c, groupMembersReq)
 	if err != nil {
 		utils.SendJsonRsp(c, rsp)
 		return
@@ -35,13 +35,26 @@ func groupMembersHandler(c *gin.Context) {
 }
 
 func groupListHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	groupListReq := &api.GroupListReq{}
+	if err := c.ShouldBind(groupListReq); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
-	})
+	groupListReq.Uid = utils.GetUid(c)
+
+	// 获取群成员列表
+	err, rsp := service.DefaultService.GetGroupList(c, groupListReq)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
 }
 
 func getGroupDetailHandler(c *gin.Context) {
@@ -89,13 +102,27 @@ func modifyGroupHandler(c *gin.Context) {
 }
 
 func inviteGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	inviteGroupReq := &api.InviteGroupReq{}
+	if err := c.ShouldBind(inviteGroupReq); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
-	})
+	inviteGroupReq.Uid = utils.GetUid(c)
+	_, inviteGroupReq.UserName = utils.GetUserName(c)
+
+	// 邀请进群
+	err, rsp := service.DefaultService.InviteGroup(c, inviteGroupReq)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
 }
 
 func removeGroupMemberHandler(c *gin.Context) {
@@ -128,14 +155,36 @@ func secedeGroupHandler(c *gin.Context) {
 	})
 }
 
+// remarkGroupHandler 修改在群中的昵称
 func remarkGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	remarkNameInGroupReq := &api.RemarkNameInGroupReq{}
+	if err := c.ShouldBind(remarkNameInGroupReq); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
-	})
+	remarkNameInGroupReq.Uid = utils.GetUid(c)
+	if remarkNameInGroupReq.GroupId == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	// 获取群成员列表
+	err, rsp := service.DefaultService.RemarkNameInGroup(c, remarkNameInGroupReq)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
 }
 
 func getGroupMemberListHandler(c *gin.Context) {
@@ -158,6 +207,38 @@ func getGroupNoticesHandler(c *gin.Context) {
 	})
 }
 
+func getGroupMembersHandler(c *gin.Context) {
+	groupMembersReq := &api.GroupMembersReq{}
+	if err := c.ShouldBind(groupMembersReq); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	groupMembersReq.Uid = utils.GetUid(c)
+	groupMembersReq.GroupId = cast.ToInt64(c.Query("group_id"))
+	if groupMembersReq.GroupId == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	// 获取群成员列表
+	err, rsp := service.DefaultService.GetGroupMembers(c, groupMembersReq)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
+}
+
 func editGroupNoticeHandler(c *gin.Context) {
 	log.Printf("unimplemented")
 	c.JSON(http.StatusOK, gin.H{
@@ -171,7 +252,7 @@ func editGroupNoticeHandler(c *gin.Context) {
 func Routers(r *gin.Engine) {
 	group := r.Group("/api/v1/group/")
 	{
-		group.GET("/member/invites", groupMembersHandler)
+		group.GET("/member/invites", memberInviteHandler)
 		group.GET("/list", groupListHandler)
 		group.GET("/detail", getGroupDetailHandler)
 		group.POST("/create", createGroupHandler)
@@ -183,6 +264,7 @@ func Routers(r *gin.Engine) {
 		group.POST("/member/remark", remarkGroupHandler)
 		//group.GET("/member/invites", getGroupMemberListHandler)
 		group.GET("/notice/list", getGroupNoticesHandler)
+		group.GET("/member/list", getGroupMembersHandler)
 		group.POST("/notice/edit", editGroupNoticeHandler)
 
 	}

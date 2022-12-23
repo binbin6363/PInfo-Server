@@ -1,6 +1,7 @@
 package service
 
 import (
+	"PInfo-server/utils"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -18,6 +19,11 @@ import (
 )
 
 func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMsgReq) (error, *api.SendTextMsgRsp) {
+	err, forwardInfo := s.dao.GetContactDetailInfo(ctx, req.ReceiverId, req.Uid)
+	if err == nil && (forwardInfo.Status != int(model.ContactFriend)) {
+		return errors.New("对方不是你的好友"), nil
+	}
+
 	msg := &model.SingleMessages{
 		Uid:         req.Uid,
 		MsgID:       s.dao.GenMsgID(), // 本应该由中心服务生成，此处暂且放在本机生成
@@ -91,7 +97,7 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 				IsRevoke:   0,
 				IsRead:     0,
 				IsMark:     0,
-				CreatedAt:  time.Unix(msg.CreateTime, 0).Format("2006-01-02 15:04:05"),
+				CreatedAt:  utils.FormatTimeStr(msg.CreateTime),
 			},
 			ReceiverId: req.ReceiverId,
 			SenderId:   req.Uid,
@@ -188,7 +194,7 @@ func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsg
 				IsRevoke:   0,
 				IsRead:     0,
 				IsMark:     0,
-				CreatedAt:  time.Unix(msg.CreateTime, 0).Format("2006-01-02 15:04:05"),
+				CreatedAt:  utils.FormatTimeStr(msg.CreateTime),
 			},
 			ReceiverId: req.ReceiverId,
 			SenderId:   req.Uid,
@@ -253,7 +259,7 @@ func (s *Service) querySingleMessage(ctx context.Context, req *api.MsgRecordsReq
 			IsMark:     1,
 			IsRead:     1,
 			Content:    msgList[idx].Content,
-			CreatedAt:  time.Unix(msgList[idx].CreateTime, 0).Format("2006-01-02 15:04:05"),
+			CreatedAt:  utils.FormatTimeStr(msgList[idx].CreateTime),
 		}
 		if msgList[idx].SenderID == req.Uid {
 			msgRow.Avatar = selfInfo.Avatar
@@ -296,7 +302,7 @@ func (s *Service) queryGroupMessage(ctx context.Context, req *api.MsgRecordsReq)
 			IsMark:     1,
 			IsRead:     1,
 			Content:    msgList[idx].Content,
-			CreatedAt:  time.Unix(msgList[idx].CreateTime, 0).Format("2006-01-02 15:04:05"),
+			CreatedAt:  utils.FormatTimeStr(msgList[idx].CreateTime),
 		}
 
 		if _, ok := infoMap[msgList[idx].SenderID]; !ok {

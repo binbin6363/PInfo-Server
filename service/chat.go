@@ -4,6 +4,7 @@ import (
 	"PInfo-server/api"
 	"PInfo-server/log"
 	"PInfo-server/model"
+	"PInfo-server/utils"
 	"context"
 	"gorm.io/gorm"
 	"time"
@@ -39,7 +40,7 @@ func (s *Service) GetConversationList(ctx context.Context, req *api.TalkListReq)
 			RemarkName: con.RemarkName,
 			UnreadNum:  con.Unread,
 			MsgText:    con.MsgDigest,
-			UpdatedAt:  time.Unix(con.UpdateTime, 0).Format("2006-01-02 15:04:05"),
+			UpdatedAt:  utils.FormatTimeStr(con.UpdateTime),
 		}
 		if talkInfo.RemarkName == "" {
 			talkInfo.RemarkName = con.ConversationName
@@ -87,8 +88,8 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 			RemarkName: conversationInfo.ConversationName,
 			UnreadNum:  0,
 			MsgText:    conversationInfo.MsgDigest,
-			UpdatedAt:  time.Unix(conversationInfo.UpdateTime, 0).Format("2006-01-02 15:04:05"),
-			CreatedAt:  time.Unix(conversationInfo.CreateTime, 0).Format("2006-01-02 15:04:05"),
+			UpdatedAt:  utils.FormatTimeStr(conversationInfo.UpdateTime),
+			CreatedAt:  utils.FormatTimeStr(conversationInfo.CreateTime),
 		}
 		return nil, rsp
 	}
@@ -160,8 +161,8 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 		RemarkName: conversationName,
 		UnreadNum:  0,
 		MsgText:    "",
-		UpdatedAt:  time.Unix(nowTime, 0).Format("2006-01-02 15:04:05"),
-		CreatedAt:  time.Unix(nowTime, 0).Format("2006-01-02 15:04:05"),
+		UpdatedAt:  utils.FormatTimeStr(nowTime),
+		CreatedAt:  utils.FormatTimeStr(nowTime),
 	}
 
 	log.Infof("create conversation req:%+v, rsp:%+v", req, *rsp)

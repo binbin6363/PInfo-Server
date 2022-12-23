@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cast"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"time"
 )
 
 // EncryptPassword 对密码加密
@@ -57,4 +58,9 @@ func SendJsonRsp(c *gin.Context, rsp *api.CommRsp) {
 		log.Infof("handle error, code:%d, message:%s", rsp.Code, rsp.Message)
 		c.JSON(http.StatusOK, rsp)
 	}
+}
+
+// FormatTimeStr 格式化时间戳到字符串
+func FormatTimeStr(nowTime int64) string {
+	return time.Unix(nowTime, 0).Format("2006-01-02 15:04:05")
 }

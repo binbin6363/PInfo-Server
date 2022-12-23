@@ -138,13 +138,16 @@ type ContactListRsp struct {
 }
 
 type ContactInfo struct {
-	Id           int64  `json:"id"`
-	Nickname     string `json:"nickname"`
-	Gender       int    `json:"gender"`
-	Motto        string `json:"motto"`
-	Avatar       string `json:"avatar"`
-	FriendRemark string `json:"friend_remark"`
-	IsOnline     int    `json:"is_online"`
+	Id           int64  `json:"id,omitempty"`
+	UserId       int64  `json:"user_id,omitempty"`
+	Nickname     string `json:"nickname,omitempty"`
+	Gender       int    `json:"gender,omitempty"`
+	Motto        string `json:"motto,omitempty"`
+	Avatar       string `json:"avatar,omitempty"`
+	FriendRemark string `json:"friend_remark,omitempty"`
+	Remark       string `json:"remark,omitempty"`
+	IsOnline     int    `json:"is_online,omitempty"`
+	CreatedAt    string `json:"created_at,omitempty"`
 }
 
 type SendTextMsgReq struct {
@@ -283,13 +286,33 @@ type GroupMembersReq struct {
 }
 
 type GroupMemberInfo struct {
-	GroupId      int64  `json:"id"`
-	Nickname     string `json:"nickname"`
-	Gender       int    `json:"gender"`
-	Motto        string `json:"motto"`
-	Avatar       string `json:"avatar"`
-	FriendRemark string `json:"friend_remark"`
-	IsOnline     int    `json:"is_online"`
+	Id       int64  `json:"id,omitempty"`
+	Uid      int64  `json:"user_id,omitempty"`
+	Nickname string `json:"nickname,omitempty"`
+	//UserCard     string `json:"user_card,omitempty"`
+	Gender       int    `json:"gender,omitempty"`
+	Motto        string `json:"motto,omitempty"`
+	Avatar       string `json:"avatar,omitempty"`
+	FriendRemark string `json:"user_card,omitempty"`
+	IsOnline     int    `json:"is_online,omitempty"`
+}
+
+type GroupListReq struct {
+	Id  int64 `json:"id,omitempty"`
+	Uid int64 `json:"user_id,omitempty"`
+}
+
+type GroupListRsp struct {
+	GroupInfoList []*GroupInfo `json:"rows"`
+}
+
+type GroupInfo struct {
+	Id        int64  `json:"id"`
+	GroupName string `json:"group_name"`
+	Avatar    string `json:"avatar"`
+	Profile   string `json:"profile"`
+	Leader    int64  `json:"leader"`
+	IsDisturb int    `json:"is_disturb"`
 }
 
 type CreateGroupReq struct {
@@ -305,6 +328,17 @@ type CreateGroupRsp struct {
 	GroupId int64 `json:"group_id"`
 }
 
+type InviteGroupReq struct {
+	Uid      int64  `json:"id"`       // 我的ID
+	UserName string `json:"username"` // 我的用户名
+	GroupId  int64  `json:"group_id"`
+	Ids      string `json:"ids"` // 群成员ID列表
+}
+
+type InviteGroupRsp struct {
+	GroupId int64 `json:"group_id"`
+}
+
 type EmoticonListRsp struct {
 	CollectEmoticon []EmoticonItem `json:"collect_emoticon"`
 	SystemEmoticon  []EmoticonItem `json:"sys_emoticon"`
@@ -313,6 +347,14 @@ type EmoticonListRsp struct {
 type EmoticonItem struct {
 	MediaId int64  `json:"media_id"`
 	Src     string `json:"src"`
+}
+
+// RemarkNameInGroupReq 修改自己在群中的昵称
+type RemarkNameInGroupReq struct {
+	Uid        int64  `json:"id"`         // 我的ID
+	UserName   string `json:"username"`   // 我的用户名
+	GroupId    int64  `json:"group_id"`   // 群ID
+	RemarkName string `json:"visit_card"` // 我的群昵称
 }
 
 // CommRsp 针对请求的ack

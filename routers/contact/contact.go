@@ -2,6 +2,7 @@ package contact
 
 import (
 	"PInfo-server/api"
+	"PInfo-server/model"
 	"PInfo-server/service"
 	"PInfo-server/utils"
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,7 @@ import (
 
 // contactListHandler 获取好友列表服务接口
 func contactListHandler(c *gin.Context) {
-	err, contactInfos := service.DefaultService.GetContactList(c, utils.GetUid(c), 2)
+	err, contactInfos := service.DefaultService.GetContactList(c, utils.GetUid(c), model.ContactFriend)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    http.StatusNotFound,
@@ -137,7 +138,7 @@ func unreadNumHandler(c *gin.Context) {
 // recordsHandler 查询好友申请服务接口
 func recordsHandler(c *gin.Context) {
 	// todo:
-	err, contactInfos := service.DefaultService.GetContactList(c, utils.GetUid(c), 1)
+	err, contactInfos := service.DefaultService.GetContactList(c, utils.GetUid(c), model.ContactWaitMeApply)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    http.StatusNotFound,
@@ -150,13 +151,15 @@ func recordsHandler(c *gin.Context) {
 	contactList := api.ContactListRsp{}
 	for _, contact := range contactInfos {
 		contactInfo := &api.ContactInfo{
-			Id:           contact.Id,
-			Nickname:     contact.Nickname,
-			Gender:       contact.Gender,
-			Motto:        contact.Motto,
-			Avatar:       contact.Avatar,
-			FriendRemark: contact.FriendRemark,
-			IsOnline:     1,
+			Id:        contact.Id,
+			UserId:    contact.Id,
+			Nickname:  contact.Nickname,
+			Gender:    contact.Gender,
+			Motto:     contact.Motto,
+			Avatar:    contact.Avatar,
+			Remark:    contact.Remark,
+			IsOnline:  1,
+			CreatedAt: contact.CreatedAt,
 		}
 		contactList.ContactList = append(contactList.ContactList, contactInfo)
 	}
@@ -203,7 +206,7 @@ func addContactHandler(c *gin.Context) {
 	*/
 }
 
-// acceptContactHandler 处理好友申请服务接口
+// acceptContactHandler 处理好友申请服务接口，同意
 func acceptContactHandler(c *gin.Context) {
 
 	req := &api.ApplyAddContactReq{}
@@ -228,6 +231,31 @@ func acceptContactHandler(c *gin.Context) {
 
 }
 
+// declineContactHandler 处理好友申请服务接口，拒绝
+func declineContactHandler(c *gin.Context) {
+
+	req := &api.ApplyAddContactReq{}
+	if err := c.ShouldBind(req); err != nil {
+		utils.SendJsonRsp(c, &api.CommRsp{
+			Code:    400,
+			Message: "param invalid",
+			Data:    nil,
+		})
+		return
+	}
+
+	req.Uid = utils.GetUid(c)
+	_, req.UserName = utils.GetUserName(c)
+	err, rsp := service.DefaultService.DeclineAddContact(c, req)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
+
+}
+
 // Routers .
 func Routers(r *gin.Engine) {
 	contact := r.Group("/api/v1/contact")
@@ -241,5 +269,6 @@ func Routers(r *gin.Engine) {
 		contact.GET("/apply/records", recordsHandler)
 		contact.POST("/apply/create", addContactHandler)
 		contact.POST("/apply/accept", acceptContactHandler)
+		contact.POST("/apply/decline", declineContactHandler)
 	}
 }
