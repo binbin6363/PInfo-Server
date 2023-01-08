@@ -19,8 +19,13 @@ import (
 )
 
 func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMsgReq) (error, *api.SendTextMsgRsp) {
-	err, forwardInfo := s.dao.GetContactDetailInfo(ctx, req.ReceiverId, req.Uid)
-	if err == nil && (forwardInfo.Status != int(model.ContactFriend)) {
+	err, myFriendInfo := s.dao.GetContactDetailInfo(ctx, req.Uid, req.ReceiverId)
+	if err == nil && (myFriendInfo.Status != int(model.ContactFriend)) {
+		log.Errorf("i(%d) am not your(%d) friend, send message failed", req.Uid, req.ReceiverId)
+		return errors.New("我不是对方的好友"), nil
+	}
+	err, yourFriendInfo := s.dao.GetContactDetailInfo(ctx, req.ReceiverId, req.Uid)
+	if err == nil && (yourFriendInfo.Status != int(model.ContactFriend)) {
 		log.Errorf("peer(%d) is not your(%d) friend, send message failed", req.ReceiverId, req.Uid)
 		return errors.New("对方不是你的好友"), nil
 	}
@@ -47,10 +52,10 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 
 	con := &model.Conversations{
 		ID:                 0,
-		Uid:                msg.Uid,
+		Uid:                req.Uid,
 		ContactID:          req.ReceiverId,
 		ConversationType:   1,
-		ConversationName:   "",
+		ConversationName:   myFriendInfo.FriendRemark,
 		ConversationStatus: 1,
 		Unread:             0,
 		MsgDigest:          msg.Content,
@@ -72,6 +77,7 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 	}
 
 	con.ID = 0
+	con.ConversationName = yourFriendInfo.FriendRemark
 	con.Uid = req.ReceiverId
 	con.ContactID = req.Uid
 	if err := s.dao.UpdateConversationSingleMsg(ctx, con); err != nil {
