@@ -232,7 +232,10 @@ func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int
 
 	// 如果id为0，从最大开始拉
 	if minMsgId == 0 {
-		r = r.Where("uid=? and (senderid=? or receiverid=?)", uid, peerUid, peerUid)
+		minMsgId = 0x7fffffffffffffff
+	}
+	if uid == peerUid {
+		r = r.Where("uid=? and (senderid=? and receiverid=?) and msgid<?", uid, peerUid, peerUid, minMsgId)
 	} else {
 		r = r.Where("uid=? and (senderid=? or receiverid=?) and msgid<?", uid, peerUid, peerUid, minMsgId)
 	}
