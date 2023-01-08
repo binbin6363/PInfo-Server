@@ -133,6 +133,7 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 			return err, rsp
 		}
 		conversationName = groupInfo.GroupName
+		conversationAvatar = groupInfo.GroupAvatar
 	}
 
 	nowTime := time.Now().Unix()
