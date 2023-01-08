@@ -190,7 +190,7 @@ func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsg
 				UserId:     req.Uid,
 				ReceiverId: groupId,
 				Content:    req.Text,
-				Nickname:   groupInfo.GroupName,
+				Nickname:   userInfo.NickName,
 				Avatar:     userInfo.Avatar,
 				IsRevoke:   0,
 				IsRead:     0,
