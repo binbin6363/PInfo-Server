@@ -75,6 +75,14 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 
 	// 如果已存在，则直接返回信息
 	if conversationInfo != nil && conversationInfo.Uid != 0 && conversationInfo.ContactID != 0 {
+		err, userInfo := s.dao.GetUserInfoByUid(ctx, req.ContactId)
+		if err != nil {
+			rsp.Code = 400
+			rsp.Message = "联系人获取失败"
+			log.Infof("get contact info failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
+			return err, rsp
+		}
+		conversationAvatar := userInfo.Avatar
 		rsp.Data = &api.TalkInfo{
 			ID:         conversationInfo.ID,
 			Type:       conversationInfo.ConversationType,
@@ -84,13 +92,14 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 			IsOnline:   0,
 			IsRobot:    0,
 			Name:       conversationInfo.ConversationName,
-			Avatar:     "",
+			Avatar:     conversationAvatar,
 			RemarkName: conversationInfo.ConversationName,
 			UnreadNum:  0,
 			MsgText:    conversationInfo.MsgDigest,
 			UpdatedAt:  utils.FormatTimeStr(conversationInfo.UpdateTime),
 			CreatedAt:  utils.FormatTimeStr(conversationInfo.CreateTime),
 		}
+
 		return nil, rsp
 	}
 
