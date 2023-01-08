@@ -1,5 +1,7 @@
 package api
 
+import "mime/multipart"
+
 // LoginReq 登录请求
 type LoginReq struct {
 	UserName string `json:"mobile"`
@@ -339,6 +341,19 @@ type InviteGroupRsp struct {
 	GroupId int64 `json:"group_id"`
 }
 
+type SetGroupInfoReq struct {
+	Uid          int64  `json:"id"`         // 我的ID
+	UserName     string `json:"username"`   // 我的用户名
+	GroupId      int64  `json:"group_id"`   // 群ID
+	GroupName    string `json:"group_name"` // 群名
+	GroupAvatar  string `json:"avatar"`     // 群头像
+	GroupProfile string `json:"profile"`    // 群简介
+
+}
+
+type SetGroupInfoRsp struct {
+}
+
 type EmoticonListRsp struct {
 	CollectEmoticon []EmoticonItem `json:"collect_emoticon"`
 	SystemEmoticon  []EmoticonItem `json:"sys_emoticon"`
@@ -355,6 +370,33 @@ type RemarkNameInGroupReq struct {
 	UserName   string `json:"username"`   // 我的用户名
 	GroupId    int64  `json:"group_id"`   // 群ID
 	RemarkName string `json:"visit_card"` // 我的群昵称
+}
+
+type GroupDetailReq struct {
+	Uid      int64  `json:"id"`       // 我的ID
+	UserName string `json:"username"` // 我的用户名
+	GroupId  int64  `json:"group_id"` // 群ID
+}
+
+type GroupDetailRsp struct {
+	Avatar          string      `json:"avatar"`
+	CreatedAt       string      `json:"created_at"`
+	GroupId         int64       `json:"group_id"`
+	GroupName       string      `json:"group_name"`
+	IsDisturb       int         `json:"is_disturb"`
+	IsManager       bool        `json:"is_manager"`
+	ManagerNickname string      `json:"manager_nickname"`
+	Notice          interface{} `json:"notice"`
+	Profile         string      `json:"profile"`
+	VisitCard       string      `json:"visit_card"`
+}
+
+type UploadReq struct {
+	Form *multipart.Form `json:"-"` // 上传的文件流
+}
+
+type UploadRsp struct {
+	Avatar string `json:"avatar"`
 }
 
 // CommRsp 针对请求的ack

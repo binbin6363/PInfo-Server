@@ -170,6 +170,7 @@ type GroupMembers struct {
 	GroupID    int64  `gorm:"column:group_id"`
 	Uid        int64  `gorm:"column:uid"`
 	UserRole   int    `gorm:"column:user_role"`   // 成员角色，1普通成员，2群管理员
+	Disturb    int    `gorm:"column:disturb"`     // 该成员是否设置群消息免打扰，0否，1是
 	RemarkName string `gorm:"column:remark_name"` // 用户自己备注在群里的名字
 	Sequence   int64  `gorm:"column:sequence"`
 	CreateTime int64  `gorm:"column:create_time"`
@@ -193,4 +194,18 @@ type GroupMemberInfoList struct {
 	UserRole     int    `gorm:"column:user_role"`
 	CreateTime   int64  `gorm:"column:create_time"`
 	Sequence     int64  `gorm:"column:sequence"`
+}
+
+// GroupDetailInfo 我的群具体信息，临时数据结构
+type GroupDetailInfo struct {
+	GroupId     int64  `gorm:"column:group_id"`
+	GroupName   string `gorm:"column:group_name"`
+	GroupAvatar string `gorm:"column:group_avatar"`
+	Notice      string `gorm:"column:group_announce"`
+	UserRole    int    `gorm:"column:user_role"`
+	VisitCard   string `gorm:"column:remark_name"`
+	IsDisturb   int    `gorm:"column:disturb"`
+	CreatedAt   string `gorm:"column:create_time"`
+	ManagerName string
+	IsManager   bool
 }

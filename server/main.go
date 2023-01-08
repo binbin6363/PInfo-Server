@@ -10,6 +10,7 @@ import (
 	"PInfo-server/routers/group"
 	"PInfo-server/routers/note"
 	"PInfo-server/routers/sms"
+	"PInfo-server/routers/upload"
 	"PInfo-server/routers/users"
 	"PInfo-server/service"
 	"flag"
@@ -28,7 +29,7 @@ func main() {
 	gin.SetMode(gin.DebugMode)
 	// 加载多个APP的路由配置
 	routers.Register(auth.Routers, chat.Routers, users.Routers, group.Routers, note.Routers,
-		contact.Routers, sms.Routers, emoticon.Routers)
+		contact.Routers, sms.Routers, emoticon.Routers, upload.Routers)
 
 	// 初始化路由
 	r := routers.Init()

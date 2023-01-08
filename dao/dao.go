@@ -470,6 +470,24 @@ func (d *Dao) SetConversation(ctx context.Context, conversationInfo *model.Conve
 	return nil
 }
 
+func (d *Dao) BatchSetGroupConversationName(ctx context.Context, conversationInfo *model.Conversations) error {
+	r := d.db(ctx)
+	if conversationInfo.ContactID == 0 || conversationInfo.ConversationName == "" {
+		log.Error("groupId|conversationName invalid")
+		return errors.New("groupId|conversationName invalid")
+	}
+
+	r = r.Debug().Model(&model.Conversations{}).Where("contact_id = ?", conversationInfo.ContactID).
+		UpdateColumn("conversation_name", conversationInfo.ConversationName)
+	if err := r.Error; err != nil {
+		log.Infof("BatchSetGroupConversationName update db error(%v) user info:%+v", err, conversationInfo)
+		return err
+	}
+
+	log.Infof("BatchSetGroupConversationName update db ok user info:%+v", conversationInfo)
+	return nil
+}
+
 func (d *Dao) SetGroupInfo(ctx context.Context, groupInfo *model.Groups) error {
 	r := d.db(ctx)
 	if groupInfo.GroupID == 0 {
@@ -494,20 +512,20 @@ func (d *Dao) SetGroupInfo(ctx context.Context, groupInfo *model.Groups) error {
 	return nil
 }
 
-func (d *Dao) GetGroupInfo(ctx context.Context, uid, GroupId int64) (error, *model.Groups) {
+func (d *Dao) GetGroupInfo(ctx context.Context, GroupId int64) (error, *model.Groups) {
 	r := d.db(ctx)
-	if uid == 0 || GroupId == 0 {
+	if GroupId == 0 {
 		log.Error("contact id is invalid")
 		return errors.New("contact id is invalid"), nil
 	}
 
 	groupInfo := &model.Groups{}
 	if err := r.Debug().Where("group_id=?", GroupId).First(&groupInfo).Error; err != nil {
-		log.Infof("GetGroupInfo read db error(%v) uid(%d)", err, uid)
+		log.Infof("GetGroupInfo read db error(%v) group id(%d)", err, GroupId)
 		return err, nil
 	}
 
-	log.Infof("GetGroupInfo read db ok uid(%d), info(%+v)", uid, groupInfo)
+	log.Infof("GetGroupInfo read db ok group id(%d), info(%+v)", GroupId, groupInfo)
 	return nil, groupInfo
 }
 
@@ -679,4 +697,49 @@ func (d *Dao) GetGroupList(ctx context.Context, uid int64) (err error, groupList
 	}
 
 	return nil, groupList
+}
+
+func (d *Dao) GetGroupDetailInfo(ctx context.Context, groupId, uid int64) (error, *model.GroupDetailInfo) {
+	r := d.db(ctx)
+	if groupId == 0 {
+		log.Error("group id is invalid")
+		return errors.New("group id is invalid"), nil
+	}
+
+	groupDetailInfo := &model.GroupDetailInfo{}
+	err := r.Table(model.Groups{}.TableName()).Select("groups.group_id as group_id, groups.group_name as group_name, "+
+		"groups.group_avatar as group_avatar, groups.group_announce as group_announce, groups.create_time as create_time, "+
+		"group_members.remark_name as remark_name, group_members.user_role as user_role, group_members.disturb as disturb").
+		Joins("left join group_members on group_members.group_id=groups.group_id where group_members.group_id=? and group_members.uid=?",
+			groupId, uid).Debug().Scan(&groupDetailInfo).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			log.Infof("record not exist, group id:%d", groupId)
+		} else {
+			log.Errorf("GetGroupDetailInfo read db error(%v) group id(%d)", err, groupId)
+		}
+		return err, nil
+	}
+
+	type Leader struct {
+		GroupId    int64  `gorm:"column:group_id"`
+		Uid        int64  `gorm:"column:uid"`
+		RemarkName string `gorm:"column:remark_name"`
+	}
+	leaders := &Leader{}
+	err = r.Debug().Table(model.GroupMembers{}.TableName()).Select([]string{"group_id", "uid", "remark_name"}).
+		Where("group_id = ? and user_role=2", groupId).First(&leaders).Error
+	if err == gorm.ErrRecordNotFound {
+		log.Infof("not found manager in group id:%d", groupId)
+	} else if err == nil {
+		groupDetailInfo.ManagerName = leaders.RemarkName
+		if leaders.Uid == uid {
+			groupDetailInfo.IsManager = true
+		} else {
+			groupDetailInfo.IsManager = false
+		}
+	}
+
+	log.Infof("GetGroupDetailInfo read db ok group id(%d), uid(%d)", groupId, uid)
+	return nil, groupDetailInfo
 }

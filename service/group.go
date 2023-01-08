@@ -210,7 +210,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *api.CreateGroupReq) (err
 
 	rsp.Data = createGroupRsp
 
-	log.Infof("create group ok, req:%+v, rsp:%+v", req, rsp)
+	log.Infof("create group ok, req:%+v, rsp:%+v", req, createGroupRsp)
 	return nil, rsp
 }
 
@@ -241,6 +241,7 @@ func (s *Service) InviteGroup(ctx context.Context, req *api.InviteGroupReq) (err
 		return err, rsp
 	}
 
+	log.Infof("InviteGroup ok, req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }
 
@@ -272,5 +273,92 @@ func (s *Service) RemarkNameInGroup(ctx context.Context, req *api.RemarkNameInGr
 	}
 
 	log.Infof("RemarkNameInGroup ok, req:%+v, rsp:%+v", req, rsp)
+	return nil, rsp
+}
+
+func (s *Service) GetGroupDetail(ctx context.Context, req *api.GroupDetailReq) (err error, rsp *api.CommRsp) {
+	rsp = &api.CommRsp{
+		Code:    0,
+		Message: "",
+		Data:    nil,
+	}
+
+	// 获取我在内的信息
+	err, groupDetailInfo := s.dao.GetGroupDetailInfo(ctx, req.GroupId, req.Uid)
+	if err != nil {
+		rsp.Code = 5000
+		rsp.Message = "GetGroupDetailInfo failed"
+		return err, rsp
+	}
+
+	groupDetailRsp := &api.GroupDetailRsp{
+		Avatar:          groupDetailInfo.GroupAvatar,
+		CreatedAt:       groupDetailInfo.CreatedAt,
+		GroupId:         groupDetailInfo.GroupId,
+		GroupName:       groupDetailInfo.GroupName,
+		IsDisturb:       groupDetailInfo.IsDisturb,
+		IsManager:       groupDetailInfo.IsManager,
+		ManagerNickname: groupDetailInfo.ManagerName,
+		Notice:          groupDetailInfo.Notice,
+		Profile:         "",
+		VisitCard:       groupDetailInfo.VisitCard,
+	}
+	rsp.Data = groupDetailRsp
+
+	log.Infof("GetGroupDetail ok, req:%+v, rsp:%+v", req, groupDetailRsp)
+	return nil, rsp
+}
+
+func (s *Service) SetGroupInfo(ctx context.Context, req *api.SetGroupInfoReq) (err error, rsp *api.CommRsp) {
+	rsp = &api.CommRsp{
+		Code:    0,
+		Message: "",
+		Data:    nil,
+	}
+
+	// 获取我在内的信息
+	err, groupInfo := s.dao.GetGroupInfo(ctx, req.GroupId)
+	if err != nil {
+		return err, nil
+	}
+
+	needSetCon := false
+	nowTime := time.Now().Unix()
+	if groupInfo.GroupAvatar != req.GroupAvatar && req.GroupAvatar != "" {
+		groupInfo.GroupAvatar = req.GroupAvatar
+	}
+	if groupInfo.GroupAnnounce != req.GroupProfile && req.GroupProfile != "" {
+		groupInfo.GroupAnnounce = req.GroupProfile
+	}
+	if groupInfo.GroupName != req.GroupName && req.GroupName != "" {
+		groupInfo.GroupName = req.GroupName
+		// 需要更新会话名
+		needSetCon = true
+	}
+	groupInfo.GroupAnnounce = req.GroupProfile
+	groupInfo.GroupName = req.GroupName
+	groupInfo.Sequence = nowTime
+	groupInfo.UpdateTime = nowTime
+
+	if err = s.dao.SetGroupInfo(ctx, groupInfo); err != nil {
+		rsp.Code = 5000
+		rsp.Message = "SetGroupInfo failed"
+		return err, rsp
+	}
+
+	// 修改群名，同步修改会话名
+	if needSetCon {
+		conversationInfo := &model.Conversations{
+			ContactID:        groupInfo.GroupID,
+			ConversationName: groupInfo.GroupName,
+			Sequence:         nowTime,
+			UpdateTime:       nowTime,
+		}
+		if err := s.dao.BatchSetGroupConversationName(ctx, conversationInfo); err != nil {
+			log.Error("set group conversation name failed, group id:%d, err:%v", groupInfo.GroupID, err)
+		}
+	}
+
+	log.Infof("SetGroupInfo ok, req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }

@@ -58,13 +58,28 @@ func groupListHandler(c *gin.Context) {
 }
 
 func getGroupDetailHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	groupDetailReq := &api.GroupDetailReq{}
+	if err := c.ShouldBind(groupDetailReq); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
-	})
+	groupDetailReq.Uid = utils.GetUid(c)
+	_, groupDetailReq.UserName = utils.GetUserName(c)
+	groupDetailReq.GroupId = utils.QueryInt64Val(c, "group_id")
+
+	// 获取群详情
+	err, rsp := service.DefaultService.GetGroupDetail(c, groupDetailReq)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
 }
 
 func createGroupHandler(c *gin.Context) {
@@ -92,13 +107,27 @@ func createGroupHandler(c *gin.Context) {
 }
 
 func modifyGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	setGroupInfoReq := &api.SetGroupInfoReq{}
+	if err := c.ShouldBind(setGroupInfoReq); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
-	})
+	setGroupInfoReq.Uid = utils.GetUid(c)
+	_, setGroupInfoReq.UserName = utils.GetUserName(c)
+
+	// 邀请进群
+	err, rsp := service.DefaultService.SetGroupInfo(c, setGroupInfoReq)
+	if err != nil {
+		utils.SendJsonRsp(c, rsp)
+		return
+	}
+
+	utils.SendJsonRsp(c, rsp)
 }
 
 func inviteGroupHandler(c *gin.Context) {

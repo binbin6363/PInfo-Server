@@ -21,6 +21,7 @@ import (
 func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMsgReq) (error, *api.SendTextMsgRsp) {
 	err, forwardInfo := s.dao.GetContactDetailInfo(ctx, req.ReceiverId, req.Uid)
 	if err == nil && (forwardInfo.Status != int(model.ContactFriend)) {
+		log.Errorf("peer(%d) is not your(%d) friend, send message failed", req.ReceiverId, req.Uid)
 		return errors.New("对方不是你的好友"), nil
 	}
 
@@ -147,7 +148,7 @@ func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsg
 	}
 
 	// 获取群头像
-	err, groupInfo := s.dao.GetGroupInfo(ctx, req.Uid, groupId)
+	err, groupInfo := s.dao.GetGroupInfo(ctx, groupId)
 	if err == gorm.ErrRecordNotFound {
 		log.Errorf("group not exist, group id:%d", groupId)
 		return err, nil

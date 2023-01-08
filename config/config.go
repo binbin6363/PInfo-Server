@@ -7,14 +7,16 @@ import (
 )
 
 type ServerInfo struct {
-	Name         string `yaml:"name"`
-	Listen       string `yaml:"listen"`
-	Timeout      int    `yaml:"timeout"`
-	Secret       string `yaml:"secret"`
-	TokenExpire  int    `yaml:"token_expire"`
-	DataCenterId int64  `yaml:"data_center_id"`
-	WorkerId     int64  `yaml:"worker_id"`
-	DebugReqRsp  bool   `yaml:"debug_req_rsp"`
+	Name          string `yaml:"name"`
+	Listen        string `yaml:"listen"`
+	Timeout       int    `yaml:"timeout"`
+	Secret        string `yaml:"secret"`
+	TokenExpire   int    `yaml:"token_expire"`
+	DataCenterId  int64  `yaml:"data_center_id"`
+	WorkerId      int64  `yaml:"worker_id"`
+	DebugReqRsp   bool   `yaml:"debug_req_rsp"`
+	ResourceRoot  string `yaml:"resource_root"`
+	RemoteUrlRoot string `yaml:"remote_url_root"`
 }
 
 // DBInfo db信息

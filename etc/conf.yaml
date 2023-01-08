@@ -6,7 +6,9 @@ server:
   token_expire: 7200             # token有效期，单位秒
   data_center_id: 1              # 数据中心ID。0-31之间取值，用于雪花算法
   worker_id: 1                   # 数据中心ID。0-31之间取值，用于雪花算法
-  debug_req_rsp: false           # 是否开启请求回包的debug日志打印
+  debug_req_rsp: true           # 是否开启请求回包的debug日志打印
+  resource_root: /Users/politewang/Pictures/pim # 媒体文件资源根路径/data/pim/resource/
+  remote_url_root: http://polite.wang/img/ # 给到前端访问的远程资源根地址
 
 db:
   dsn: "pim:polite@123@tcp(127.0.0.1:3306)/db_pim?charset=latin1&parseTime=True&loc=Local"

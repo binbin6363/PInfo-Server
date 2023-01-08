@@ -116,7 +116,7 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 		}
 		conversationAvatar = userInfo.Avatar
 	} else if req.TalkType == 2 {
-		err, groupInfo := s.dao.GetGroupInfo(ctx, req.Uid, req.ContactId)
+		err, groupInfo := s.dao.GetGroupInfo(ctx, req.ContactId)
 		if err != nil {
 			rsp.Code = 400
 			rsp.Message = "群信息获取失败"

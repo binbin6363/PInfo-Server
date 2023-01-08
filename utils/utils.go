@@ -41,6 +41,36 @@ func GetUserName(c *gin.Context) (err error, username string) {
 	return errors.New("gin get username failed"), ""
 }
 
+// GetInt64Val 从上下文获取val
+func GetInt64Val(c *gin.Context, key string) (val int64) {
+	if v, ok := c.Get(key); ok {
+		val = cast.ToInt64(v)
+		return val
+	}
+	return 0
+}
+
+// GetString 从上下文获取val
+func GetString(c *gin.Context, key string) (val string) {
+	if v, ok := c.Get(key); ok {
+		val = cast.ToString(v)
+		return val
+	}
+	return ""
+}
+
+// QueryInt64Val 从上下文获取val
+func QueryInt64Val(c *gin.Context, key string) (val int64) {
+	val = cast.ToInt64(c.Query(key))
+	return val
+}
+
+// QueryString 从上下文获取val
+func QueryString(c *gin.Context, key string) (val string) {
+	val = c.Query(key)
+	return val
+}
+
 // SendJsonRsp 回复json消息
 func SendJsonRsp(c *gin.Context, rsp *api.CommRsp) {
 	if rsp == nil {
