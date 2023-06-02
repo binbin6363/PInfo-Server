@@ -127,48 +127,6 @@ func recordsHandler(c *gin.Context) {
 		"message": "success",
 		"data":    rsp,
 	})
-
-	/*
-		c.JSON(http.StatusOK, gin.H{
-			"code":    200,
-			"message": "unimplemented",
-			"data": api.MsgRecordsRsp{
-				Limit:       30,
-				MaxRecordId: 12000,
-				Rows: []api.MessageRow{
-					{
-						Id:         1200,
-						Sequence:   2,
-						TalkType:   1,
-						MsgType:    1,
-						UserId:     20221110,
-						PeerId: 20221113,
-						Nickname:   "jack",
-						Avatar:     "https://im.gzydong.club/public/media/image/avatar/20221124/ea1bf7400e61fad835ad72c2c9e985b1_200x200.png",
-						IsRevoke:   0,
-						IsMark:     0,
-						IsRead:     1,
-						Content:    "last msg",
-						CreatedAt:  "2022-12-08 08:50:45",
-					}, {
-						Id:         1123,
-						Sequence:   1,
-						TalkType:   1,
-						MsgType:    1,
-						UserId:     20221110,
-						PeerId: 20221113,
-						Nickname:   "jack",
-						Avatar:     "https://im.gzydong.club/public/media/image/avatar/20221124/ea1bf7400e61fad835ad72c2c9e985b1_200x200.png",
-						IsRevoke:   0,
-						IsMark:     0,
-						IsRead:     1,
-						Content:    "new msg",
-						CreatedAt:  "2022-12-08 09:50:45",
-					},
-				},
-			},
-		})
-	*/
 }
 
 // recordsForwardHandler 获取转发会话记录详情列表服务接口
@@ -397,7 +355,7 @@ func Routers(r *gin.Engine) {
 		login.GET("/records", recordsHandler)
 		login.GET("/records/forward", recordsForwardHandler)
 		login.POST("/disturb", disturbHandler)
-		login.GET("/records/history", recordsHistoryHandler)
+		login.GET("/records/history", recordsHandler)
 		login.GET("/search-chat-records", searchMsgHandler)
 		login.POST("/message/text", sendTextMsgHandler)
 		login.POST("/message/code", sendCodeMsgHandler)
