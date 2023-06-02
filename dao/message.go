@@ -89,7 +89,7 @@ func (d *Dao) UpdateConversationGroupMsg(ctx context.Context, con []*model.Conve
 }
 
 // QuerySingleMessage 拉取单人历史消息
-func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int64, limit int) (error, []*model.SingleMessages) {
+func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int64, limit, msgType int) (error, []*model.SingleMessages) {
 	r := d.db(ctx)
 	if uid == 0 || peerUid == 0 {
 		log.Error("uid|msgid invalid")
@@ -104,6 +104,9 @@ func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int
 		r = r.Where("uid=? and (senderid=? and receiverid=?) and msgid<?", uid, peerUid, peerUid, minMsgId)
 	} else {
 		r = r.Where("uid=? and (senderid=? or receiverid=?) and msgid<?", uid, peerUid, peerUid, minMsgId)
+	}
+	if msgType != 0 {
+		r = r.Where("msg_type = ?", msgType)
 	}
 	// 分页，取第index页的count条数据。倒序
 	r = r.Order(clause.OrderByColumn{Column: clause.Column{Name: "msgid"}, Desc: true})
@@ -120,7 +123,7 @@ func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int
 }
 
 // QueryGroupMessage 拉取群历史消息
-func (d *Dao) QueryGroupMessage(ctx context.Context, groupId, minMsgId int64, limit int) (error, []*model.GroupMessages) {
+func (d *Dao) QueryGroupMessage(ctx context.Context, groupId, minMsgId int64, limit, msgType int) (error, []*model.GroupMessages) {
 	r := d.db(ctx)
 	if groupId == 0 {
 		log.Error("groupId invalid")
@@ -132,6 +135,9 @@ func (d *Dao) QueryGroupMessage(ctx context.Context, groupId, minMsgId int64, li
 		r = r.Where("groupid=?", groupId)
 	} else {
 		r = r.Where("groupid=? and msgid<?", groupId, minMsgId)
+	}
+	if msgType != 0 {
+		r = r.Where("msg_type = ?", msgType)
 	}
 	// 分页，取第index页的count条数据。倒序
 	r = r.Order(clause.OrderByColumn{Column: clause.Column{Name: "msgid"}, Desc: true})

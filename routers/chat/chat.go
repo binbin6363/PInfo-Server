@@ -99,6 +99,7 @@ func recordsHandler(c *gin.Context) {
 	req.MinMsgId = cast.ToInt64(c.Query("record_id"))
 	req.PeerId = cast.ToInt64(c.Query("receiver_id"))
 	req.TalkType = cast.ToInt(c.Query("talk_type"))
+	req.MsgType = cast.ToInt(c.Query("msg_type"))
 	req.Limit = cast.ToInt(c.Query("limit"))
 	if uid, ok := c.Get("uid"); ok {
 		req.Uid = cast.ToInt64(uid)

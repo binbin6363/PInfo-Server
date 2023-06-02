@@ -245,7 +245,7 @@ func (s *Service) SendTextMessage(ctx context.Context, req *api.SendTextMsgReq) 
 func (s *Service) querySingleMessage(ctx context.Context, req *api.MsgRecordsReq) (err error, rsp *api.MsgRecordsRsp) {
 	rsp = &api.MsgRecordsRsp{}
 	rsp.Limit = req.Limit
-	err, msgList := s.dao.QuerySingleMessage(ctx, req.Uid, req.PeerId, req.MinMsgId, req.Limit)
+	err, msgList := s.dao.QuerySingleMessage(ctx, req.Uid, req.PeerId, req.MinMsgId, req.Limit, req.MsgType)
 	if err != nil {
 		return err, nil
 	}
@@ -289,7 +289,7 @@ func (s *Service) querySingleMessage(ctx context.Context, req *api.MsgRecordsReq
 func (s *Service) queryGroupMessage(ctx context.Context, req *api.MsgRecordsReq) (err error, rsp *api.MsgRecordsRsp) {
 	rsp = &api.MsgRecordsRsp{}
 	rsp.Limit = req.Limit
-	err, msgList := s.dao.QueryGroupMessage(ctx, req.PeerId, req.MinMsgId, req.Limit)
+	err, msgList := s.dao.QueryGroupMessage(ctx, req.PeerId, req.MinMsgId, req.Limit, req.MsgType)
 	if err != nil {
 		return err, nil
 	}

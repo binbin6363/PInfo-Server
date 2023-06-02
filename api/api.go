@@ -198,6 +198,7 @@ type MsgRecordsReq struct {
 	PeerId   int64 // receiver_id
 	TalkType int   // talk_type
 	Limit    int   // limit
+	MsgType  int   // msg_type, 0所有，2图片视频文件，3会话记录，4代码块，5群投票
 }
 
 type MsgRecordsRsp struct {
