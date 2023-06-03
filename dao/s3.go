@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"time"
@@ -111,4 +112,24 @@ func (d *Dao) ParseUrlKey(ctx context.Context, urlStr string) (string, error) {
 	}
 
 	return u.Path, nil
+}
+
+// RawDownload 直接从url下载字节流
+func (d *Dao) RawDownload(_ context.Context, url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp != nil {
+		defer func() {
+			log.Infof("done download data")
+			resp.Body.Close()
+		}()
+	} else {
+		log.Errorf("resp err: %v", err)
+		return nil, err
+	}
+
+	log.Infof("start download data from url:%s", url)
+	return io.ReadAll(resp.Body)
 }

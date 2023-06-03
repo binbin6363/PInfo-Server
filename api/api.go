@@ -401,6 +401,15 @@ type UploadRsp struct {
 	Avatar string `json:"avatar"`
 }
 
+type DownloadReq struct {
+	Uid int64  `json:"id"`  // 我的ID
+	Url string `json:"url"` // 下载URL
+}
+
+type DownloadRsp struct {
+	Data string `json:"data"`
+}
+
 // CommRsp 针对请求的ack
 type CommRsp struct {
 	Code    int         `json:"code"`

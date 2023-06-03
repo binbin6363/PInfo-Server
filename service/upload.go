@@ -5,6 +5,7 @@ import (
 	"PInfo-server/config"
 	"PInfo-server/log"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"time"
 )
@@ -57,5 +58,20 @@ func (s *Service) UploadAvatar(ctx context.Context, req *api.UploadReq) (err err
 	}
 
 	log.Infof("UploadAvatar ok, req:%+v, rsp:%+v", req, uploadRsp)
+	return nil, rsp
+}
+
+func (s *Service) DownloadAvatar(ctx context.Context, req *api.DownloadReq) (err error, rsp *api.CommRsp) {
+
+	data, err := s.dao.RawDownload(ctx, req.Url)
+	if err != nil {
+		return err, rsp
+	}
+
+	rsp.Data = &api.DownloadRsp{
+		Data: base64.URLEncoding.EncodeToString(data),
+	}
+
+	log.Infof("DownloadAvatar ok")
 	return nil, rsp
 }
