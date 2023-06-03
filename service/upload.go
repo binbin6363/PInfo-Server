@@ -75,7 +75,7 @@ func (s *Service) DownloadAvatar(ctx context.Context, req *api.DownloadReq) (err
 	}
 
 	rsp.Data = &api.DownloadRsp{
-		Data: base64.URLEncoding.EncodeToString(data),
+		Data: base64.StdEncoding.EncodeToString(data),
 	}
 
 	log.Infof("DownloadAvatar ok")
