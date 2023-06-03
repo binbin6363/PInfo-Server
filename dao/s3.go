@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -104,17 +103,12 @@ func (d *Dao) DownloadFile(ctx context.Context, bucket, key string) error {
 }
 
 // ParseUrlKey 从url解析path路径剥离bucket
-func (d *Dao) ParseUrlKey(ctx context.Context, bucket, urlStr string) (string, error) {
+func (d *Dao) ParseUrlKey(ctx context.Context, urlStr string) (string, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		log.Errorf("parse url failed, url: %s", urlStr)
 		return "", errors.New("parse url failed")
 	}
 
-	if _, key, ok := strings.Cut(u.Path, bucket); ok {
-		return key, nil
-	}
-
-	log.Errorf("parse fail, use ori:%s", urlStr)
-	return urlStr, nil
+	return u.Path, nil
 }

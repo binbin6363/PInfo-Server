@@ -8,6 +8,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"strings"
 	"time"
 )
 
@@ -78,7 +79,7 @@ func (d *Dao) GetUserInfoByUserName(ctx context.Context, username string) (error
 		log.Infof("GetUserInfoByUserName read db error(%v) username(%s)", err, username)
 		return err, nil
 	}
-	userInfo.Avatar = d.getFullAvatar(ctx, userInfo.Avatar)
+	userInfo.Avatar = d.makeFullAvatar(ctx, userInfo.Avatar)
 
 	log.Infof("GetUserInfoByUserName read db ok username(%s), info:%+v", username, userInfo)
 	return nil, userInfo
@@ -99,7 +100,7 @@ func (d *Dao) GetUserInfoByUid(ctx context.Context, uid int64) (error, *model.Us
 	}
 
 	// 根据key生成URL
-	userInfo.Avatar = d.getFullAvatar(ctx, userInfo.Avatar)
+	userInfo.Avatar = d.makeFullAvatar(ctx, userInfo.Avatar)
 
 	log.Infof("GetUserInfoByUid read db ok uid(%d)", uid)
 	return nil, userInfo
@@ -133,10 +134,11 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 	return nil
 }
 
+// parseShortAvatar 从完整URL解析出 bucket + key 的路径
 func (d *Dao) parseShortAvatar(ctx context.Context, avatarUrl string) string {
 	shortAvatar := avatarUrl
 	if len(avatarUrl) != 0 {
-		if ava, err := d.ParseUrlKey(ctx, config.AppConfig().CosInfo.AvatarBucket, avatarUrl); err == nil {
+		if ava, err := d.ParseUrlKey(ctx, avatarUrl); err == nil {
 			shortAvatar = ava
 		} else {
 			log.Errorf("parse url failed, use ori: %s", avatarUrl)
@@ -145,17 +147,25 @@ func (d *Dao) parseShortAvatar(ctx context.Context, avatarUrl string) string {
 	return shortAvatar
 }
 
-func (d *Dao) getFullAvatar(ctx context.Context, avatar string) string {
-	fullAvatar := avatar
+// makeFullAvatar 构造全路径并获取前面
+func (d *Dao) makeFullAvatar(ctx context.Context, avatar string) string {
+
 	// 根据key生成URL
 	if len(avatar) > 0 {
-		str, e := d.GetPresignUrl(ctx, config.AppConfig().CosInfo.AvatarBucket,
-			avatar, time.Duration(config.AppConfig().CosInfo.Expire))
-		if e == nil {
-			fullAvatar = str
+		if _, key, ok := strings.Cut(avatar, config.AppConfig().CosInfo.AvatarBucket); !ok {
+			log.Errorf("parse key fail")
 		} else {
-			log.Errorf("get avatar url err: %v", e)
+			str, e := d.GetPresignUrl(ctx, config.AppConfig().CosInfo.AvatarBucket,
+				key, time.Duration(config.AppConfig().CosInfo.Expire))
+			if e == nil {
+				return str
+			} else {
+				log.Errorf("get avatar url err: %v", e)
+			}
 		}
+
 	}
-	return fullAvatar
+
+	log.Errorf("makeFullAvatar fail, use ori:%s", avatar)
+	return avatar
 }
