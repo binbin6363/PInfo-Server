@@ -5,9 +5,8 @@ import (
 	"PInfo-server/config"
 	"PInfo-server/log"
 	"context"
-	"io"
-	"os"
-	"path"
+	"fmt"
+	"time"
 )
 
 func (s *Service) UploadAvatar(ctx context.Context, req *api.UploadReq) (err error, rsp *api.CommRsp) {
@@ -19,8 +18,8 @@ func (s *Service) UploadAvatar(ctx context.Context, req *api.UploadReq) (err err
 
 	uploadRsp := &api.UploadRsp{}
 	uploadOK := false
-	resourceRoot := config.AppConfig().ServerInfo.ResourceRoot
-	remoteUrlRoot := config.AppConfig().ServerInfo.RemoteUrlRoot
+	bucket := config.AppConfig().CosInfo.AvatarBucket
+	expireHour := config.AppConfig().CosInfo.Expire
 	for _, fileHeaders := range req.Form.File {
 		for _, file := range fileHeaders {
 			inFile, err := file.Open()
@@ -29,21 +28,24 @@ func (s *Service) UploadAvatar(ctx context.Context, req *api.UploadReq) (err err
 				continue
 			}
 			defer inFile.Close()
-			fullPath := path.Join(resourceRoot, file.Filename)
-			out, err := os.Create(fullPath)
+			key := fmt.Sprintf("avatar/%d/%s", req.Uid, file.Filename)
+			err = s.dao.UploadFile(ctx, bucket, key, inFile)
 			if err != nil {
-				log.Errorf("open outfile failed, path:%s, err:%v", fullPath, err)
-				continue
+				log.Errorf("UploadFile failed, path:%s, err:%v", key, err)
+				uploadOK = false
+				break
+			} else {
+				log.Infof("UploadFile ok, name:%s, size:%d", file.Filename, file.Size)
+				uploadOK = true
 			}
-			defer out.Close()
-			_, err = io.Copy(out, inFile)
-			if err != nil {
-				log.Errorf("copy file failed, infile:%s, outfile:%s, err:%v", file.Filename, fullPath, err)
-				continue
+
+			if p, e := s.dao.GetPresignUrl(ctx, bucket, key, time.Duration(expireHour)); e == nil {
+				uploadRsp.Avatar = p
+				log.Infof("get presign ok, key:%s, url:%s", key, uploadRsp.Avatar)
+			} else {
+				log.Errorf("get presign fail, key:%s, err: %v", key, e)
 			}
-			uploadOK = true
-			uploadRsp.Avatar = path.Join(remoteUrlRoot, file.Filename)
-			log.Infof("upload file ok, src:%s, target path:%s, size:%d", file.Filename, fullPath, file.Size)
+			break
 		}
 	}
 

@@ -393,7 +393,8 @@ type GroupDetailRsp struct {
 }
 
 type UploadReq struct {
-	Form *multipart.Form `json:"-"` // 上传的文件流
+	Uid  int64           `json:"id"` // 我的ID
+	Form *multipart.Form `json:"-"`  // 上传的文件流
 }
 
 type UploadRsp struct {

@@ -2,15 +2,24 @@ package upload
 
 import (
 	"PInfo-server/api"
+	"PInfo-server/log"
 	"PInfo-server/service"
 	"PInfo-server/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 )
 
 func uploadAvatarHandler(c *gin.Context) {
 	form, _ := c.MultipartForm()
 	req := &api.UploadReq{
 		Form: form,
+	}
+
+	if uid, ok := c.Get("uid"); ok {
+		req.Uid = cast.ToInt64(uid)
+	} else {
+		log.Errorf("invalid uid req")
+		return
 	}
 
 	err, rsp := service.DefaultService.UploadAvatar(c.Request.Context(), req)

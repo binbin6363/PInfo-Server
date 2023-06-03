@@ -1,9 +1,13 @@
 package dao
 
 import (
+	"PInfo-server/config"
 	"PInfo-server/log"
 	"PInfo-server/utils"
 	"context"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -12,25 +16,35 @@ import (
 type Dao struct {
 	commDB *gorm.DB
 	sf     *utils.Snowflake
+	sess   *session.Session
 }
 
 // New creates Dao instance
 // dsn eg: "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
-func New(dsn string, dataCenterId, WorkerId int64) *Dao {
+func New(dbInfo *config.DBInfo, svrInfo *config.ServerInfo, cosInfo *config.CosInfo) *Dao {
 	d := &Dao{}
 
-	cli, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	cli, err := gorm.Open(mysql.Open(dbInfo.Dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("dao: New db gorm client error(%v)", err)
 	}
 	d.commDB = cli
 
-	s, err := utils.NewSnowflake(dataCenterId, WorkerId)
+	s, err := utils.NewSnowflake(svrInfo.DataCenterId, svrInfo.WorkerId)
 	if err != nil {
-		log.Fatalf("dao: NewSnowflake error(%v), dataCenterId:%d, WorkerId:%d", err, dataCenterId, WorkerId)
+		log.Fatalf("dao: NewSnowflake error(%v), dataCenterId:%d, WorkerId:%d",
+			err, svrInfo.DataCenterId, svrInfo.WorkerId)
 	}
-	log.Infof("dao: NewSnowflake dataCenterId:%d, WorkerId:%d", dataCenterId, WorkerId)
+	log.Infof("dao: NewSnowflake dataCenterId:%d, WorkerId:%d", svrInfo.DataCenterId, svrInfo.WorkerId)
 	d.sf = s
+
+	d.sess, _ = session.NewSession(&aws.Config{
+		Credentials:      credentials.NewStaticCredentials(cosInfo.SecretID, cosInfo.SecretKey, ""),
+		Endpoint:         aws.String(cosInfo.Url),
+		Region:           aws.String(cosInfo.Region),
+		DisableSSL:       aws.Bool(cosInfo.DisableSSL),
+		S3ForcePathStyle: aws.Bool(cosInfo.ForcePathStyle),
+	})
 
 	return d
 }

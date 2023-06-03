@@ -15,9 +15,9 @@ type Service struct {
 // New creates service instance
 func New() *Service {
 	srv := Service{
-		dao: dao.New(config.AppConfig().DBInfo.Dsn,
-			config.AppConfig().ServerInfo.DataCenterId,
-			config.AppConfig().ServerInfo.WorkerId),
+		dao: dao.New(config.AppConfig().DBInfo,
+			config.AppConfig().ServerInfo,
+			config.AppConfig().CosInfo),
 	}
 	return &srv
 }

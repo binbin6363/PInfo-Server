@@ -2,8 +2,8 @@ package config
 
 import (
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"log"
+	"os"
 )
 
 type ServerInfo struct {
@@ -38,6 +38,18 @@ type ServerCfg struct {
 	ServerInfo *ServerInfo `yaml:"server"`
 	DBInfo     *DBInfo     `yaml:"db"`
 	ConnInfo   *ConnInfo   `yaml:"conn"`
+	CosInfo    *CosInfo    `yaml:"cos"`
+}
+
+type CosInfo struct {
+	SecretID       string `yaml:"secret_id"`
+	SecretKey      string `yaml:"secret_key"`
+	Url            string `yaml:"domain"`
+	Region         string `yaml:"region"`
+	DisableSSL     bool   `yaml:"disable_ssl"`
+	ForcePathStyle bool   `yaml:"force_path_style"`
+	AvatarBucket   string `yaml:"avatar_bucket"`
+	Expire         int64  `yaml:"expire"` // 单位小时
 }
 
 // 配置实例
@@ -50,7 +62,7 @@ func AppConfig() *ServerCfg {
 
 // Init 初始化配置
 func Init(file string) {
-	configFile, err := ioutil.ReadFile(file)
+	configFile, err := os.ReadFile(file)
 	if err != nil {
 		log.Fatalf("load conf fail, path:%s, err:%v", file, err)
 	}
