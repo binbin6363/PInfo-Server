@@ -3,7 +3,9 @@ package dao
 import (
 	"PInfo-server/log"
 	"context"
+	"errors"
 	"io"
+	"net/url"
 	"os"
 	"time"
 
@@ -98,4 +100,15 @@ func (d *Dao) DownloadFile(ctx context.Context, bucket, key string) error {
 	}
 	log.Infof("Downloaded %s %d bytes", file.Name(), numBytes)
 	return err
+}
+
+// ParseUrlKey 从url解析path路径
+func (d *Dao) ParseUrlKey(ctx context.Context, urlStr string) (string, error) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		log.Errorf("parse url failed, url: %s", urlStr)
+		return "", errors.New("parse url failed")
+	}
+
+	return u.Path, nil
 }

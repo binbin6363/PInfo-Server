@@ -44,7 +44,7 @@ type ServerCfg struct {
 type CosInfo struct {
 	SecretID       string `yaml:"secret_id"`
 	SecretKey      string `yaml:"secret_key"`
-	Url            string `yaml:"domain"`
+	Domain         string `yaml:"domain"`
 	Region         string `yaml:"region"`
 	DisableSSL     bool   `yaml:"disable_ssl"`
 	ForcePathStyle bool   `yaml:"force_path_style"`

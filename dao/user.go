@@ -1,12 +1,14 @@
 package dao
 
 import (
+	"PInfo-server/config"
 	"PInfo-server/log"
 	"PInfo-server/model"
 	"context"
 	"errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"time"
 )
 
 func (d *Dao) CheckUserExist(ctx context.Context, username string) (err error, exist bool) {
@@ -95,6 +97,14 @@ func (d *Dao) GetUserInfoByUid(ctx context.Context, uid int64) (error, *model.Us
 		return err, nil
 	}
 
+	// 根据key生成URL
+	str, e := d.GetPresignUrl(ctx, config.AppConfig().CosInfo.AvatarBucket,
+		userInfo.Avatar, time.Duration(config.AppConfig().CosInfo.Expire))
+	if e == nil {
+		userInfo.Avatar = str
+	} else {
+		log.Errorf("get avatar url err: %v", e)
+	}
 	log.Infof("GetUserInfoByUid read db ok uid(%d)", uid)
 	return nil, userInfo
 }
@@ -105,6 +115,15 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 	if userInfo.Uid == 0 {
 		log.Error("uid invalid")
 		return errors.New("uid invalid")
+	}
+
+	// 拆解URL，只存储key
+	if len(userInfo.Avatar) != 0 {
+		if ava, err := d.ParseUrlKey(ctx, userInfo.Avatar); err == nil {
+			userInfo.Avatar = ava
+		} else {
+			log.Errorf("parse url failed, use ori: %s", userInfo.Avatar)
+		}
 	}
 
 	r = r.Clauses(clause.OnConflict{

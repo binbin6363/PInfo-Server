@@ -40,7 +40,7 @@ func New(dbInfo *config.DBInfo, svrInfo *config.ServerInfo, cosInfo *config.CosI
 
 	d.sess, _ = session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(cosInfo.SecretID, cosInfo.SecretKey, ""),
-		Endpoint:         aws.String(cosInfo.Url),
+		Endpoint:         aws.String(cosInfo.Domain),
 		Region:           aws.String(cosInfo.Region),
 		DisableSSL:       aws.Bool(cosInfo.DisableSSL),
 		S3ForcePathStyle: aws.Bool(cosInfo.ForcePathStyle),
