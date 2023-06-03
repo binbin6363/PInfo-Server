@@ -62,9 +62,15 @@ func (s *Service) UploadAvatar(ctx context.Context, req *api.UploadReq) (err err
 }
 
 func (s *Service) DownloadAvatar(ctx context.Context, req *api.DownloadReq) (err error, rsp *api.CommRsp) {
+	rsp = &api.CommRsp{
+		Code:    0,
+		Message: "ok",
+		Data:    nil,
+	}
 
 	data, err := s.dao.RawDownload(ctx, req.Url)
 	if err != nil {
+		log.Errorf("RawDownload err:%v", err)
 		return err, rsp
 	}
 
