@@ -155,6 +155,7 @@ func (d *Dao) makeFullAvatar(ctx context.Context, avatar string) string {
 		if _, key, ok := strings.Cut(avatar, config.AppConfig().CosInfo.AvatarBucket); !ok {
 			log.Errorf("parse key fail")
 		} else {
+			log.Info("after cut, key: %s", key)
 			str, e := d.GetPresignUrl(ctx, config.AppConfig().CosInfo.AvatarBucket,
 				key, time.Duration(config.AppConfig().CosInfo.Expire))
 			if e == nil {
