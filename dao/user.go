@@ -78,6 +78,7 @@ func (d *Dao) GetUserInfoByUserName(ctx context.Context, username string) (error
 		log.Infof("GetUserInfoByUserName read db error(%v) username(%s)", err, username)
 		return err, nil
 	}
+	userInfo.Avatar = d.getFullAvatar(ctx, userInfo.Avatar)
 
 	log.Infof("GetUserInfoByUserName read db ok username(%s), info:%+v", username, userInfo)
 	return nil, userInfo
@@ -98,13 +99,8 @@ func (d *Dao) GetUserInfoByUid(ctx context.Context, uid int64) (error, *model.Us
 	}
 
 	// 根据key生成URL
-	str, e := d.GetPresignUrl(ctx, config.AppConfig().CosInfo.AvatarBucket,
-		userInfo.Avatar, time.Duration(config.AppConfig().CosInfo.Expire))
-	if e == nil {
-		userInfo.Avatar = str
-	} else {
-		log.Errorf("get avatar url err: %v", e)
-	}
+	userInfo.Avatar = d.getFullAvatar(ctx, userInfo.Avatar)
+
 	log.Infof("GetUserInfoByUid read db ok uid(%d)", uid)
 	return nil, userInfo
 }
@@ -118,13 +114,7 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 	}
 
 	// 拆解URL，只存储key
-	if len(userInfo.Avatar) != 0 {
-		if ava, err := d.ParseUrlKey(ctx, userInfo.Avatar); err == nil {
-			userInfo.Avatar = ava
-		} else {
-			log.Errorf("parse url failed, use ori: %s", userInfo.Avatar)
-		}
-	}
+	userInfo.Avatar = d.parseShortAvatar(ctx, userInfo.Avatar)
 
 	r = r.Clauses(clause.OnConflict{
 		// key列
@@ -141,4 +131,31 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 
 	log.Infof("SetUserInfo update db ok user info:%+v", userInfo)
 	return nil
+}
+
+func (d *Dao) parseShortAvatar(ctx context.Context, avatarUrl string) string {
+	shortAvatar := avatarUrl
+	if len(avatarUrl) != 0 {
+		if ava, err := d.ParseUrlKey(ctx, avatarUrl); err == nil {
+			shortAvatar = ava
+		} else {
+			log.Errorf("parse url failed, use ori: %s", avatarUrl)
+		}
+	}
+	return shortAvatar
+}
+
+func (d *Dao) getFullAvatar(ctx context.Context, avatar string) string {
+	fullAvatar := avatar
+	// 根据key生成URL
+	if len(avatar) > 0 {
+		str, e := d.GetPresignUrl(ctx, config.AppConfig().CosInfo.AvatarBucket,
+			avatar, time.Duration(config.AppConfig().CosInfo.Expire))
+		if e == nil {
+			fullAvatar = str
+		} else {
+			log.Errorf("get avatar url err: %v", e)
+		}
+	}
+	return fullAvatar
 }
