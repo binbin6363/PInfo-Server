@@ -136,7 +136,7 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 func (d *Dao) parseShortAvatar(ctx context.Context, avatarUrl string) string {
 	shortAvatar := avatarUrl
 	if len(avatarUrl) != 0 {
-		if ava, err := d.ParseUrlKey(ctx, avatarUrl); err == nil {
+		if ava, err := d.ParseUrlKey(ctx, config.AppConfig().CosInfo.AvatarBucket, avatarUrl); err == nil {
 			shortAvatar = ava
 		} else {
 			log.Errorf("parse url failed, use ori: %s", avatarUrl)
