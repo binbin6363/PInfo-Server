@@ -257,6 +257,18 @@ func sendImageMsgHandler(c *gin.Context) {
 		return
 	}
 
+	log.Infof("show keys: %v", c.Keys)
+	log.Infof("show Params: %v", c.Params)
+	log.Infof("show Accepted: %v", c.Accepted)
+
+	for key, values := range form.Value {
+		log.Infof("%s: %v\n", key, values)
+	}
+	log.Infof("show form")
+	for key, values := range form.File {
+		log.Infof("%s: %v\n", key, values)
+	}
+
 	req := &api.SendImageMsgReq{}
 	//if err := c.ShouldBind(req); err != nil {
 	//	c.JSON(http.StatusOK, gin.H{
