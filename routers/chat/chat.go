@@ -257,30 +257,22 @@ func sendImageMsgHandler(c *gin.Context) {
 		return
 	}
 
-	log.Infof("show keys: %v", c.Keys)
-	log.Infof("show Params: %v", c.Params)
-	log.Infof("show Accepted: %v", c.Accepted)
-
-	for key, values := range form.Value {
-		log.Infof("%s: %v\n", key, values)
-	}
 	log.Infof("show form")
 	for key, values := range form.File {
 		log.Infof("%s: %v\n", key, values)
 	}
 
 	req := &api.SendImageMsgReq{}
-	//if err := c.ShouldBind(req); err != nil {
-	//	c.JSON(http.StatusOK, gin.H{
-	//		"code":    500,
-	//		"message": "参数错误",
-	//		"data":    nil,
-	//	})
-	//	return
-	//}
+
+	for key, values := range form.Value {
+		if key == "receiver_id" {
+			req.ReceiverId = cast.ToInt64(values[0])
+		} else if key == "talk_type" {
+			req.TalkType = cast.ToInt(values[0])
+		}
+	}
 	req.Form = form
-	req.ReceiverId = cast.ToInt64(form.Value["receiver_id"][0])
-	req.TalkType = cast.ToInt(form.Value["talk_type"][0])
+	log.Debugf("show req: %v", req)
 
 	if uid, ok := c.Get("uid"); ok {
 		req.Uid = cast.ToInt64(uid)
