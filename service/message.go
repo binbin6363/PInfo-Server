@@ -349,3 +349,38 @@ func (s *Service) QueryMessage(ctx context.Context, req *api.MsgRecordsReq) (err
 
 	return errors.New("unknown talk type"), nil
 }
+
+func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq) (rsp *api.SendImageMsgRsp, err error) {
+	rsp = &api.SendImageMsgRsp{
+		Content: api.SendImageMsgContent{},
+	}
+	bucket := config.AppConfig().CosInfo.MediaBucket
+	expireHour := config.AppConfig().CosInfo.Expire
+	for _, fileHeaders := range req.Form.File {
+		for _, file := range fileHeaders {
+			inFile, err := file.Open()
+			if err != nil {
+				log.Errorf("open infile failed, path:%s, err:%v", file.Filename, err)
+				continue
+			}
+			defer inFile.Close()
+			key := fmt.Sprintf("img/%d/%s", time.Now().Year(), file.Filename)
+			err = s.dao.UploadFile(ctx, bucket, key, inFile)
+			if err != nil {
+				log.Errorf("UploadFile failed, path:%s, err:%v", key, err)
+				break
+			} else {
+				log.Infof("UploadFile ok, name:%s, size:%d", file.Filename, file.Size)
+			}
+
+			if p, e := s.dao.GetPresignUrl(ctx, bucket, key, time.Duration(expireHour)); e == nil {
+				log.Infof("get presign ok, key:%s, url:%s", key, p)
+				rsp.Content.ImgContent = append(rsp.Content.ImgContent, api.ImageMsgContent{Name: file.Filename, Url: p})
+			} else {
+				log.Errorf("get presign fail, key:%s, err: %v", key, e)
+			}
+			break
+		}
+	}
+	return rsp, err
+}

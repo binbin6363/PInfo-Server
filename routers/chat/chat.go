@@ -215,28 +215,7 @@ func sendTextMsgHandler(c *gin.Context) {
 		})
 		return
 	}
-	//
-	//rsp := api.SendTextMsgEvtNotice{
-	//	Content: api.SendTextMsgContent{
-	//		Data: api.SendTextMsgData{
-	//			Id:         1201,
-	//			Sequence:   3,
-	//			TalkType:   1,
-	//			MsgType:    1,
-	//			UserId:     20221113,
-	//			PeerId: 20221110,
-	//			Nickname:   "jack",
-	//			Avatar:     "https://im.gzydong.club/public/media/image/avatar/20221124/ea1bf7400e61fad835ad72c2c9e985b1_200x200.png",
-	//			IsMark:     0,
-	//			IsRead:     0,
-	//			Content:    "new chat content",
-	//			CreatedAt:  "2022-12-09 00:50:45",
-	//		},
-	//		TalkType:   1,
-	//		PeerId: 20221111,
-	//		SenderId:   20221113,
-	//	},
-	//}
+
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "success",
@@ -278,11 +257,43 @@ func sendImageMsgHandler(c *gin.Context) {
 		return
 	}
 
-	log.Infof("unimplemented")
+	req := &api.SendImageMsgReq{}
+	if err := c.ShouldBind(req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+	req.Form = form
+
+	if uid, ok := c.Get("uid"); ok {
+		req.Uid = cast.ToInt64(uid)
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+	// 上传文件到服务器
+	rsp, err := service.DefaultService.SendImageMessage(c, req)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{
+			"code":    500,
+			"message": "内部错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	log.Infof("done send image message")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "unimplemented",
-		"data":    nil,
+		"message": "success",
+		"data":    rsp,
 	})
 }
 

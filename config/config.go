@@ -52,8 +52,9 @@ type CosInfo struct {
 	Region         string `yaml:"region"`
 	DisableSSL     bool   `yaml:"disable_ssl"`
 	ForcePathStyle bool   `yaml:"force_path_style"`
-	AvatarBucket   string `yaml:"avatar_bucket"`
-	Expire         int64  `yaml:"expire"` // 单位小时
+	AvatarBucket   string `yaml:"avatar_bucket"` // 头像专用
+	MediaBucket    string `yaml:"media_bucket"`  // 媒体消息专用，包含图片，语音，文件
+	Expire         int64  `yaml:"expire"`        // 单位小时
 }
 
 type LogInfo struct {

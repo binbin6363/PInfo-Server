@@ -192,6 +192,26 @@ type SendTextMsgData struct {
 	CreatedAt  string `json:"created_at"`
 }
 
+type SendImageMsgReq struct {
+	Uid         int64           // 服务框架从token解析加上的
+	ClientMsgId int64           `json:"client_msg_id"` // 消息去重
+	ReceiverId  int64           `json:"receiver_id"`
+	TalkType    int             `json:"talk_type"`
+	Form        *multipart.Form `json:"form"`
+}
+
+type ImageMsgContent struct {
+	Name string `json:"name"` // 图片名字
+	Url  string `json:"url"`  // 图片消息服务器的url
+}
+
+type SendImageMsgContent struct {
+	ImgContent []ImageMsgContent `json:"url"` // 图片消息url
+}
+
+type SendImageMsgRsp struct {
+	Content SendImageMsgContent `json:"content"`
+}
 type MsgRecordsReq struct {
 	Uid      int64
 	MinMsgId int64 // record_id
