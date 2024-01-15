@@ -37,7 +37,7 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 		ClientMsgID: req.ClientMsgId,
 		SenderID:    req.Uid,
 		ReceiverID:  req.ReceiverId,
-		MsgType:     1,
+		MsgType:     model.MsgTypeText,
 		Content:     req.Text,
 		MsgStatus:   0,
 		CreateTime:  time.Now().Unix(),
@@ -96,7 +96,7 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 				Id:         msg.MsgID,
 				Sequence:   1,
 				TalkType:   req.TalkType,
-				MsgType:    1,
+				MsgType:    model.MsgTypeText,
 				UserId:     req.Uid,
 				ReceiverId: req.ReceiverId,
 				Content:    req.Text,
@@ -139,7 +139,7 @@ func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsg
 		MsgID:       s.dao.GenMsgID(), // 本应该由中心服务生成，此处暂且放在本机生成
 		ClientMsgID: req.ClientMsgId,  // 客户端发送的消息做去重
 		SenderID:    req.Uid,
-		MsgType:     1,
+		MsgType:     model.MsgTypeText,
 		Content:     req.Text,
 		MsgStatus:   0,
 		CreateTime:  time.Now().Unix(),
@@ -191,7 +191,7 @@ func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsg
 				Id:         msg.MsgID,
 				Sequence:   1,
 				TalkType:   req.TalkType,
-				MsgType:    1,
+				MsgType:    model.MsgTypeText,
 				UserId:     req.Uid,
 				ReceiverId: groupId,
 				Content:    req.Text,
@@ -354,6 +354,19 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 	rsp = &api.SendImageMsgRsp{
 		Content: api.SendImageMsgContent{},
 	}
+
+	msg := &model.SingleMessages{
+		Uid:         req.Uid,
+		MsgID:       s.dao.GenMsgID(), // 本应该由中心服务生成，此处暂且放在本机生成
+		ClientMsgID: req.ClientMsgId,
+		SenderID:    req.Uid,
+		ReceiverID:  req.ReceiverId,
+		MsgType:     model.MsgTypeImg,
+		MsgStatus:   0,
+		CreateTime:  time.Now().Unix(),
+		UpdateTime:  time.Now().Unix(),
+	}
+	// 上传图片
 	bucket := config.AppConfig().CosInfo.MediaBucket
 	expireHour := config.AppConfig().CosInfo.Expire
 	for _, fileHeaders := range req.Form.File {
@@ -365,12 +378,29 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 			}
 			defer inFile.Close()
 			key := fmt.Sprintf("img/%d/%s", time.Now().Year(), file.Filename)
+			// 上传图片
 			err = s.dao.UploadFile(ctx, bucket, key, inFile)
 			if err != nil {
 				log.Errorf("UploadFile failed, path:%s, err:%v", key, err)
 				break
 			} else {
 				log.Infof("UploadFile ok, name:%s, size:%d", file.Filename, file.Size)
+			}
+
+			// 上传成功，写db
+			msg.Content = file.Filename
+			// 给发送者插入消息
+			msg.Uid = req.Uid
+			if err = s.dao.AddOneSingleMessage(ctx, msg); err != nil {
+				log.Infof("save img msg for sender failed! info:%+v", msg)
+				break
+			}
+			// 给接收者插入消息
+			msg.Uid = req.ReceiverId
+			msg.ID = 0
+			if err = s.dao.AddOneSingleMessage(ctx, msg); err != nil {
+				log.Infof("save img msg for receiver failed! info:%+v", msg)
+				break
 			}
 
 			if p, e := s.dao.GetPresignUrl(ctx, bucket, key, time.Duration(expireHour)); e == nil {
@@ -382,5 +412,6 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 			break
 		}
 	}
+
 	return rsp, err
 }

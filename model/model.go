@@ -29,6 +29,17 @@ const (
 	ContactWaitMeApply ContactType = 2 // 好友申请等我审批
 	ContactSendApply   ContactType = 3 // 我已发送好友申请
 	ContactFriend      ContactType = 4 // 已通过申请，好友关系
+
+	MsgTypeText     = 1  // 文本
+	MsgTypeImg      = 2  // 图片
+	MsgTypeRecord   = 3  // 会话记录消息
+	MsgTypeCode     = 4  // 代码块消息
+	MsgTypeVote     = 5  // 投票消息
+	MsgTypeAudio    = 6  // 音频消息
+	MsgTypeVideo    = 7  // 视频消息
+	MsgTypeLogin    = 8  // 登录消息
+	MsgTypeFile     = 9  // 文件消息
+	MsgTypeLocation = 10 // 位置消息
 )
 
 // Contacts 联系人好友
