@@ -62,6 +62,7 @@ type LogInfo struct {
 	MaxSize    int    `yaml:"max_size"`
 	MaxAge     int    `yaml:"max_age"`
 	MaxBackUps int    `yaml:"max_backups"`
+	CallerSkip int    `yaml:"caller_skip"`
 }
 
 // 配置实例

@@ -88,7 +88,8 @@ func main() {
 		config.AppConfig().LogInfo.MaxSize,
 		config.AppConfig().LogInfo.MaxBackUps,
 		config.AppConfig().LogInfo.MaxAge,
-		config.AppConfig().LogInfo.Level)
+		config.AppConfig().LogInfo.Level,
+		config.AppConfig().LogInfo.CallerSkip)
 
 	cleanup := initTracer()
 	defer cleanup(context.Background())
