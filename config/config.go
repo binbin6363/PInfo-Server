@@ -1,9 +1,11 @@
 package config
 
 import (
-	"gopkg.in/yaml.v2"
-	"log"
 	"os"
+
+	"PInfo-server/log"
+
+	"gopkg.in/yaml.v2"
 )
 
 type ServerInfo struct {
@@ -17,6 +19,7 @@ type ServerInfo struct {
 	DebugReqRsp   bool   `yaml:"debug_req_rsp"`
 	ResourceRoot  string `yaml:"resource_root"`
 	RemoteUrlRoot string `yaml:"remote_url_root"`
+	Mode          string `yaml:"mode"` // debug, release, test
 }
 
 // DBInfo db信息
@@ -39,6 +42,7 @@ type ServerCfg struct {
 	DBInfo     *DBInfo     `yaml:"db"`
 	ConnInfo   *ConnInfo   `yaml:"conn"`
 	CosInfo    *CosInfo    `yaml:"cos"`
+	LogInfo    *LogInfo    `yaml:"log"`
 }
 
 type CosInfo struct {
@@ -50,6 +54,14 @@ type CosInfo struct {
 	ForcePathStyle bool   `yaml:"force_path_style"`
 	AvatarBucket   string `yaml:"avatar_bucket"`
 	Expire         int64  `yaml:"expire"` // 单位小时
+}
+
+type LogInfo struct {
+	Path       string `yaml:"path"`
+	Level      int    `yaml:"level"`
+	MaxSize    int    `yaml:"max_size"`
+	MaxAge     int    `yaml:"max_age"`
+	MaxBackUps int    `yaml:"max_backups"`
 }
 
 // 配置实例
@@ -71,5 +83,5 @@ func Init(file string) {
 		log.Fatalf("Unmarshal conf fail, err:%v", err)
 	}
 
-	log.Printf("load conf ok, path:%s, conf:%v", file, string(configFile))
+	log.Infof("load conf ok, path:%s, conf:%v", file, string(configFile))
 }

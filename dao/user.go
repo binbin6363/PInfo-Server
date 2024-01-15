@@ -1,15 +1,18 @@
 package dao
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
 	"PInfo-server/config"
 	"PInfo-server/log"
 	"PInfo-server/model"
-	"context"
-	"errors"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"strings"
-	"time"
 )
 
 func (d *Dao) CheckUserExist(ctx context.Context, username string) (err error, exist bool) {
@@ -42,34 +45,62 @@ func (d *Dao) CheckUserExist(ctx context.Context, username string) (err error, e
 }
 
 // AllocNewUserID 获取新用户ID
-func (d *Dao) AllocNewUserID(ctx context.Context) (err error, uid int64) {
+func (d *Dao) AllocNewUserID(ctx context.Context) (uid int64, err error) {
 	r := d.db(ctx)
 	type Result struct {
 		Uid int64 `gorm:"column:uid"`
 	}
 
+	tx := r.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if err = tx.Error; err != nil {
+		return 0, err
+	}
+
 	res := &Result{}
-	err = r.Table("user_infos").Order(clause.OrderByColumn{
+	err = r.Model(&model.UserInfo{}).Order(clause.OrderByColumn{
 		Column: clause.Column{
 			Name: "uid",
 		},
 		Desc: true,
-	}).Select([]string{"uid"}).Scan(&res).Error
-
+	}).Select([]string{"uid"}).First(&res).Error
 	if err != nil {
-		log.Infof("alloc user id failed, err:%+v", err)
-		return err, 0
+		log.Infof("select max uid failed, err:%+v", err)
+		tx.Rollback()
+		return 0, err
 	}
 
 	uid = res.Uid + 1
-	log.Infof("alloc user id ok, id:%d", uid)
-	return nil, uid
+	userInfo := &model.UserInfo{}
+	userInfo.Uid = uid
+	userInfo.UserName = fmt.Sprintf("%d", uid)
+	userInfo.CreateTime = time.Now().Unix()
+	err = r.Model(&model.UserInfo{}).Create(userInfo).Error
+	if err != nil {
+		log.Infof("alloc user id failed, err:%+v", err)
+		tx.Rollback()
+		return 0, err
+	}
+
+	err = tx.Commit().Error
+	if err == nil {
+		log.Infof("alloc user id ok, id:%d", uid)
+	} else {
+		uid = 0
+		log.Errorf("alloc user id failed, err:%v", err)
+	}
+
+	return uid, err
 }
 
 // GetUserInfoByUserName 获取用户信息
 func (d *Dao) GetUserInfoByUserName(ctx context.Context, username string) (error, *model.UserInfo) {
 	r := d.db(ctx)
-	if username == "" {
+	if len(username) == 0 {
 		log.Error("username is empty, invalid")
 		return errors.New("username is invalid"), nil
 	}
@@ -121,7 +152,7 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 		// key列
 		Columns: []clause.Column{{Name: "username"}},
 		// 需要更新的列
-		DoUpdates: clause.AssignmentColumns([]string{"passhash", "nickname",
+		DoUpdates: clause.AssignmentColumns([]string{"passhash", "username", "nickname",
 			"phone", "email", "avatar", "gender", "user_tag", "motto", "update_time"}),
 	}).Create(userInfo)
 

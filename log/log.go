@@ -12,10 +12,10 @@ func GetLogger() *zap.SugaredLogger {
 	return defaultLogger
 }
 
-func InitLogger(fileName string, maxSize, maxBackups, maxAge int) {
+func InitLogger(fileName string, maxSize, maxBackups, maxAge, level int) {
 	writeSyncer := getLogWriter(fileName, maxSize, maxBackups, maxAge)
 	encoder := getEncoder()
-	core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
+	core := zapcore.NewCore(encoder, writeSyncer, zapcore.Level(level))
 
 	logger := zap.New(core, zap.AddCaller())
 	defaultLogger = logger.Sugar()

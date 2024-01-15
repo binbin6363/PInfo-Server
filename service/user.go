@@ -1,13 +1,16 @@
 package service
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
 	"PInfo-server/api"
+	"PInfo-server/config"
 	"PInfo-server/log"
 	"PInfo-server/model"
 	"PInfo-server/utils"
-	"context"
-	"errors"
-	"time"
 )
 
 func (s *Service) GetUserInfo(ctx context.Context, username string) (error, *model.UserInfo) {
@@ -74,28 +77,29 @@ func (s *Service) RegisterUser(ctx context.Context, uid int64, req *api.Register
 	userInfo := &model.UserInfo{
 		UserName:   req.UserName,
 		PassHash:   passHash,
-		NickName:   req.NickName,
+		NickName:   req.UserName,
 		Phone:      "",
 		Email:      "",
-		Avatar:     "",
 		Gender:     1,
 		UserTag:    "",
 		Motto:      "",
 		CreateTime: time.Now().Unix(),
 		UpdateTime: time.Now().Unix(),
 	}
-	if req.NickName == "" {
-		userInfo.NickName = req.UserName
+	if len(req.NickName) > 0 { // 如果有nickname则使用nickname
+		userInfo.NickName = req.NickName
 	}
 
 	// 申请用户ID
-	err, userInfo.Uid = s.dao.AllocNewUserID(ctx)
+	userInfo.Uid, err = s.dao.AllocNewUserID(ctx)
 	if err != nil {
 		log.Infof("alloc user id failed, err:%v, user info:%+v", err, userInfo)
 		rsp.Code = 4002
 		rsp.Message = "内部错误"
 		return errors.New("内部错误"), rsp
 	}
+	userInfo.Avatar = fmt.Sprintf("%s/%d/avatar.png",
+		config.AppConfig().CosInfo.AvatarBucket, userInfo.Uid)
 
 	err = s.dao.SetUserInfo(ctx, userInfo)
 	if err != nil {

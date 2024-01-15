@@ -1,14 +1,14 @@
 package service
 
 import (
+	"PInfo-server/api"
+	"PInfo-server/log"
 	"PInfo-server/model"
 	"PInfo-server/utils"
 	"context"
-	"gorm.io/gorm"
 	"time"
 
-	"PInfo-server/api"
-	"PInfo-server/log"
+	"gorm.io/gorm"
 )
 
 func (s *Service) GetContactList(ctx context.Context, uid int64, status model.ContactType) (error, []*api.ContactInfo) {

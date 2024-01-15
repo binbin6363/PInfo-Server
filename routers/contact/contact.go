@@ -2,13 +2,14 @@ package contact
 
 import (
 	"PInfo-server/api"
+	"PInfo-server/log"
 	"PInfo-server/model"
 	"PInfo-server/service"
 	"PInfo-server/utils"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
-	"log"
-	"net/http"
 )
 
 // contactListHandler 获取好友列表服务接口
@@ -67,7 +68,7 @@ func contactSearchHandler(c *gin.Context) {
 
 // deleteContactHandler 解除好友关系服务接口
 func deleteContactHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "Hello Welcome to PIM",
@@ -125,7 +126,7 @@ func contactDetailHandler(c *gin.Context) {
 
 // unreadNumHandler 查询好友申请未读数量服务接口
 func unreadNumHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "Hello Welcome to PIM",

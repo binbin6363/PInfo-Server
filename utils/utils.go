@@ -1,14 +1,16 @@
 package utils
 
 import (
-	"PInfo-server/api"
-	"PInfo-server/log"
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 	"golang.org/x/crypto/bcrypt"
-	"net/http"
-	"time"
+
+	"PInfo-server/api"
+	"PInfo-server/log"
 )
 
 // EncryptPassword 对密码加密

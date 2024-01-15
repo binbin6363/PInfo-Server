@@ -1,14 +1,16 @@
 package routers
 
 import (
-	"PInfo-server/config"
 	"net/http"
 	"strings"
 
+	"PInfo-server/config"
 	"PInfo-server/log"
 	"PInfo-server/service"
+
 	"github.com/gin-gonic/gin"
 	gindump "github.com/tpkeeper/gin-dump"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 type Option func(*gin.Engine)
@@ -90,10 +92,12 @@ func Register(opts ...Option) {
 }
 
 // Init 初始化
-func Init() *gin.Engine {
+func Init(serviceName string) *gin.Engine {
+
 	r := gin.Default()
 	r.Use(Cors())
 	r.Use(JWTAuthMiddleware())
+	r.Use(otelgin.Middleware(serviceName))
 	if config.AppConfig().ServerInfo.DebugReqRsp {
 		r.Use(gindump.DumpWithOptions(true, true, true, false, false, func(dumpStr string) {
 			log.Info(dumpStr)

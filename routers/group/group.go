@@ -2,12 +2,13 @@ package group
 
 import (
 	"PInfo-server/api"
+	"PInfo-server/log"
 	"PInfo-server/service"
 	"PInfo-server/utils"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
-	"log"
-	"net/http"
 )
 
 func memberInviteHandler(c *gin.Context) {
@@ -155,7 +156,7 @@ func inviteGroupHandler(c *gin.Context) {
 }
 
 func removeGroupMemberHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -165,7 +166,7 @@ func removeGroupMemberHandler(c *gin.Context) {
 }
 
 func dismissGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -175,7 +176,7 @@ func dismissGroupHandler(c *gin.Context) {
 }
 
 func secedeGroupHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -217,7 +218,7 @@ func remarkGroupHandler(c *gin.Context) {
 }
 
 func getGroupMemberListHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -227,7 +228,7 @@ func getGroupMemberListHandler(c *gin.Context) {
 }
 
 func getGroupNoticesHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -269,7 +270,7 @@ func getGroupMembersHandler(c *gin.Context) {
 }
 
 func editGroupNoticeHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "Hello Welcome to PIM",

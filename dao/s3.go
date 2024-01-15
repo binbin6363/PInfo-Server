@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"PInfo-server/log"
 	"context"
 	"errors"
 	"io"
@@ -9,6 +8,8 @@ import (
 	"net/url"
 	"os"
 	"time"
+
+	"PInfo-server/log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"

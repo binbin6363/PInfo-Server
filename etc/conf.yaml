@@ -19,3 +19,13 @@ db:
 conn:
   addr: "127.0.0.1:8080" # 接入服务地址
   timeout: 100 # ms
+
+cos:
+  secret_id: "AKIDbB0pbGnAqkV4b9UuT7ZmjS9mHckgZJyV"
+  secret_key: "e8k8IWnSzHUVM0cNNJ1Wr5520reFqU3Q"
+  domain: "cos.ap-shanghai.myqcloud.com"
+  region: "ap-shanghai"
+  avatar_bucket: "pim-avatar-1252010140"
+  disable_ssl: false
+  force_path_style: true
+  expire: 12

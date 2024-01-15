@@ -1,11 +1,13 @@
 package dao
 
 import (
-	"PInfo-server/log"
-	"PInfo-server/model"
 	"context"
 	"errors"
+
 	"gorm.io/gorm/clause"
+
+	"PInfo-server/log"
+	"PInfo-server/model"
 )
 
 // GetConversationList 差量获取会话列表

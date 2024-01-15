@@ -3,13 +3,14 @@ package auth
 import (
 	"PInfo-server/api"
 	"PInfo-server/config"
+	"PInfo-server/log"
 	"PInfo-server/model"
 	"PInfo-server/service"
 	"PInfo-server/utils"
 	"context"
-	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func loginHandler(c *gin.Context) {
@@ -40,7 +41,7 @@ func loginHandler(c *gin.Context) {
 	}
 
 	_, enc := utils.EncryptPassword(loginReq.PassWord)
-	log.Printf("enc passwd hash:%s", enc)
+	log.Infof("enc passwd hash:%s", enc)
 
 	// 验证密码
 	if !utils.CheckPasswordHash(loginReq.PassWord, detailInfo.PassHash) {
@@ -51,12 +52,12 @@ func loginHandler(c *gin.Context) {
 		})
 		return
 	}
-	log.Printf("passwd check pass")
+	log.Infof("passwd check pass")
 
 	// 生成token
 	err, token := service.DefaultService.CreateJwt(context.TODO(), userInfo)
 	if err != nil {
-		log.Printf("gen token failed.")
+		log.Errorf("gen token failed.")
 		c.JSON(http.StatusOK, gin.H{
 			"code":    500,
 			"message": "参数错误",

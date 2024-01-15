@@ -5,9 +5,11 @@ import (
 	"PInfo-server/log"
 	"PInfo-server/model"
 	"PInfo-server/utils"
+
 	"context"
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 func (s *Service) GetConversationList(ctx context.Context, req *api.TalkListReq) (err error, rsp *api.CommRsp) {

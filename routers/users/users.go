@@ -3,9 +3,11 @@ package users
 import (
 	"PInfo-server/api"
 	"PInfo-server/service"
+
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
-	"net/http"
 )
 
 func usersSettingHandler(c *gin.Context) {

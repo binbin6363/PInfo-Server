@@ -1,13 +1,14 @@
 package note
 
 import (
-	"github.com/gin-gonic/gin"
-	"log"
+	"PInfo-server/log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func noteClassListHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -17,7 +18,7 @@ func noteClassListHandler(c *gin.Context) {
 }
 
 func noteTagListHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -27,7 +28,7 @@ func noteTagListHandler(c *gin.Context) {
 }
 
 func noteArticleListHandler(c *gin.Context) {
-	log.Printf("unimplemented")
+	log.Infof("unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
