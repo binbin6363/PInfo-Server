@@ -3,7 +3,7 @@ package config
 import (
 	"os"
 
-	"PInfo-server/log"
+	"log"
 
 	"gopkg.in/yaml.v2"
 )
@@ -83,5 +83,5 @@ func Init(file string) {
 		log.Fatalf("Unmarshal conf fail, err:%v", err)
 	}
 
-	log.Infof("load conf ok, path:%s, conf:%v", file, string(configFile))
+	log.Printf("load conf ok, path:%s, conf:%v", file, string(configFile))
 }
