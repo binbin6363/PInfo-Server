@@ -258,15 +258,17 @@ func sendImageMsgHandler(c *gin.Context) {
 	}
 
 	req := &api.SendImageMsgReq{}
-	if err := c.ShouldBind(req); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"code":    500,
-			"message": "参数错误",
-			"data":    nil,
-		})
-		return
-	}
+	//if err := c.ShouldBind(req); err != nil {
+	//	c.JSON(http.StatusOK, gin.H{
+	//		"code":    500,
+	//		"message": "参数错误",
+	//		"data":    nil,
+	//	})
+	//	return
+	//}
 	req.Form = form
+	req.ReceiverId = cast.ToInt64(form.Value["receiver_id"][0])
+	req.TalkType = cast.ToInt(form.Value["talk_type"][0])
 
 	if uid, ok := c.Get("uid"); ok {
 		req.Uid = cast.ToInt64(uid)
