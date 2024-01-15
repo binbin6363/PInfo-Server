@@ -120,15 +120,11 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 	// 消息通知对方，走下游websocket。下游决定推送的设备
 	bytesData, _ := json.Marshal(notice)
 	url := fmt.Sprintf("http://%s/notice/message/text", config.AppConfig().ConnInfo.Addr)
-	resp, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
-	if resp != nil {
-		defer resp.Body.Close()
-	}
+	resp, err := s.HttpPost(ctx, url, bytesData, 500)
 	if err != nil {
 		log.Infof("notify conn failed, err:%+v", err)
 	} else {
-		body, _ := ioutil.ReadAll(resp.Body)
-		log.Infof("notify conn success, req:%+v, rsp:%s", req, string(body))
+		log.Infof("notify conn success, req:%+v, rsp:%s", req, string(resp))
 	}
 
 	// 更新会话列表
