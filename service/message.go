@@ -121,7 +121,9 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 	bytesData, _ := json.Marshal(notice)
 	url := fmt.Sprintf("http://%s/notice/message/text", config.AppConfig().ConnInfo.Addr)
 	resp, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
-	defer resp.Body.Close()
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		log.Infof("notify conn failed, err:%+v", err)
 	} else {
@@ -218,7 +220,9 @@ func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsg
 	bytesData, _ := json.Marshal(notice)
 	url := fmt.Sprintf("http://%s/notice/message/text", config.AppConfig().ConnInfo.Addr)
 	resp, err := http.Post(url, "application/json; charset=utf-8", bytes.NewReader(bytesData))
-	defer resp.Body.Close()
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		log.Infof("notify conn failed, err:%+v", err)
 	} else {

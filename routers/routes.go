@@ -99,8 +99,9 @@ func Init(serviceName string) *gin.Engine {
 	r.Use(JWTAuthMiddleware())
 	r.Use(otelgin.Middleware(serviceName))
 	if config.AppConfig().ServerInfo.DebugReqRsp {
+		log.Infof("open req/rsp debug log")
 		r.Use(gindump.DumpWithOptions(true, true, true, false, false, func(dumpStr string) {
-			log.Info(dumpStr)
+			log.Infof("dump: [%s]", dumpStr)
 		}))
 	}
 	for _, opt := range options {
