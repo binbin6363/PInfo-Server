@@ -267,17 +267,15 @@ func sendImageMsgHandler(c *gin.Context) {
 	for key, values := range form.Value {
 		if key == "receiver_id" {
 			req.ReceiverId = cast.ToInt64(values[0])
-		} else if key == "sender_id" {
-			req.Uid = cast.ToInt64(values[0])
-			log.Infof("parse uid from form, uid: %d", req.Uid)
 		} else if key == "talk_type" {
 			req.TalkType = cast.ToInt(values[0])
+		} else if key == "client_msg_id" {
+			req.ClientMsgId = cast.ToInt64(values[0])
 		}
 	}
 	req.Form = form
 	if uid, ok := c.Get("uid"); ok {
 		req.Uid = cast.ToInt64(uid)
-		log.Infof("parse uid from token, uid: %d", req.Uid)
 	} else {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    500,
