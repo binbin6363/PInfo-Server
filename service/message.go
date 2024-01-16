@@ -392,7 +392,11 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 			// 构建图片路径
 			key := s.makeImgKey(inFile)
 			// 上传图片
-			inFile.Seek(0, 0) // 重制文件指针
+			_, err = inFile.Seek(0, 0) // 重置文件指针
+			if err != nil {
+				log.Errorf("seek file err: %v", err)
+				break
+			}
 			err = s.dao.UploadFile(ctx, bucket, key, inFile)
 			if err != nil {
 				log.Errorf("UploadFile failed, path:%s, err:%v", key, err)
