@@ -11,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"gorm.io/gorm"
@@ -387,12 +388,14 @@ func (s *Service) QueryMessage(ctx context.Context, req *api.MsgRecordsReq) (err
 }
 
 // makeImgKey 构建图片文件路径，格式：img/year/md5
-func (s *Service) makeImgKey(reader io.Reader) string {
+func (s *Service) makeImgKey(name string, reader io.Reader) (string, string) {
+	suffix := filepath.Ext(name)
 	hash := md5.New()
 	_, _ = io.Copy(hash, reader)
-	key := fmt.Sprintf("img/%d/%s", time.Now().Year(), hex.EncodeToString(hash.Sum(nil)))
+	md5Str := hex.EncodeToString(hash.Sum(nil))
+	key := fmt.Sprintf("img/%d/%s%s", time.Now().Year(), md5Str, suffix)
 	log.Infof("upload image key: %s", key)
-	return key
+	return key, md5Str
 }
 
 func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq) (rsp *api.SendImageMsgRsp, err error) {
@@ -423,13 +426,13 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 			}
 			defer inFile.Close()
 			// 构建图片路径
-			key := s.makeImgKey(inFile)
+			key, md5Str := s.makeImgKey(file.Filename, inFile)
 			// 上传图片，先重置文件指针
 			if _, err = inFile.Seek(0, 0); err != nil {
 				log.Errorf("seek file err: %v", err)
 				break
 			}
-			err = s.dao.UploadFile(ctx, bucket, key, inFile)
+			err = s.dao.UploadFile(ctx, bucket, key, inFile, "image/jpeg", md5Str)
 			if err != nil {
 				log.Errorf("UploadFile failed, path:%s, err:%v", key, err)
 				break

@@ -31,7 +31,7 @@ func (s *Service) UploadAvatar(ctx context.Context, req *api.UploadReq) (err err
 			}
 			defer inFile.Close()
 			key := fmt.Sprintf("avatar/%d/%s", req.Uid, file.Filename)
-			err = s.dao.UploadFile(ctx, bucket, key, inFile)
+			err = s.dao.UploadFile(ctx, bucket, key, inFile, "", "")
 			if err != nil {
 				log.Errorf("UploadFile failed, path:%s, err:%v", key, err)
 				uploadOK = false

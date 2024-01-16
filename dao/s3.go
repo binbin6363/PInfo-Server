@@ -38,14 +38,21 @@ func (d *Dao) GetPresignUrl(ctx context.Context, bucket, key string, expireHour 
 }
 
 // UploadFile .
-func (d *Dao) UploadFile(ctx context.Context, bucket, key string, reader io.Reader) error {
+func (d *Dao) UploadFile(ctx context.Context, bucket, key string, reader io.Reader, ftype, md5Str string) error {
 
 	uploader := s3manager.NewUploader(d.sess)
-	_, err := uploader.Upload(&s3manager.UploadInput{
+	ui := &s3manager.UploadInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 		Body:   reader,
-	})
+	}
+	if len(ftype) > 0 {
+		ui.ContentType = aws.String(ftype)
+	}
+	if len(md5Str) > 0 {
+		ui.ContentMD5 = aws.String(md5Str)
+	}
+	_, err := uploader.Upload(ui)
 	if err != nil {
 		log.Errorf("Unable to upload %q to %q, %v", key, bucket, err)
 		return err
