@@ -246,6 +246,27 @@ func (s *Service) SendTextMessage(ctx context.Context, req *api.SendTextMsgReq) 
 	}
 }
 
+// makeFullUrl 根据存储中的key组装原始URL
+func (s *Service) makeFullUrl(ctx context.Context, msgType int, key string) string {
+	if len(key) == 0 {
+		return key
+	}
+	d := config.AppConfig().CosInfo.Domain
+	b := config.AppConfig().CosInfo.MediaBucket
+	switch msgType {
+	case model.MsgTypeImg, model.MsgTypeFile, model.MsgTypeAudio, model.MsgTypeVideo:
+		b = config.AppConfig().CosInfo.MediaBucket
+	default:
+		log.Errorf("unknown msg type: %d for url", msgType)
+		return key
+	}
+	u, e := s.dao.GetPresignUrl(ctx, b, key, time.Duration(config.AppConfig().CosInfo.Expire))
+	if e == nil {
+		return u
+	}
+	return d + key
+}
+
 func (s *Service) querySingleMessage(ctx context.Context, req *api.MsgRecordsReq) (err error, rsp *api.MsgRecordsRsp) {
 	rsp = &api.MsgRecordsRsp{}
 	rsp.Limit = req.Limit
@@ -277,7 +298,9 @@ func (s *Service) querySingleMessage(ctx context.Context, req *api.MsgRecordsReq
 				msgRow.MsgType == model.MsgTypeImg ||
 				msgRow.MsgType == model.MsgTypeAudio ||
 				msgRow.MsgType == model.MsgTypeVideo) {
-			if e := json.Unmarshal([]byte(msgList[idx].MediaInfo), &msgRow.FileItem); e != nil {
+			if e := json.Unmarshal([]byte(msgList[idx].MediaInfo), &msgRow.FileItem); e == nil {
+				msgRow.FileItem.Url = s.makeFullUrl(ctx, msgRow.MsgType, msgRow.FileItem.Url)
+			} else {
 				log.Errorf("Unmarshal media info err: %v, media: %s", e, msgList[idx].MediaInfo)
 				continue
 			}
