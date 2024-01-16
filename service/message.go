@@ -272,6 +272,15 @@ func (s *Service) querySingleMessage(ctx context.Context, req *api.MsgRecordsReq
 			Content:    msgList[idx].Content,
 			CreatedAt:  utils.FormatTimeStr(msgList[idx].CreateTime),
 		}
+		if msgRow.MsgType == model.MsgTypeFile ||
+			msgRow.MsgType == model.MsgTypeImg ||
+			msgRow.MsgType == model.MsgTypeAudio ||
+			msgRow.MsgType == model.MsgTypeVideo {
+			if err = json.Unmarshal([]byte(msgList[idx].MediaInfo), &msgRow.FileItem); err != nil {
+				log.Errorf("Unmarshal media info err: %v, media: %s", err, msgList[idx].MediaInfo)
+				continue
+			}
+		}
 		if msgList[idx].SenderID == req.Uid {
 			msgRow.Avatar = selfInfo.Avatar
 			msgRow.Nickname = selfInfo.NickName
@@ -391,9 +400,8 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 			defer inFile.Close()
 			// 构建图片路径
 			key := s.makeImgKey(inFile)
-			// 上传图片
-			_, err = inFile.Seek(0, 0) // 重置文件指针
-			if err != nil {
+			// 上传图片，先重置文件指针
+			if _, err = inFile.Seek(0, 0); err != nil {
 				log.Errorf("seek file err: %v", err)
 				break
 			}
@@ -407,6 +415,14 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 
 			// 上传成功，写db
 			msg.Content = file.Filename
+			fileItem := api.FileItem{
+				Url: key,
+			}
+			if b, e := json.Marshal(fileItem); e == nil {
+				msg.MediaInfo = string(b)
+			} else {
+				log.Errorf("Marshal media info err: %v", e)
+			}
 			// 给发送者插入消息
 			msg.Uid = req.Uid
 			if err = s.dao.AddOneSingleMessage(ctx, msg); err != nil {
