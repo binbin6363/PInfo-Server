@@ -3,9 +3,12 @@ package service
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -350,6 +353,15 @@ func (s *Service) QueryMessage(ctx context.Context, req *api.MsgRecordsReq) (err
 	return errors.New("unknown talk type"), nil
 }
 
+// makeImgKey 构建图片文件路径，格式：img/year/md5
+func (s *Service) makeImgKey(reader io.Reader) string {
+	hash := md5.New()
+	_, _ = io.Copy(hash, reader)
+	key := fmt.Sprintf("img/%d/%s", time.Now().Year(), hex.EncodeToString(hash.Sum(nil)))
+	log.Infof("upload image key: %s", key)
+	return key
+}
+
 func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq) (rsp *api.SendImageMsgRsp, err error) {
 	rsp = &api.SendImageMsgRsp{
 		Content: api.SendImageMsgContent{},
@@ -377,7 +389,8 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 				continue
 			}
 			defer inFile.Close()
-			key := fmt.Sprintf("img/%d/%s", time.Now().Year(), file.Filename)
+			// 构建图片路径
+			key := s.makeImgKey(inFile)
 			// 上传图片
 			err = s.dao.UploadFile(ctx, bucket, key, inFile)
 			if err != nil {
