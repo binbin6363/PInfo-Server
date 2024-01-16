@@ -267,15 +267,17 @@ func sendImageMsgHandler(c *gin.Context) {
 	for key, values := range form.Value {
 		if key == "receiver_id" {
 			req.ReceiverId = cast.ToInt64(values[0])
+		} else if key == "sender_id" {
+			req.Uid = cast.ToInt64(values[0])
+			log.Infof("parse uid from form, uid: %d", req.Uid)
 		} else if key == "talk_type" {
 			req.TalkType = cast.ToInt(values[0])
 		}
 	}
 	req.Form = form
-	log.Debugf("show req: %v", req)
-
 	if uid, ok := c.Get("uid"); ok {
 		req.Uid = cast.ToInt64(uid)
+		log.Infof("parse uid from token, uid: %d", req.Uid)
 	} else {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    500,
@@ -285,6 +287,8 @@ func sendImageMsgHandler(c *gin.Context) {
 		return
 	}
 	// 上传文件到服务器
+	log.Debugf("show req: %v", req)
+	// uid 没解析出来
 	rsp, err := service.DefaultService.SendImageMessage(c, req)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{
