@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/hex"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -392,7 +392,7 @@ func (s *Service) makeImgKey(name string, reader io.Reader) (string, string) {
 	suffix := filepath.Ext(name)
 	hash := md5.New()
 	_, _ = io.Copy(hash, reader)
-	md5Str := hex.EncodeToString(hash.Sum(nil))
+	md5Str := base64.StdEncoding.EncodeToString(hash.Sum(nil))
 	key := fmt.Sprintf("img/%d/%s%s", time.Now().Year(), md5Str, suffix)
 	log.Infof("upload image key: %s", key)
 	return key, md5Str
