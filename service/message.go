@@ -272,12 +272,13 @@ func (s *Service) querySingleMessage(ctx context.Context, req *api.MsgRecordsReq
 			Content:    msgList[idx].Content,
 			CreatedAt:  utils.FormatTimeStr(msgList[idx].CreateTime),
 		}
-		if msgRow.MsgType == model.MsgTypeFile ||
-			msgRow.MsgType == model.MsgTypeImg ||
-			msgRow.MsgType == model.MsgTypeAudio ||
-			msgRow.MsgType == model.MsgTypeVideo {
-			if err = json.Unmarshal([]byte(msgList[idx].MediaInfo), &msgRow.FileItem); err != nil {
-				log.Errorf("Unmarshal media info err: %v, media: %s", err, msgList[idx].MediaInfo)
+		if msgList[idx].MediaInfo != "" &&
+			(msgRow.MsgType == model.MsgTypeFile ||
+				msgRow.MsgType == model.MsgTypeImg ||
+				msgRow.MsgType == model.MsgTypeAudio ||
+				msgRow.MsgType == model.MsgTypeVideo) {
+			if e := json.Unmarshal([]byte(msgList[idx].MediaInfo), &msgRow.FileItem); e != nil {
+				log.Errorf("Unmarshal media info err: %v, media: %s", e, msgList[idx].MediaInfo)
 				continue
 			}
 		}
