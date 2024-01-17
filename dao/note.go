@@ -27,3 +27,31 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 	log.Infof("EditArticle update db ok id: %d", articleInfo.ID)
 	return nil
 }
+
+// ArticleList 拉取文章列表
+// todo：先把page当成ID查
+func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int64, kw string) (error, []*model.Articles) {
+	r := d.db(ctx)
+	if page == 0 {
+		log.Error("page invalid")
+		return errors.New("page invalid"), nil
+	}
+
+	r = r.Where("uid=? and id>?", uid, page)
+	if len(kw) > 0 {
+		r = r.Where("title like ?", kw)
+	}
+	// 分页，取第index页的count条数据。倒序
+	limit := 10
+	r = r.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: true})
+	r = r.Limit(limit)
+
+	articleList := make([]*model.Articles, 0)
+	if err := r.Find(&articleList).Error; err != nil {
+		log.Infof("ArticleList read db error(%v)", err)
+		return err, nil
+	}
+
+	log.Infof("ArticleList ok, size:%d", len(articleList))
+	return nil, articleList
+}

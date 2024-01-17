@@ -452,7 +452,7 @@ type ClassEditReq struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-type NoteItem struct {
+type ArticleInfo struct {
 	Id        int64  `json:"id"`
 	Title     string `json:"title"`
 	UpdatedAt string `json:"updated_at"`
@@ -487,4 +487,16 @@ type EditArticleReq struct {
 	MdContent string `json:"md_content"`
 }
 type EditArticleRsp struct {
+}
+
+type ListArticleReq struct {
+	Uid      int64  // 我的ID
+	Page     int    `json:"page"`
+	Keyword  string `json:"keyword"`
+	FindType int    `json:"find_type"`
+	Cid      int64  `json:"cid"`
+}
+
+type ListArticleRsp struct {
+	Items []ArticleInfo `json:"rows"`
 }
