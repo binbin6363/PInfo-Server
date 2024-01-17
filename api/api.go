@@ -470,3 +470,10 @@ type ClassItem struct {
 	IsDefault bool   `json:"is_default"`
 	UpdatedAt string `json:"updated_at"`
 }
+
+type ClassListReq struct {
+}
+
+type ClassListRsp struct {
+	ClassItems []ClassItem `json:"rows"`
+}
