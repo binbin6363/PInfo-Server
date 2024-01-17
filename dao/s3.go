@@ -1,8 +1,10 @@
 package dao
 
 import (
+	"PInfo-server/config"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -17,10 +19,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
+func (d *Dao) MakeRawUrl(ctx context.Context, disableSSL bool, domain, bucket, key string) (string, error) {
+	schema := "https"
+	if disableSSL {
+		schema = "http"
+	}
+	urlStr := fmt.Sprintf("%s://%s/%s/%s", schema, domain, bucket, key)
+	return urlStr, nil
+}
+
 // GetPresignUrl .
 func (d *Dao) GetPresignUrl(ctx context.Context, bucket, key string, expireHour time.Duration) (string, error) {
 	log.Debugf("Create Presign client, key:%s", key)
 
+	if !config.AppConfig().CosInfo.SignFlag {
+		return d.MakeRawUrl(ctx, config.AppConfig().CosInfo.DisableSSL,
+			config.AppConfig().CosInfo.Domain, bucket, key)
+	}
 	svc := s3.New(d.sess)
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(bucket),

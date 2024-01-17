@@ -55,6 +55,7 @@ type CosInfo struct {
 	AvatarBucket   string `yaml:"avatar_bucket"` // 头像专用
 	MediaBucket    string `yaml:"media_bucket"`  // 媒体消息专用，包含图片，语音，文件
 	Expire         int64  `yaml:"expire"`        // 单位小时
+	SignFlag       bool   `yaml:"sign"`          // 是否需要签名，默认需要
 }
 
 type LogInfo struct {
