@@ -439,3 +439,34 @@ type CommRsp struct {
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }
+
+type TagEditReq struct {
+	TagId     int64  `json:"tag_id"`
+	TagName   string `json:"tag_name"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type ClassEditReq struct {
+	ClassId   int64  `json:"class_id"`
+	ClassName string `json:"class_name"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type NoteItem struct {
+	Id        int64  `json:"id"`
+	Title     string `json:"title"`
+	UpdatedAt string `json:"updated_at"`
+	Classify  string `json:"classify"`
+	Abstract  string `json:"abstract"`
+	Image     string `json:"image"`
+	ClassId   int64  `json:"class_id"`
+	Status    int    `json:"status"`
+}
+
+type ClassItem struct {
+	Id        int64  `json:"id"`
+	ClassName string `json:"class_name"`
+	Count     int    `json:"count"`
+	IsDefault bool   `json:"is_default"`
+	UpdatedAt string `json:"updated_at"`
+}
