@@ -402,14 +402,24 @@ func (s *Service) makeImgKey(name string, reader io.Reader) (string, string) {
 }
 
 func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq) (rsp *api.SendImageMsgRsp, err error) {
+	_, userInfo := s.dao.GetUserInfoByUid(ctx, req.Uid)
 	rsp = &api.SendImageMsgRsp{
 		Content: api.SendMsgContent{
 			ReceiverId: req.ReceiverId,
 			SenderId:   req.Uid,
 			TalkType:   req.TalkType,
 			Data: api.SendMsgData{
+				Sequence:    1,
 				TalkType:    req.TalkType,
 				MsgType:     model.MsgTypeImg,
+				UserId:      req.Uid,
+				ReceiverId:  req.ReceiverId,
+				Nickname:    userInfo.NickName,
+				Avatar:      userInfo.Avatar,
+				IsRevoke:    0,
+				IsRead:      0,
+				IsMark:      0,
+				CreatedAt:   utils.FormatTimeStr(time.Now().Unix()),
 				FileContent: &api.FileContent{},
 			},
 		},
@@ -468,6 +478,8 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 				log.Infof("save img msg for sender failed! info:%+v", msg)
 				break
 			}
+			rsp.Content.Data.Id = msg.ID
+			rsp.Content.Data.Content = file.Filename
 			// 给接收者插入消息
 			msg.Uid = req.ReceiverId
 			msg.ID = 0
