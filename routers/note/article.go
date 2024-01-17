@@ -6,6 +6,8 @@ import (
 	"PInfo-server/service"
 	"net/http"
 
+	"github.com/spf13/cast"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,6 +35,24 @@ func articleEditorHandler(c *gin.Context) {
 	log.Infof("articleEditorHandler")
 
 	req := &api.EditArticleReq{}
+	if err := c.ShouldBind(req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+	if uid, ok := c.Get("uid"); ok {
+		req.Uid = cast.ToInt64(uid)
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
 
 	rsp, err := service.DefaultService.EditArticle(c, req)
 	if err != nil {
