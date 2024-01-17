@@ -5,6 +5,7 @@ import (
 	"PInfo-server/model"
 	"context"
 	"errors"
+	"time"
 
 	"gorm.io/gorm/clause"
 )
@@ -15,6 +16,11 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 	if articleInfo.Uid == 0 {
 		log.Error("uid invalid")
 		return errors.New("uid invalid")
+	}
+
+	articleInfo.UpdateTime = time.Now().Unix()
+	if articleInfo.CreateTime == 0 {
+		articleInfo.CreateTime = articleInfo.UpdateTime
 	}
 
 	r = r.Clauses(clause.OnConflict{
