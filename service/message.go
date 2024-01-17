@@ -396,7 +396,7 @@ func (s *Service) makeImgKey(name string, reader io.Reader) (string, string) {
 	b := hash.Sum(nil)
 	md5Str := base64.StdEncoding.EncodeToString(b)
 	hexStr := hex.EncodeToString(b)
-	key := fmt.Sprintf("img/%d/%s%s", time.Now().Year(), hexStr, suffix)
+	key := fmt.Sprintf("img/%d/%s_512x512%s", time.Now().Year(), hexStr, suffix)
 	log.Infof("upload image key: %s", key)
 	return key, md5Str
 }
