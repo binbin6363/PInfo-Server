@@ -161,35 +161,36 @@ type SendTextMsgReq struct {
 }
 
 type SendTextMsgRsp struct {
-	Content SendTextMsgContent `json:"content"`
+	Content SendMsgContent `json:"content"`
 }
 
 type SendTextMsgEvtNotice struct {
-	Event   string             `json:"event"`
-	Content SendTextMsgContent `json:"content"`
+	Event   string         `json:"event"`
+	Content SendMsgContent `json:"content"`
 }
 
-type SendTextMsgContent struct {
-	Data       SendTextMsgData `json:"data"`
-	ReceiverId int64           `json:"receiver_id"`
-	SenderId   int64           `json:"sender_id"`
-	TalkType   int             `json:"talk_type"`
+type SendMsgContent struct {
+	Data       SendMsgData `json:"data"`
+	ReceiverId int64       `json:"receiver_id"`
+	SenderId   int64       `json:"sender_id"`
+	TalkType   int         `json:"talk_type"`
 }
 
-type SendTextMsgData struct {
-	Id         int64  `json:"id"`
-	Sequence   int64  `json:"sequence"`
-	TalkType   int    `json:"talk_type"`
-	MsgType    int    `json:"msg_type"`
-	UserId     int64  `json:"user_id"`
-	ReceiverId int64  `json:"receiver_id"`
-	Nickname   string `json:"nickname"`
-	Avatar     string `json:"avatar"`
-	IsRevoke   int    `json:"is_revoke"`
-	IsMark     int    `json:"is_mark"`
-	IsRead     int    `json:"is_read"`
-	Content    string `json:"content"`
-	CreatedAt  string `json:"created_at"`
+type SendMsgData struct {
+	Id          int64        `json:"id"`
+	Sequence    int64        `json:"sequence"`
+	TalkType    int          `json:"talk_type"`
+	MsgType     int          `json:"msg_type"`
+	UserId      int64        `json:"user_id"`
+	ReceiverId  int64        `json:"receiver_id"`
+	Nickname    string       `json:"nickname"`
+	Avatar      string       `json:"avatar"`
+	IsRevoke    int          `json:"is_revoke"`
+	IsMark      int          `json:"is_mark"`
+	IsRead      int          `json:"is_read"`
+	Content     string       `json:"content"`
+	CreatedAt   string       `json:"created_at"`
+	FileContent *FileContent `json:"file"`
 }
 
 type SendImageMsgReq struct {
@@ -200,18 +201,15 @@ type SendImageMsgReq struct {
 	Form        *multipart.Form `json:"form"`
 }
 
-type ImageMsgContent struct {
+type FileContent struct {
 	Name string `json:"name"` // 图片名字
 	Url  string `json:"url"`  // 图片消息服务器的url
 }
 
-type SendImageMsgContent struct {
-	ImgContent []ImageMsgContent `json:"url"` // 图片消息url
+type SendImageMsgRsp struct {
+	Content SendMsgContent `json:"content"`
 }
 
-type SendImageMsgRsp struct {
-	Content SendImageMsgContent `json:"content"`
-}
 type MsgRecordsReq struct {
 	Uid      int64
 	MinMsgId int64 // record_id

@@ -96,8 +96,8 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 
 	// Sequence 这个字段是否需要，尚待考虑。可以不用该字段
 	rsp := &api.SendTextMsgRsp{
-		Content: api.SendTextMsgContent{
-			Data: api.SendTextMsgData{
+		Content: api.SendMsgContent{
+			Data: api.SendMsgData{
 				Id:         msg.MsgID,
 				Sequence:   1,
 				TalkType:   req.TalkType,
@@ -191,8 +191,8 @@ func (s *Service) sendGroupTextMessage(ctx context.Context, req *api.SendTextMsg
 
 	// Sequence 这个字段是否需要，尚待考虑。可以不用该字段
 	rsp := &api.SendTextMsgRsp{
-		Content: api.SendTextMsgContent{
-			Data: api.SendTextMsgData{
+		Content: api.SendMsgContent{
+			Data: api.SendMsgData{
 				Id:         msg.MsgID,
 				Sequence:   1,
 				TalkType:   req.TalkType,
@@ -403,7 +403,16 @@ func (s *Service) makeImgKey(name string, reader io.Reader) (string, string) {
 
 func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq) (rsp *api.SendImageMsgRsp, err error) {
 	rsp = &api.SendImageMsgRsp{
-		Content: api.SendImageMsgContent{},
+		Content: api.SendMsgContent{
+			ReceiverId: req.ReceiverId,
+			SenderId:   req.Uid,
+			TalkType:   req.TalkType,
+			Data: api.SendMsgData{
+				TalkType:    req.TalkType,
+				MsgType:     model.MsgTypeImg,
+				FileContent: &api.FileContent{},
+			},
+		},
 	}
 
 	msg := &model.SingleMessages{
@@ -469,7 +478,10 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 
 			if p, e := s.dao.GetPresignUrl(ctx, bucket, key, time.Duration(expireHour)); e == nil {
 				log.Infof("get presign ok, key:%s, url:%s", key, p)
-				rsp.Content.ImgContent = append(rsp.Content.ImgContent, api.ImageMsgContent{Name: file.Filename, Url: p})
+				rsp.Content.Data.FileContent.Name = file.Filename
+				rsp.Content.Data.FileContent.Url = p
+				// 仅支持单文件发送
+				break
 			} else {
 				log.Errorf("get presign fail, key:%s, err: %v", key, e)
 			}
