@@ -1,7 +1,9 @@
 package note
 
 import (
+	"PInfo-server/api"
 	"PInfo-server/log"
+	"PInfo-server/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,15 +27,31 @@ func articleDetailHandler(c *gin.Context) {
 		"data":    nil,
 	})
 }
+
+// 更新/新增 文章请求
 func articleEditorHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.Infof("articleEditorHandler")
+
+	req := &api.EditArticleReq{}
+
+	rsp, err := service.DefaultService.EditArticle(c, req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "内部错误",
+			"data":    nil,
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
+		"message": "success",
+		"data":    rsp,
 	})
+	log.Infof("done articleEditorHandler")
 }
+
 func articleDeleteHandler(c *gin.Context) {
 	log.Infof("unimplemented")
 

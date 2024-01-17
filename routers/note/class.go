@@ -10,7 +10,7 @@ import (
 )
 
 func classListHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.Infof("classListHandler")
 
 	req := &api.ClassListReq{}
 
@@ -29,7 +29,7 @@ func classListHandler(c *gin.Context) {
 		"message": "success",
 		"data":    rsp,
 	})
-
+	log.Infof("done classListHandler")
 }
 
 func classEditorHandler(c *gin.Context) {

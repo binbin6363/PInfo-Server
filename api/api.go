@@ -477,3 +477,14 @@ type ClassListReq struct {
 type ClassListRsp struct {
 	ClassItems []ClassItem `json:"rows"`
 }
+
+type EditArticleReq struct {
+	Uid       int64  // 我的ID
+	ArticleId int64  `json:"article_id"`
+	ClassId   int64  `json:"class_id"`
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	MdContent string `json:"md_content"`
+}
+type EditArticleRsp struct {
+}

@@ -221,3 +221,50 @@ type GroupDetailInfo struct {
 	ManagerName string
 	IsManager   bool
 }
+
+// Classes 文章分类表
+type Classes struct {
+	ID         int64  `gorm:"column:id;primarykey;AUTO_INCREMENT"`
+	Uid        int64  `gorm:"column:uid"`
+	Flag       int    `gorm:"column:flag"` // 文章分类标识，0默认
+	Name       string `gorm:"column:name"` // 分类名字
+	CreateTime int64  `gorm:"column:create_time"`
+	UpdateTime int64  `gorm:"column:update_time"`
+}
+
+// TableName 默认是通过结构体的蛇形复数来指定表名，这里通过TableName显示定义出来，便于问题排查
+func (Classes) TableName() string {
+	return "classes"
+}
+
+// Tags 文章tag表
+type Tags struct {
+	ID         int64  `gorm:"column:id;primarykey;AUTO_INCREMENT"`
+	Uid        int64  `gorm:"column:uid"`
+	Flag       int    `gorm:"column:flag"` // 文章tag标识，0默认
+	Name       string `gorm:"column:name"` // tag名字
+	CreateTime int64  `gorm:"column:create_time"`
+	UpdateTime int64  `gorm:"column:update_time"`
+}
+
+// TableName 默认是通过结构体的蛇形复数来指定表名，这里通过TableName显示定义出来，便于问题排查
+func (Tags) TableName() string {
+	return "tags"
+}
+
+// Articles 文章表
+type Articles struct {
+	ID         int64  `gorm:"column:id;primarykey;AUTO_INCREMENT"`
+	Uid        int64  `gorm:"column:uid"`
+	ClassId    int64  `gorm:"column:class_id"`
+	Title      string `gorm:"column:title"`      // 文章标题
+	Content    string `gorm:"column:content"`    // html格式内容
+	MdContent  string `gorm:"column:md_content"` // md格式内容
+	CreateTime int64  `gorm:"column:create_time"`
+	UpdateTime int64  `gorm:"column:update_time"`
+}
+
+// TableName 默认是通过结构体的蛇形复数来指定表名，这里通过TableName显示定义出来，便于问题排查
+func (Articles) TableName() string {
+	return "articles"
+}
