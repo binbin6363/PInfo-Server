@@ -30,11 +30,11 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 
 // ArticleList 拉取文章列表
 // todo：先把page当成ID查
-func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int64, kw string) (error, []*model.Articles) {
+func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int64, kw string) ([]*model.Articles, error) {
 	r := d.db(ctx)
 	if page == 0 {
 		log.Error("page invalid")
-		return errors.New("page invalid"), nil
+		return nil, errors.New("page invalid")
 	}
 
 	r = r.Where("uid=? and id>?", uid, page)
@@ -47,11 +47,11 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 	r = r.Limit(limit)
 
 	articleList := make([]*model.Articles, 0)
-	if err := r.Find(&articleList).Error; err != nil {
+	if err := r.Select([]string{"id", "class_id", "title", "update_time"}).Find(&articleList).Error; err != nil {
 		log.Infof("ArticleList read db error(%v)", err)
-		return err, nil
+		return nil, err
 	}
 
 	log.Infof("ArticleList ok, size:%d", len(articleList))
-	return nil, articleList
+	return articleList, nil
 }

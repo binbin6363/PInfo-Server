@@ -40,3 +40,28 @@ func (s *Service) ClassList(ctx context.Context, req *api.ClassListReq) (*api.Cl
 	log.Infof("done ClassList, rsp: %v", rsp)
 	return rsp, nil
 }
+
+func (s *Service) ArticleList(ctx context.Context, req *api.ListArticleReq) (*api.ListArticleRsp, error) {
+	rsp := &api.ListArticleRsp{}
+
+	result, err := s.dao.ArticleList(ctx, req.Page, req.FindType, req.Uid, req.Cid, req.Keyword)
+	if err != nil {
+		log.Errorf("ArticleList err: %v", err)
+		return nil, err
+	}
+
+	for idx := range result {
+		item := result[idx]
+		rsp.Items = append(rsp.Items, api.ArticleInfo{
+			Id:        item.ID,
+			Title:     item.Title,
+			ClassId:   item.ClassId,
+			Status:    1,
+			Image:     "",
+			Abstract:  "",
+			UpdatedAt: utils.FormatTimeStr(item.UpdateTime),
+		})
+	}
+	log.Infof("done ClassList, rsp: %v", rsp)
+	return rsp, nil
+}
