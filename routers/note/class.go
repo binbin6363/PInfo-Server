@@ -14,7 +14,7 @@ func classListHandler(c *gin.Context) {
 
 	req := &api.ClassListReq{}
 
-	err, rsp := service.DefaultService.ClassList(c, req)
+	rsp, err := service.DefaultService.ClassList(c, req)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    500,
