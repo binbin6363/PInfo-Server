@@ -22,21 +22,20 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 	if articleInfo.CreateTime == 0 {
 		articleInfo.CreateTime = articleInfo.UpdateTime
 	}
+	var err error
 	if articleInfo.ID == 0 {
 		log.Infof("create article, uid: %d, title: %s", articleInfo.Uid, articleInfo.Title)
+		err = r.Create(articleInfo).Error
 	} else {
 		log.Infof("update article, uid: %d, id: %d", articleInfo.Uid, articleInfo.ID)
+		err = r.Updates(articleInfo).Error
+	}
+	if err != nil {
+		log.Error("EditArticle err: %v, uid: %d", err, articleInfo.Uid)
+	} else {
+		log.Infof("EditArticle ok, uid: %d, id: %d", articleInfo.Uid, articleInfo.ID)
 	}
 
-	log.Debugf("show articleInfo: %+v", articleInfo)
-	r = r.Clauses(clause.OnConflict{
-		// key列
-		Columns: []clause.Column{{Name: "id"}, {Name: "uid"}},
-		// 需要更新的列
-		DoUpdates: clause.AssignmentColumns([]string{"content", "md_content", "update_time"}),
-	}).Create(articleInfo)
-
-	log.Infof("ArticleEdit update db ok id: %d", articleInfo.ID)
 	return nil
 }
 
