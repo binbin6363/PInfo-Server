@@ -50,7 +50,7 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 
 	r = r.Where("uid=? and id>?", uid, page)
 	if len(kw) > 0 {
-		r = r.Where("title like ?", kw)
+		r = r.Where("title like ?", "%"+kw+"%")
 	}
 	// 分页，取第index页的count条数据。倒序
 	limit := 10
