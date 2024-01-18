@@ -22,12 +22,17 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 	if articleInfo.CreateTime == 0 {
 		articleInfo.CreateTime = articleInfo.UpdateTime
 	}
+	if articleInfo.ID == 0 {
+		log.Infof("create article, uid: %d, title: %s", articleInfo.Uid, articleInfo.Title)
+	} else {
+		log.Infof("update article, uid: %d, id: %d", articleInfo.Uid, articleInfo.ID)
+	}
 
-	log.Debugf("show articleInfo: %v", articleInfo)
+	log.Debugf("show articleInfo: %+v", articleInfo)
 	r = r.Clauses(clause.OnConflict{
 		// key列
-		Columns: []clause.Column{{Name: "id"}},
-		// 需要更新的列。页面上仅支持这四列的手动修改。其他列的修改，都应该直接走server_list.csv更新（通用的）
+		Columns: []clause.Column{{Name: "id"}, {Name: "uid"}},
+		// 需要更新的列
 		DoUpdates: clause.AssignmentColumns([]string{"content", "md_content", "update_time"}),
 	}).Create(articleInfo)
 
