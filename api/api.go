@@ -461,7 +461,6 @@ type ArticleInfo struct {
 	Image     string  `json:"image"`
 	ClassId   int64   `json:"class_id"`
 	Status    int     `json:"status"`
-	Content   *string `json:"content"`    // 可选返回
 	MdContent *string `json:"md_content"` // 可选返回
 }
 
@@ -485,7 +484,6 @@ type ArticleEditReq struct {
 	ArticleId int64  `json:"article_id"`
 	ClassId   int64  `json:"class_id"`
 	Title     string `json:"title"`
-	Content   string `json:"content"`
 	MdContent string `json:"md_content"`
 }
 type ArticleEditRsp struct {
@@ -509,5 +507,13 @@ type ArticleDetailReq struct {
 }
 
 type ArticleDetailRsp struct {
-	Items []ArticleInfo `json:"rows"`
+	Id         int64   `json:"id"`
+	Title      string  `json:"title"`
+	Classify   string  `json:"classify"`
+	Abstract   string  `json:"abstract"`
+	Image      string  `json:"image"`
+	ClassId    int64   `json:"class_id"`
+	IsAsterisk int     `json:"is_asterisk"`
+	MdContent  *string `json:"md_content"` // 可选返回
+	UpdatedAt  string  `json:"updated_at"`
 }

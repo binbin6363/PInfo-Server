@@ -16,7 +16,6 @@ func (s *Service) ArticleEdit(ctx context.Context, req *api.ArticleEditReq) (*ap
 		Uid:       req.Uid,
 		ClassId:   req.ClassId,
 		Title:     req.Title,
-		Content:   req.Content,
 		MdContent: req.MdContent,
 	}
 	if err := s.dao.EditArticle(ctx, article); err != nil {
@@ -67,7 +66,6 @@ func (s *Service) ArticleList(ctx context.Context, req *api.ArticleListReq) (*ap
 }
 
 func (s *Service) ArticleDetail(ctx context.Context, req *api.ArticleDetailReq) (*api.ArticleDetailRsp, error) {
-	rsp := &api.ArticleDetailRsp{}
 
 	result, err := s.dao.ArticleDetail(ctx, req.Uid, req.ArticleId)
 	if err != nil {
@@ -75,18 +73,17 @@ func (s *Service) ArticleDetail(ctx context.Context, req *api.ArticleDetailReq) 
 		return nil, err
 	}
 
-	rsp.Items = append(rsp.Items, api.ArticleInfo{
-		Id:        result.ID,
-		Title:     result.Title,
-		UpdatedAt: utils.FormatTimeStr(result.UpdateTime),
-		Classify:  "",
-		Abstract:  "",
-		Image:     "",
-		ClassId:   result.ClassId,
-		Status:    1,
-		Content:   &result.Content,
-		MdContent: &result.MdContent,
-	})
+	rsp := &api.ArticleDetailRsp{
+		Id:         result.ID,
+		Title:      result.Title,
+		Classify:   "",
+		Abstract:   "",
+		Image:      "",
+		ClassId:    result.ClassId,
+		IsAsterisk: 1,
+		MdContent:  &result.MdContent,
+		UpdatedAt:  utils.FormatTimeStr(result.UpdateTime),
+	}
 
 	log.Infof("done ClassList, rsp: %v", rsp)
 	return rsp, nil
