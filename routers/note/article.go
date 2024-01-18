@@ -14,7 +14,7 @@ import (
 func articleListHandler(c *gin.Context) {
 	log.Infof("articleEditorHandler")
 
-	req := &api.ListArticleReq{}
+	req := &api.ArticleListReq{}
 
 	req.Page = cast.ToInt(c.Query("page"))
 	req.Keyword = c.Query("keyword")
@@ -59,20 +59,44 @@ func articleListHandler(c *gin.Context) {
 }
 
 func articleDetailHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.Infof("articleDetailHandler")
+
+	req := &api.ArticleDetailReq{}
+	req.ArticleId = cast.ToInt64(c.Query("article_id"))
+	if uid, ok := c.Get("uid"); ok {
+		req.Uid = cast.ToInt64(uid)
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	rsp, err := service.DefaultService.ArticleDetail(c, req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "内部错误",
+			"data":    nil,
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
+		"message": "success",
+		"data":    rsp,
 	})
+	log.Infof("done articleDetailHandler")
 }
 
 // 更新/新增 文章请求
 func articleEditorHandler(c *gin.Context) {
 	log.Infof("articleEditorHandler")
 
-	req := &api.EditArticleReq{}
+	req := &api.ArticleEditReq{}
 	if err := c.ShouldBind(req); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    500,
@@ -92,7 +116,7 @@ func articleEditorHandler(c *gin.Context) {
 		return
 	}
 
-	rsp, err := service.DefaultService.EditArticle(c, req)
+	rsp, err := service.DefaultService.ArticleEdit(c, req)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    500,

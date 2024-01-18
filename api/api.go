@@ -478,7 +478,7 @@ type ClassListRsp struct {
 	ClassItems []ClassItem `json:"rows"`
 }
 
-type EditArticleReq struct {
+type ArticleEditReq struct {
 	Uid       int64  // 我的ID
 	ArticleId int64  `json:"article_id"`
 	ClassId   int64  `json:"class_id"`
@@ -486,10 +486,10 @@ type EditArticleReq struct {
 	Content   string `json:"content"`
 	MdContent string `json:"md_content"`
 }
-type EditArticleRsp struct {
+type ArticleEditRsp struct {
 }
 
-type ListArticleReq struct {
+type ArticleListReq struct {
 	Uid      int64  // 我的ID
 	Page     int    `json:"page"`
 	Keyword  string `json:"keyword"`
@@ -497,6 +497,15 @@ type ListArticleReq struct {
 	Cid      int64  `json:"cid"`
 }
 
-type ListArticleRsp struct {
+type ArticleListRsp struct {
+	Items []ArticleInfo `json:"rows"`
+}
+
+type ArticleDetailReq struct {
+	Uid       int64 // 我的ID
+	ArticleId int64
+}
+
+type ArticleDetailRsp struct {
 	Items []ArticleInfo `json:"rows"`
 }

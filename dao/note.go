@@ -30,7 +30,7 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 		DoUpdates: clause.AssignmentColumns([]string{"content", "md_content", "update_time"}),
 	}).Create(articleInfo)
 
-	log.Infof("EditArticle update db ok id: %d", articleInfo.ID)
+	log.Infof("ArticleEdit update db ok id: %d", articleInfo.ID)
 	return nil
 }
 
@@ -60,4 +60,21 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 
 	log.Infof("ArticleList ok, size:%d", len(articleList))
 	return articleList, nil
+}
+
+func (d *Dao) ArticleDetail(ctx context.Context, uid, articleId int64) (*model.Articles, error) {
+	r := d.db(ctx)
+	if uid == 0 || articleId == 0 {
+		log.Error("uid|articleId invalid")
+		return nil, errors.New("uid|articleId invalid")
+	}
+
+	info := &model.Articles{}
+	err := r.Where("id=? and uid=?", articleId, uid).Find(info).Error
+	if err != nil {
+		log.Error("ArticleDetail err: %v", err)
+		return nil, err
+	}
+	log.Infof("ArticleDetail ok id: %d", articleId)
+	return info, nil
 }
