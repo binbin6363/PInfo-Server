@@ -23,6 +23,7 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 		articleInfo.CreateTime = articleInfo.UpdateTime
 	}
 
+	log.Debugf("show articleInfo: %v", articleInfo)
 	r = r.Clauses(clause.OnConflict{
 		// key列
 		Columns: []clause.Column{{Name: "id"}},

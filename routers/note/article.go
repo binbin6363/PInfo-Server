@@ -116,6 +116,7 @@ func articleEditorHandler(c *gin.Context) {
 		return
 	}
 
+	log.Debugf("show articleEditorHandler req: %v", req)
 	rsp, err := service.DefaultService.ArticleEdit(c, req)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
