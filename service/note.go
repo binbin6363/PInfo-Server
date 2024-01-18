@@ -84,6 +84,8 @@ func (s *Service) ArticleDetail(ctx context.Context, req *api.ArticleDetailReq) 
 		Image:     "",
 		ClassId:   result.ClassId,
 		Status:    1,
+		Content:   &result.Content,
+		MdContent: &result.MdContent,
 	})
 
 	log.Infof("done ClassList, rsp: %v", rsp)

@@ -453,14 +453,16 @@ type ClassEditReq struct {
 }
 
 type ArticleInfo struct {
-	Id        int64  `json:"id"`
-	Title     string `json:"title"`
-	UpdatedAt string `json:"updated_at"`
-	Classify  string `json:"classify"`
-	Abstract  string `json:"abstract"`
-	Image     string `json:"image"`
-	ClassId   int64  `json:"class_id"`
-	Status    int    `json:"status"`
+	Id        int64   `json:"id"`
+	Title     string  `json:"title"`
+	UpdatedAt string  `json:"updated_at"`
+	Classify  string  `json:"classify"`
+	Abstract  string  `json:"abstract"`
+	Image     string  `json:"image"`
+	ClassId   int64   `json:"class_id"`
+	Status    int     `json:"status"`
+	Content   *string `json:"content"`    // 可选返回
+	MdContent *string `json:"md_content"` // 可选返回
 }
 
 type ClassItem struct {
