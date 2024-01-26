@@ -1,6 +1,7 @@
-package routers
+package plugins
 
 import (
+	"PInfo-server/routers"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -19,10 +20,29 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
-type Option func(*gin.Engine)
+// Init gin初始化
+func Init(serviceName string) *gin.Engine {
 
-var options []Option
+	r := gin.Default()
+	r.Use(Cors())
+	r.Use(JWTAuthMiddleware())
+	r.Use(otelgin.Middleware(serviceName))
+	r.Use(ZapTraceLogger())
+	if config.AppConfig().ServerInfo.DebugReqRsp {
+		log.Infof("open req/rsp debug log")
+		r.Use(gindump.DumpWithOptions(true, true, true, false, false, func(dumpStr string) {
+			log.Infof("dump: [%s]", dumpStr)
+		}))
+	}
+	for _, opt := range routers.Routes() {
+		opt(r)
+	}
 
+	rand.Seed(time.Now().UnixNano())
+	return r
+}
+
+// Cors 跨域处理中间件
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		method := c.Request.Method
@@ -46,7 +66,7 @@ func Cors() gin.HandlerFunc {
 }
 
 // JWTAuthMiddleware 基于JWT的认证中间件
-func JWTAuthMiddleware() func(c *gin.Context) {
+func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 首次的登录不校验token
 		if strings.Contains(c.Request.URL.Path, "/auth/login") ||
@@ -92,34 +112,7 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 	}
 }
 
-// Register 注册路由配置
-func Register(opts ...Option) {
-	options = append(options, opts...)
-}
-
-// Init 初始化
-func Init(serviceName string) *gin.Engine {
-
-	r := gin.Default()
-	r.Use(Cors())
-	r.Use(JWTAuthMiddleware())
-	r.Use(otelgin.Middleware(serviceName))
-	r.Use(ZapTraceLogger())
-	if config.AppConfig().ServerInfo.DebugReqRsp {
-		log.Infof("open req/rsp debug log")
-		r.Use(gindump.DumpWithOptions(true, true, true, false, false, func(dumpStr string) {
-			log.Infof("dump: [%s]", dumpStr)
-		}))
-	}
-	for _, opt := range options {
-		opt(r)
-	}
-
-	rand.Seed(time.Now().UnixNano())
-	return r
-}
-
-// ZapTraceLogger 创建一个 ZapTraceLogger 中间件
+// ZapTraceLogger 创建一个ZapTraceLogger中间件
 func ZapTraceLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 从 Gin Context 中获取 Trace ID（假设 Trace ID 存储在 Header 中）
@@ -138,6 +131,6 @@ func ZapTraceLogger() gin.HandlerFunc {
 		t := time.Now()
 		log.InfoContextf(c, "recv msg")
 		c.Next()
-		log.InfoContextf(c, "done, cost: %v", time.Now().Sub(t))
+		log.InfoContextf(c, "done, cost: %v", time.Since(t))
 	}
 }

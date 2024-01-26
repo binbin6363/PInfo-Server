@@ -4,6 +4,7 @@ import (
 	"PInfo-server/api"
 	"PInfo-server/log"
 	"PInfo-server/model"
+	"PInfo-server/routers"
 	"PInfo-server/service"
 	"PInfo-server/utils"
 	"net/http"
@@ -11,6 +12,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 )
+
+func init() {
+	routers.Register(Routers)
+}
 
 // contactListHandler 获取好友列表服务接口
 func contactListHandler(c *gin.Context) {

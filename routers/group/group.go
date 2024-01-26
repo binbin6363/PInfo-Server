@@ -3,6 +3,7 @@ package group
 import (
 	"PInfo-server/api"
 	"PInfo-server/log"
+	"PInfo-server/routers"
 	"PInfo-server/service"
 	"PInfo-server/utils"
 	"net/http"
@@ -10,6 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 )
+
+func init() {
+	routers.Register(Routers)
+}
 
 func memberInviteHandler(c *gin.Context) {
 	groupMembersReq := &api.GroupMembersReq{}

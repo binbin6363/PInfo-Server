@@ -1,9 +1,15 @@
 package sms
 
 import (
-	"github.com/gin-gonic/gin"
+	"PInfo-server/routers"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
+
+func init() {
+	routers.Register(Routers)
+}
 
 func sendSmsCodeHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{

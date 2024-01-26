@@ -1,8 +1,14 @@
 package note
 
 import (
+	"PInfo-server/routers"
+
 	"github.com/gin-gonic/gin"
 )
+
+func init() {
+	routers.Register(Routers)
+}
 
 // Routers .
 func Routers(r *gin.Engine) {

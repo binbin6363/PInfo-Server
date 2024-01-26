@@ -2,9 +2,15 @@ package emoticon
 
 import (
 	"PInfo-server/api"
-	"github.com/gin-gonic/gin"
+	"PInfo-server/routers"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
+
+func init() {
+	routers.Register(Routers)
+}
 
 func emoticonListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{

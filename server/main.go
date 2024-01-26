@@ -1,6 +1,7 @@
 package main
 
 import (
+	"PInfo-server/plugins"
 	"context"
 	"flag"
 	"os"
@@ -8,16 +9,6 @@ import (
 
 	"PInfo-server/config"
 	"PInfo-server/log"
-	"PInfo-server/routers"
-	"PInfo-server/routers/auth"
-	"PInfo-server/routers/chat"
-	"PInfo-server/routers/contact"
-	"PInfo-server/routers/emoticon"
-	"PInfo-server/routers/group"
-	"PInfo-server/routers/note"
-	"PInfo-server/routers/sms"
-	"PInfo-server/routers/upload"
-	"PInfo-server/routers/users"
 	"PInfo-server/service"
 
 	"github.com/gin-gonic/gin"
@@ -94,12 +85,8 @@ func main() {
 	cleanup := initTracer()
 	defer cleanup(context.Background())
 
-	// 加载多个APP的路由配置
-	routers.Register(auth.Routers, chat.Routers, users.Routers, group.Routers, note.Routers,
-		contact.Routers, sms.Routers, emoticon.Routers, upload.Routers)
-
-	// 初始化路由
-	r := routers.Init(serviceName)
+	// 初始化gin插件
+	r := plugins.Init(serviceName)
 
 	service.Init()
 

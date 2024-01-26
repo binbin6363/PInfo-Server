@@ -3,6 +3,7 @@ package chat
 import (
 	"PInfo-server/api"
 	"PInfo-server/log"
+	"PInfo-server/routers"
 	"PInfo-server/service"
 	"PInfo-server/utils"
 	"net/http"
@@ -10,6 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 )
+
+func init() {
+	routers.Register(Routers)
+}
 
 // talkListHandler 获取聊天列表服务接口
 func talkListHandler(c *gin.Context) {
