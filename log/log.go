@@ -14,7 +14,7 @@ import (
 
 const (
 	LoggerTag     = "logger"
-	LoggerTraceID = "TraceID"
+	LoggerTraceID = "traceid"
 )
 
 var defaultLogger *zap.SugaredLogger

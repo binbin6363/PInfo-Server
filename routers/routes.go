@@ -135,6 +135,9 @@ func ZapTraceLogger() gin.HandlerFunc {
 		c.Set(log.LoggerTag, loggerWithTraceID)
 
 		// 继续处理请求
+		t := time.Now()
+		log.InfoContextf(c, "recv msg")
 		c.Next()
+		log.InfoContextf(c, "done, cost: %v", time.Now().Sub(t))
 	}
 }
