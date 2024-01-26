@@ -1,8 +1,12 @@
 package routers
 
 import (
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/spf13/cast"
 
 	"go.uber.org/zap"
 
@@ -110,6 +114,8 @@ func Init(serviceName string) *gin.Engine {
 	for _, opt := range options {
 		opt(r)
 	}
+
+	rand.Seed(time.Now().UnixNano())
 	return r
 }
 
@@ -118,6 +124,9 @@ func ZapTraceLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 从 Gin Context 中获取 Trace ID（假设 Trace ID 存储在 Header 中）
 		traceID := c.Request.Header.Get(log.LoggerTraceID)
+		if len(traceID) == 0 {
+			traceID = cast.ToString(rand.Uint64())
+		}
 
 		// 将 Trace ID 添加到 Zap Logger 的上下文字段中
 		loggerWithTraceID := log.GetLogger().With(zap.String(log.LoggerTraceID, traceID))
