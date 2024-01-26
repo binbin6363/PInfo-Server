@@ -40,6 +40,10 @@ const (
 	MsgTypeLogin    = 8  // 登录消息
 	MsgTypeFile     = 9  // 文件消息
 	MsgTypeLocation = 10 // 位置消息
+
+	SingleTalkType = 1 // 单聊
+	GroupTalkType  = 2 // 群聊
+
 )
 
 // Contacts 联系人好友
@@ -142,6 +146,7 @@ type GroupMessages struct {
 	MsgStatus   int    `gorm:"column:msg_status"`
 	CreateTime  int64  `gorm:"column:create_time"`
 	UpdateTime  int64  `gorm:"column:update_time"`
+	MediaInfo   string `gorm:"column:media"`
 }
 
 // TableName 默认是通过结构体的蛇形复数来指定表名，这里通过TableName显示定义出来，便于问题排查

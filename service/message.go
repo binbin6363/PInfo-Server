@@ -423,6 +423,7 @@ func (s *Service) makeImgKey(ctx context.Context, name string, reader io.Reader)
 
 func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq) (rsp *api.SendImageMsgRsp, err error) {
 	_, userInfo := s.dao.GetUserInfoByUid(ctx, req.Uid)
+	_, yourFriendInfo := s.dao.GetContactDetailInfo(ctx, req.ReceiverId, req.Uid)
 	rsp = &api.SendImageMsgRsp{
 		Content: api.SendMsgContent{
 			ReceiverId: req.ReceiverId,
@@ -445,17 +446,6 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 		},
 	}
 
-	msg := &model.SingleMessages{
-		Uid:         req.Uid,
-		MsgID:       s.dao.GenMsgID(), // 本应该由中心服务生成，此处暂且放在本机生成
-		ClientMsgID: req.ClientMsgId,
-		SenderID:    req.Uid,
-		ReceiverID:  req.ReceiverId,
-		MsgType:     model.MsgTypeImg,
-		MsgStatus:   0,
-		CreateTime:  time.Now().Unix(),
-		UpdateTime:  time.Now().Unix(),
-	}
 	// 上传图片
 	bucket := config.AppConfig().CosInfo.MediaBucket
 	expireHour := config.AppConfig().CosInfo.Expire
@@ -483,29 +473,101 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 			}
 
 			// 上传成功，写db
-			msg.Content = file.Filename
 			fileItem := api.FileItem{
 				Url: key,
 			}
-			if b, e := json.Marshal(fileItem); e == nil {
-				msg.MediaInfo = string(b)
-			} else {
+			b, e := json.Marshal(fileItem)
+			if e != nil {
 				log.ErrorContextf(ctx, "Marshal media info err: %v", e)
 			}
-			// 给发送者插入消息
-			msg.Uid = req.Uid
-			if err = s.dao.AddOneSingleMessage(ctx, msg); err != nil {
-				log.InfoContextf(ctx, "save img msg for sender failed! info:%+v", msg)
-				break
+
+			msgID := s.dao.GenMsgID() // 本应该由中心服务生成，此处暂且放在本机生成
+			nowTime := time.Now().Unix()
+			con := &model.Conversations{
+				ID:                 0,
+				Uid:                req.Uid,
+				ContactID:          req.ReceiverId,
+				ConversationType:   1,
+				ConversationStatus: 1,
+				Unread:             0,
+				MsgDigest:          file.Filename,
+				Sequence:           msgID,
+				CreateTime:         nowTime,
+				UpdateTime:         nowTime,
 			}
-			rsp.Content.Data.Id = msg.ID
-			rsp.Content.Data.Content = file.Filename
-			// 给接收者插入消息
-			msg.Uid = req.ReceiverId
-			msg.ID = 0
-			if err = s.dao.AddOneSingleMessage(ctx, msg); err != nil {
-				log.InfoContextf(ctx, "save img msg for receiver failed! info:%+v", msg)
-				break
+
+			if req.TalkType == model.SingleTalkType {
+				msg := &model.SingleMessages{
+					Uid:         req.Uid,
+					MsgID:       msgID, // 本应该由中心服务生成，此处暂且放在本机生成
+					ClientMsgID: req.ClientMsgId,
+					SenderID:    req.Uid,
+					ReceiverID:  req.ReceiverId,
+					MsgType:     model.MsgTypeImg,
+					MsgStatus:   0,
+					CreateTime:  nowTime,
+					UpdateTime:  nowTime,
+					Content:     file.Filename,
+					MediaInfo:   string(b),
+				}
+				// 给发送者插入消息
+				if err = s.dao.AddOneSingleMessage(ctx, msg); err != nil {
+					log.InfoContextf(ctx, "save img msg for sender failed! info:%+v", msg)
+					break
+				}
+				_, myFriendInfo := s.dao.GetContactDetailInfo(ctx, req.Uid, req.ReceiverId)
+				con.ConversationName = myFriendInfo.FriendRemark
+				if err = s.dao.UpdateConversationSingleMsg(ctx, con); err != nil {
+					// 会话更新失败柔性放过
+					log.InfoContextf(ctx, "save msg for Conversation failed! info:%+v", con)
+				}
+				// 给接收者插入消息
+				msg.Uid = req.ReceiverId
+				msg.ID = 0
+				if err := s.dao.AddOneSingleMessage(ctx, msg); err != nil {
+					// 此步骤只许成功，不能失败。失败要进离线队列
+					log.InfoContextf(ctx, "save msg for receiver failed! info:%+v", msg)
+					//return err
+				}
+				con.ID = 0
+				con.ConversationName = yourFriendInfo.FriendRemark
+				con.Uid = req.ReceiverId
+				con.ContactID = req.Uid
+				if err := s.dao.UpdateConversationSingleMsg(ctx, con); err != nil {
+					log.InfoContextf(ctx, "save msg for Conversation failed! info:%+v", con)
+				}
+			} else if req.TalkType == model.GroupTalkType {
+				// 群消息入库
+				groupId := req.ReceiverId
+				msg := &model.GroupMessages{
+					GroupID:     groupId,
+					MsgID:       msgID, // 本应该由中心服务生成，此处暂且放在本机生成
+					ClientMsgID: req.ClientMsgId,
+					SenderID:    req.Uid,
+					MsgType:     model.MsgTypeImg,
+					MsgStatus:   0,
+					CreateTime:  nowTime,
+					UpdateTime:  nowTime,
+					Content:     file.Filename,
+					MediaInfo:   string(b),
+				}
+				if err = s.dao.AddOneGroupMessage(ctx, msg); err != nil {
+					log.InfoContextf(ctx, "save img msg for sender failed! info:%+v", msg)
+					break
+				}
+				_, groupMembers := s.dao.GetGroupMemberList(ctx, groupId)
+				// 获取群头像
+				_, groupInfo := s.dao.GetGroupInfo(ctx, groupId)
+				conversationList := make([]*model.Conversations, 0, len(groupMembers))
+				for _, groupMember := range groupMembers {
+					con.ConversationName = groupInfo.GroupName
+					con.Uid = groupMember.Uid
+					conversationList = append(conversationList, con)
+				}
+				if err = s.dao.UpdateConversationGroupMsg(ctx, conversationList); err != nil {
+					// 会话更新失败柔性放过
+					log.InfoContextf(ctx, "save msg for Conversation failed! info:%+v", con)
+				}
 			}
 
 			if p, e := s.dao.GetPresignUrl(ctx, bucket, key, time.Duration(expireHour)); e == nil {
@@ -519,6 +581,20 @@ func (s *Service) SendImageMessage(ctx context.Context, req *api.SendImageMsgReq
 			}
 			break
 		}
+	}
+
+	notice := &api.SendTextMsgEvtNotice{
+		Event:   "event_talk",
+		Content: rsp.Content,
+	}
+	// 消息通知对方，走下游websocket。下游决定推送的设备
+	bytesData, _ := json.Marshal(notice)
+	url := fmt.Sprintf("http://%s/notice/message/text", config.AppConfig().ConnInfo.Addr)
+	resp, err := s.HttpPost(ctx, url, bytesData, 500)
+	if err != nil {
+		log.InfoContextf(ctx, "notify conn failed, err:%+v", err)
+	} else {
+		log.InfoContextf(ctx, "notify conn success, req:%+v, rsp:%s", req, string(resp))
 	}
 
 	return rsp, err

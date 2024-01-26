@@ -1,7 +1,6 @@
 package main
 
 import (
-	"PInfo-server/plugins"
 	"context"
 	"flag"
 	"os"
@@ -9,6 +8,7 @@ import (
 
 	"PInfo-server/config"
 	"PInfo-server/log"
+	"PInfo-server/plugins"
 	"PInfo-server/service"
 
 	"github.com/gin-gonic/gin"
