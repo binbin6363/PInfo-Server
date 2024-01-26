@@ -8,7 +8,7 @@ import (
 )
 
 func annexRecoverListHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -17,7 +17,7 @@ func annexRecoverListHandler(c *gin.Context) {
 	})
 }
 func annexDeletedHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -26,7 +26,7 @@ func annexDeletedHandler(c *gin.Context) {
 	})
 }
 func annexRecoverHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -36,7 +36,7 @@ func annexRecoverHandler(c *gin.Context) {
 }
 
 func annexUploadHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,

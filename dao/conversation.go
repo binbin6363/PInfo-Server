@@ -14,7 +14,7 @@ import (
 func (d *Dao) GetConversationList(ctx context.Context, uid, sequence int64) (error, []*model.ConversationDetails) {
 	r := d.db(ctx)
 	if uid == 0 {
-		log.Error("uid is invalid")
+		log.ErrorContextf(ctx, "uid is invalid")
 		return errors.New("uid is invalid"), nil
 	}
 
@@ -29,35 +29,35 @@ func (d *Dao) GetConversationList(ctx context.Context, uid, sequence int64) (err
 
 	conDetails := make([]*model.ConversationDetails, 0)
 	if err := r.Scan(&conDetails).Error; err != nil {
-		log.Infof("GetConversationList read db error(%v) uid(%d)", err, uid)
+		log.InfoContextf(ctx, "GetConversationList read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
-	log.Infof("GetConversationList read db ok uid(%d), sequence(%d)", uid, sequence)
+	log.InfoContextf(ctx, "GetConversationList read db ok uid(%d), sequence(%d)", uid, sequence)
 	return nil, conDetails
 }
 
 func (d *Dao) GetConversation(ctx context.Context, uid, contactId int64) (error, *model.Conversations) {
 	r := d.db(ctx)
 	if uid == 0 || contactId == 0 {
-		log.Error("contact id is invalid")
+		log.ErrorContextf(ctx, "contact id is invalid")
 		return errors.New("contact id is invalid"), nil
 	}
 
 	conversationInfo := &model.Conversations{}
 	if err := r.Where("uid=? and contact_id=?", uid, contactId).First(&conversationInfo).Error; err != nil {
-		log.Infof("GetConversation read db error(%v) uid(%d)", err, uid)
+		log.InfoContextf(ctx, "GetConversation read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
-	log.Infof("GetConversation read db ok uid(%d), info(%+v)", uid, conversationInfo)
+	log.InfoContextf(ctx, "GetConversation read db ok uid(%d), info(%+v)", uid, conversationInfo)
 	return nil, conversationInfo
 }
 
 func (d *Dao) SetConversation(ctx context.Context, conversationInfo *model.Conversations) error {
 	r := d.db(ctx)
 	if conversationInfo.Uid == 0 || conversationInfo.ContactID == 0 {
-		log.Error("uid invalid")
+		log.ErrorContextf(ctx, "uid invalid")
 		return errors.New("uid invalid")
 	}
 
@@ -70,28 +70,28 @@ func (d *Dao) SetConversation(ctx context.Context, conversationInfo *model.Conve
 	}).Create(conversationInfo)
 
 	if err := r.Error; err != nil {
-		log.Infof("SetConversation update db error(%v) user info:%+v", err, conversationInfo)
+		log.InfoContextf(ctx, "SetConversation update db error(%v) user info:%+v", err, conversationInfo)
 		return err
 	}
 
-	log.Infof("SetConversation update db ok user info:%+v", conversationInfo)
+	log.InfoContextf(ctx, "SetConversation update db ok user info:%+v", conversationInfo)
 	return nil
 }
 
 func (d *Dao) BatchSetGroupConversationName(ctx context.Context, conversationInfo *model.Conversations) error {
 	r := d.db(ctx)
 	if conversationInfo.ContactID == 0 || conversationInfo.ConversationName == "" {
-		log.Error("groupId|conversationName invalid")
+		log.ErrorContextf(ctx, "groupId|conversationName invalid")
 		return errors.New("groupId|conversationName invalid")
 	}
 
 	r = r.Model(&model.Conversations{}).Where("contact_id = ?", conversationInfo.ContactID).
 		UpdateColumn("conversation_name", conversationInfo.ConversationName)
 	if err := r.Error; err != nil {
-		log.Infof("BatchSetGroupConversationName update db error(%v) user info:%+v", err, conversationInfo)
+		log.InfoContextf(ctx, "BatchSetGroupConversationName update db error(%v) user info:%+v", err, conversationInfo)
 		return err
 	}
 
-	log.Infof("BatchSetGroupConversationName update db ok user info:%+v", conversationInfo)
+	log.InfoContextf(ctx, "BatchSetGroupConversationName update db ok user info:%+v", conversationInfo)
 	return nil
 }

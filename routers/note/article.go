@@ -12,7 +12,7 @@ import (
 )
 
 func articleListHandler(c *gin.Context) {
-	log.Infof("articleEditorHandler")
+	log.InfoContextf(c, "articleEditorHandler")
 
 	req := &api.ArticleListReq{}
 
@@ -55,11 +55,11 @@ func articleListHandler(c *gin.Context) {
 		"message": "success",
 		"data":    rsp,
 	})
-	log.Infof("done articleEditorHandler")
+	log.InfoContextf(c, "done articleEditorHandler")
 }
 
 func articleDetailHandler(c *gin.Context) {
-	log.Infof("articleDetailHandler")
+	log.InfoContextf(c, "articleDetailHandler")
 
 	req := &api.ArticleDetailReq{}
 	req.ArticleId = cast.ToInt64(c.Query("article_id"))
@@ -89,12 +89,12 @@ func articleDetailHandler(c *gin.Context) {
 		"message": "success",
 		"data":    rsp,
 	})
-	log.Infof("done articleDetailHandler")
+	log.InfoContextf(c, "done articleDetailHandler")
 }
 
 // 更新/新增 文章请求
 func articleEditorHandler(c *gin.Context) {
-	log.Infof("articleEditorHandler")
+	log.InfoContextf(c, "articleEditorHandler")
 
 	req := &api.ArticleEditReq{}
 	if err := c.ShouldBind(req); err != nil {
@@ -116,7 +116,7 @@ func articleEditorHandler(c *gin.Context) {
 		return
 	}
 
-	log.Debugf("show articleEditorHandler req: %v", req)
+	log.DebugContextf(c, "show articleEditorHandler req: %v", req)
 	rsp, err := service.DefaultService.ArticleEdit(c, req)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -132,11 +132,11 @@ func articleEditorHandler(c *gin.Context) {
 		"message": "success",
 		"data":    rsp,
 	})
-	log.Infof("done articleEditorHandler")
+	log.InfoContextf(c, "done articleEditorHandler")
 }
 
 func articleDeleteHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -145,7 +145,7 @@ func articleDeleteHandler(c *gin.Context) {
 	})
 }
 func articleRecoverHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -154,7 +154,7 @@ func articleRecoverHandler(c *gin.Context) {
 	})
 }
 func articleAsteriskHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -163,7 +163,7 @@ func articleAsteriskHandler(c *gin.Context) {
 	})
 }
 func articleMoveHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -172,7 +172,7 @@ func articleMoveHandler(c *gin.Context) {
 	})
 }
 func articleUploadImgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -181,7 +181,7 @@ func articleUploadImgHandler(c *gin.Context) {
 	})
 }
 func articleTagHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,

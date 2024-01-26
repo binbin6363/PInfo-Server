@@ -56,7 +56,7 @@ func createHandler(c *gin.Context) {
 
 // deleteHandler 删除聊天列表服务接口
 func deleteHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -66,7 +66,7 @@ func deleteHandler(c *gin.Context) {
 
 // toppingHandler 对话列表置顶服务接口
 func toppingHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -76,7 +76,7 @@ func toppingHandler(c *gin.Context) {
 
 // unreadClearHandler 清除聊天消息未读数服务接口
 func unreadClearHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -86,7 +86,7 @@ func unreadClearHandler(c *gin.Context) {
 
 // recordsHandler 获取聊天记录服务接口
 func recordsHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	req := &api.MsgRecordsReq{}
 	if err := c.ShouldBind(req); err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -133,7 +133,7 @@ func recordsHandler(c *gin.Context) {
 
 // recordsForwardHandler 获取转发会话记录详情列表服务接口
 func recordsForwardHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -143,7 +143,7 @@ func recordsForwardHandler(c *gin.Context) {
 
 // disturbHandler 对话列表置顶服务接口
 func disturbHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -153,7 +153,7 @@ func disturbHandler(c *gin.Context) {
 
 // recordsHistoryHandler 查找用户聊天记录服务接口
 func recordsHistoryHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -163,7 +163,7 @@ func recordsHistoryHandler(c *gin.Context) {
 
 // searchMsgHandler 搜索用户聊天记录服务接口
 func searchMsgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -173,7 +173,7 @@ func searchMsgHandler(c *gin.Context) {
 
 // ServeGetRecordsContext .
 func ServeGetRecordsContext(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -226,7 +226,7 @@ func sendTextMsgHandler(c *gin.Context) {
 
 // sendCodeMsgHandler 发送代码块消息服务接口
 func sendCodeMsgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -236,7 +236,7 @@ func sendCodeMsgHandler(c *gin.Context) {
 
 // sendFileMsgHandler 发送聊天文件服务接口
 func sendFileMsgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -248,7 +248,7 @@ func sendFileMsgHandler(c *gin.Context) {
 func sendImageMsgHandler(c *gin.Context) {
 	form, _ := c.MultipartForm()
 	if len(form.File) == 0 {
-		log.Infof("no file specified!")
+		log.InfoContextf(c, "no file specified!")
 		c.JSON(http.StatusOK, gin.H{
 			"code":    500,
 			"message": "no file specified",
@@ -257,9 +257,9 @@ func sendImageMsgHandler(c *gin.Context) {
 		return
 	}
 
-	log.Infof("show form")
+	log.InfoContextf(c, "show form")
 	for key, values := range form.File {
-		log.Infof("%s: %v\n", key, values)
+		log.InfoContextf(c, "%s: %v\n", key, values)
 	}
 
 	req := &api.SendImageMsgReq{}
@@ -297,7 +297,7 @@ func sendImageMsgHandler(c *gin.Context) {
 		return
 	}
 
-	log.Infof("done send image message")
+	log.InfoContextf(c, "done send image message")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "success",
@@ -307,7 +307,7 @@ func sendImageMsgHandler(c *gin.Context) {
 
 // sendEmoticonMsgHandler 发送表情包服务接口
 func sendEmoticonMsgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -317,7 +317,7 @@ func sendEmoticonMsgHandler(c *gin.Context) {
 
 // forwardMsgHandler 转发消息服务接口
 func forwardMsgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -327,7 +327,7 @@ func forwardMsgHandler(c *gin.Context) {
 
 // revokeMsgHandler 撤回消息服务接口
 func revokeMsgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -337,7 +337,7 @@ func revokeMsgHandler(c *gin.Context) {
 
 // deleteMsgHandler 删除消息服务接口
 func deleteMsgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -347,7 +347,7 @@ func deleteMsgHandler(c *gin.Context) {
 
 // collectMsgHandler 收藏表情包服务接口
 func collectMsgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -357,7 +357,7 @@ func collectMsgHandler(c *gin.Context) {
 
 // sendVoteMsgHandler 发送投票消息服务接口
 func sendVoteMsgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",
@@ -367,7 +367,7 @@ func sendVoteMsgHandler(c *gin.Context) {
 
 // confirmVoteMsgHandler 确认投票消息服务接口
 func confirmVoteMsgHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "unimplemented",

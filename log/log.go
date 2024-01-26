@@ -4,10 +4,17 @@ import (
 	"context"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gorm.io/gorm/logger"
+)
+
+const (
+	LoggerTag     = "logger"
+	LoggerTraceID = "TraceID"
 )
 
 var defaultLogger *zap.SugaredLogger
@@ -82,6 +89,70 @@ func Fatal(args ...interface{}) {
 func Fatalf(format string, args ...interface{}) {
 	defaultLogger.Fatalf(format, args...)
 }
+
+// ======== with context
+func getContextLogger(ctx context.Context) *zap.SugaredLogger {
+	log := defaultLogger
+	if c, ok := ctx.(*gin.Context); ok {
+		if l, ok := c.Get(LoggerTag); ok {
+			log = l.(*zap.SugaredLogger)
+		}
+
+	}
+	return log
+}
+
+func DebugContext(ctx context.Context, args ...interface{}) {
+	log := getContextLogger(ctx)
+	log.Debug(args...)
+}
+
+func DebugContextf(ctx context.Context, format string, args ...interface{}) {
+	log := getContextLogger(ctx)
+	log.Debugf(format, args...)
+}
+
+func InfoContext(ctx context.Context, args ...interface{}) {
+	log := getContextLogger(ctx)
+	log.Info(args...)
+}
+
+func InfoContextf(ctx context.Context, format string, args ...interface{}) {
+	log := getContextLogger(ctx)
+	log.Infof(format, args...)
+}
+
+func WarnContext(ctx context.Context, args ...interface{}) {
+	log := getContextLogger(ctx)
+	log.Warn(args...)
+}
+
+func WarnContextf(ctx context.Context, format string, args ...interface{}) {
+	log := getContextLogger(ctx)
+	log.Warnf(format, args...)
+}
+
+func ErrorContext(ctx context.Context, args ...interface{}) {
+	log := getContextLogger(ctx)
+	log.Error(args...)
+}
+
+func ErrorContextf(ctx context.Context, format string, args ...interface{}) {
+	log := getContextLogger(ctx)
+	log.Errorf(format, args...)
+}
+
+func FatalContext(ctx context.Context, args ...interface{}) {
+	log := getContextLogger(ctx)
+	log.Error(args...)
+}
+
+func FatalContextf(ctx context.Context, format string, args ...interface{}) {
+	log := getContextLogger(ctx)
+	log.Fatalf(format, args...)
+}
+
+// =======================
 
 type ZapLogger struct {
 	logger *zap.Logger

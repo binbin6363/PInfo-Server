@@ -14,7 +14,7 @@ import (
 func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) error {
 	r := d.db(ctx)
 	if articleInfo.Uid == 0 {
-		log.Error("uid invalid")
+		log.ErrorContextf(ctx, "uid invalid")
 		return errors.New("uid invalid")
 	}
 
@@ -24,16 +24,16 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 	}
 	var err error
 	if articleInfo.ID == 0 {
-		log.Infof("create article, uid: %d, title: %s", articleInfo.Uid, articleInfo.Title)
+		log.InfoContextf(ctx, "create article, uid: %d, title: %s", articleInfo.Uid, articleInfo.Title)
 		err = r.Create(articleInfo).Error
 	} else {
-		log.Infof("update article, uid: %d, id: %d", articleInfo.Uid, articleInfo.ID)
+		log.InfoContextf(ctx, "update article, uid: %d, id: %d", articleInfo.Uid, articleInfo.ID)
 		err = r.Updates(articleInfo).Error
 	}
 	if err != nil {
-		log.Error("EditArticle err: %v, uid: %d", err, articleInfo.Uid)
+		log.ErrorContextf(ctx, "EditArticle err: %v, uid: %d", err, articleInfo.Uid)
 	} else {
-		log.Infof("EditArticle ok, uid: %d, id: %d", articleInfo.Uid, articleInfo.ID)
+		log.InfoContextf(ctx, "EditArticle ok, uid: %d, id: %d", articleInfo.Uid, articleInfo.ID)
 	}
 
 	return nil
@@ -44,7 +44,7 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int64, kw string) ([]*model.Articles, error) {
 	r := d.db(ctx)
 	if page == 0 {
-		log.Error("page invalid")
+		log.ErrorContextf(ctx, "page invalid")
 		return nil, errors.New("page invalid")
 	}
 
@@ -59,27 +59,27 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 
 	articleList := make([]*model.Articles, 0)
 	if err := r.Select([]string{"id", "class_id", "title", "update_time"}).Find(&articleList).Error; err != nil {
-		log.Infof("ArticleList read db error(%v)", err)
+		log.InfoContextf(ctx, "ArticleList read db error(%v)", err)
 		return nil, err
 	}
 
-	log.Infof("ArticleList ok, size:%d", len(articleList))
+	log.InfoContextf(ctx, "ArticleList ok, size:%d", len(articleList))
 	return articleList, nil
 }
 
 func (d *Dao) ArticleDetail(ctx context.Context, uid, articleId int64) (*model.Articles, error) {
 	r := d.db(ctx)
 	if uid == 0 || articleId == 0 {
-		log.Error("uid|articleId invalid")
+		log.ErrorContextf(ctx, "uid|articleId invalid")
 		return nil, errors.New("uid|articleId invalid")
 	}
 
 	info := &model.Articles{}
 	err := r.Where("id=? and uid=?", articleId, uid).Find(info).Error
 	if err != nil {
-		log.Error("ArticleDetail err: %v", err)
+		log.ErrorContextf(ctx, "ArticleDetail err: %v", err)
 		return nil, err
 	}
-	log.Infof("ArticleDetail ok id: %d", articleId)
+	log.InfoContextf(ctx, "ArticleDetail ok id: %d", articleId)
 	return info, nil
 }

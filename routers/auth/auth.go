@@ -41,7 +41,7 @@ func loginHandler(c *gin.Context) {
 	}
 
 	_, enc := utils.EncryptPassword(loginReq.PassWord)
-	log.Infof("enc passwd hash:%s", enc)
+	log.InfoContextf(c, "enc passwd hash:%s", enc)
 
 	// 验证密码
 	if !utils.CheckPasswordHash(loginReq.PassWord, detailInfo.PassHash) {
@@ -52,7 +52,7 @@ func loginHandler(c *gin.Context) {
 		})
 		return
 	}
-	log.Infof("passwd check pass")
+	log.InfoContextf(c, "passwd check pass")
 
 	// 生成token
 	err, token := service.DefaultService.CreateJwt(context.TODO(), userInfo)

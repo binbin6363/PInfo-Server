@@ -8,7 +8,7 @@ import (
 )
 
 func tagListHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -18,7 +18,7 @@ func tagListHandler(c *gin.Context) {
 }
 
 func tagEditorHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -27,7 +27,7 @@ func tagEditorHandler(c *gin.Context) {
 	})
 }
 func tagDeleteHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,

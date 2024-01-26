@@ -76,7 +76,7 @@ func QueryString(c *gin.Context, key string) (val string) {
 // SendJsonRsp 回复json消息
 func SendJsonRsp(c *gin.Context, rsp *api.CommRsp) {
 	if rsp == nil {
-		log.Infof("handle ok, send empty rsp")
+		log.InfoContextf(c, "handle ok, send empty rsp")
 		c.JSON(http.StatusOK, gin.H{
 			"code":    200,
 			"message": "ok",
@@ -84,10 +84,10 @@ func SendJsonRsp(c *gin.Context, rsp *api.CommRsp) {
 		})
 	} else if rsp.Code == 0 || rsp.Code == 200 {
 		rsp.Code = 200
-		log.Infof("handle ok, send rsp:%+v", rsp)
+		log.InfoContextf(c, "handle ok, send rsp:%+v", rsp)
 		c.JSON(http.StatusOK, rsp)
 	} else {
-		log.Infof("handle error, code:%d, message:%s", rsp.Code, rsp.Message)
+		log.InfoContextf(c, "handle error, code:%d, message:%s", rsp.Code, rsp.Message)
 		c.JSON(http.StatusOK, rsp)
 	}
 }

@@ -16,7 +16,7 @@ import (
 func (d *Dao) GetContactList(ctx context.Context, uid int64, status int) (error, []*model.UserContact) {
 	r := d.db(ctx)
 	if uid == 0 {
-		log.Error("uid is invalid")
+		log.ErrorContextf(ctx, "uid is invalid")
 		return errors.New("uid is invalid"), nil
 	}
 
@@ -29,14 +29,14 @@ func (d *Dao) GetContactList(ctx context.Context, uid int64, status int) (error,
 	userContacts := make([]*model.UserContact, 0)
 	if err := r.Scan(&userContacts).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			log.Infof("record not exist, uid:%d", uid)
+			log.InfoContextf(ctx, "record not exist, uid:%d", uid)
 		} else {
 			log.Errorf("GetContactList read db error(%v) uid(%d)", err, uid)
 		}
 		return err, nil
 	}
 
-	log.Infof("GetContactList read db ok uid(%d)", uid)
+	log.InfoContextf(ctx, "GetContactList read db ok uid(%d)", uid)
 	return nil, userContacts
 }
 
@@ -44,7 +44,7 @@ func (d *Dao) GetContactList(ctx context.Context, uid int64, status int) (error,
 func (d *Dao) GetContactDetailInfo(ctx context.Context, uid, contactId int64) (error, *model.UserContact) {
 	r := d.db(ctx)
 	if uid == 0 {
-		log.Error("contact id is invalid")
+		log.ErrorContextf(ctx, "contact id is invalid")
 		return errors.New("contact id is invalid"), nil
 	}
 
@@ -57,14 +57,14 @@ func (d *Dao) GetContactDetailInfo(ctx context.Context, uid, contactId int64) (e
 	userContacts := &model.UserContact{}
 	if err := r.First(&userContacts).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			log.Infof("record not exist, uid:%d", uid)
+			log.InfoContextf(ctx, "record not exist, uid:%d", uid)
 		} else {
 			log.Errorf("GetContactList read db error(%v) uid(%d)", err, uid)
 		}
 		return err, nil
 	}
 
-	log.Infof("GetContactDetailInfo read db ok uid(%d)", uid)
+	log.InfoContextf(ctx, "GetContactDetailInfo read db ok uid(%d)", uid)
 	return nil, userContacts
 }
 
@@ -72,24 +72,24 @@ func (d *Dao) GetContactDetailInfo(ctx context.Context, uid, contactId int64) (e
 func (d *Dao) GetContactInfo(ctx context.Context, uid, contactId int64) (error, *model.Contacts) {
 	r := d.db(ctx)
 	if uid == 0 || contactId == 0 {
-		log.Error("contact id is invalid")
+		log.ErrorContextf(ctx, "contact id is invalid")
 		return errors.New("contact id is invalid"), nil
 	}
 
 	contactInfo := &model.Contacts{}
 	if err := r.Where("uid=? and contact_id=?", uid, contactId).First(&contactInfo).Error; err != nil {
-		log.Infof("GetContactInfo read db error(%v) uid(%d)", err, uid)
+		log.InfoContextf(ctx, "GetContactInfo read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
-	log.Infof("GetContactInfo read db ok uid(%d), contactInfo:%+v", uid, *contactInfo)
+	log.InfoContextf(ctx, "GetContactInfo read db ok uid(%d), contactInfo:%+v", uid, *contactInfo)
 	return nil, contactInfo
 }
 
 func (d *Dao) SetContactInfo(ctx context.Context, contact *model.Contacts) error {
 	r := d.db(ctx)
 	if contact.Uid == 0 || contact.ContactID == 0 {
-		log.Error("uid invalid")
+		log.ErrorContextf(ctx, "uid invalid")
 		return errors.New("uid invalid")
 	}
 
@@ -102,10 +102,10 @@ func (d *Dao) SetContactInfo(ctx context.Context, contact *model.Contacts) error
 	}).Create(contact)
 
 	if err := r.Error; err != nil {
-		log.Infof("SetContactInfo update db error(%v) user info:%+v", err, contact)
+		log.InfoContextf(ctx, "SetContactInfo update db error(%v) user info:%+v", err, contact)
 		return err
 	}
 
-	log.Infof("SetContactInfo update db ok user info:%+v", contact)
+	log.InfoContextf(ctx, "SetContactInfo update db ok user info:%+v", contact)
 	return nil
 }

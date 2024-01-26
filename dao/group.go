@@ -19,7 +19,7 @@ func (d *Dao) GenGroupID() int64 {
 func (d *Dao) SetGroupInfo(ctx context.Context, groupInfo *model.Groups) error {
 	r := d.db(ctx)
 	if groupInfo.GroupID == 0 {
-		log.Error("group id invalid")
+		log.ErrorContextf(ctx, "group id invalid")
 		return errors.New("group id invalid")
 	}
 
@@ -32,35 +32,35 @@ func (d *Dao) SetGroupInfo(ctx context.Context, groupInfo *model.Groups) error {
 	}).Create(groupInfo)
 
 	if err := r.Error; err != nil {
-		log.Infof("SetGroupInfo update db error(%v) user info:%+v", err, groupInfo)
+		log.InfoContextf(ctx, "SetGroupInfo update db error(%v) user info:%+v", err, groupInfo)
 		return err
 	}
 
-	log.Infof("SetGroupInfo update db ok user info:%+v", groupInfo)
+	log.InfoContextf(ctx, "SetGroupInfo update db ok user info:%+v", groupInfo)
 	return nil
 }
 
 func (d *Dao) GetGroupInfo(ctx context.Context, GroupId int64) (error, *model.Groups) {
 	r := d.db(ctx)
 	if GroupId == 0 {
-		log.Error("contact id is invalid")
+		log.ErrorContextf(ctx, "contact id is invalid")
 		return errors.New("contact id is invalid"), nil
 	}
 
 	groupInfo := &model.Groups{}
 	if err := r.Where("group_id=?", GroupId).First(&groupInfo).Error; err != nil {
-		log.Infof("GetGroupInfo read db error(%v) group id(%d)", err, GroupId)
+		log.InfoContextf(ctx, "GetGroupInfo read db error(%v) group id(%d)", err, GroupId)
 		return err, nil
 	}
 
-	log.Infof("GetGroupInfo read db ok group id(%d), info(%+v)", GroupId, groupInfo)
+	log.InfoContextf(ctx, "GetGroupInfo read db ok group id(%d), info(%+v)", GroupId, groupInfo)
 	return nil, groupInfo
 }
 
 func (d *Dao) BatchAddGroupMember(ctx context.Context, groupMembers []*model.GroupMembers) error {
 	r := d.db(ctx)
 	if len(groupMembers) == 0 {
-		log.Error("group member empty")
+		log.ErrorContextf(ctx, "group member empty")
 		return errors.New("group member empty")
 	}
 
@@ -73,35 +73,35 @@ func (d *Dao) BatchAddGroupMember(ctx context.Context, groupMembers []*model.Gro
 	}).Create(groupMembers)
 
 	if err := r.Error; err != nil {
-		log.Infof("BatchAddGroupMember update db error(%v) user info:%+v", err, groupMembers)
+		log.InfoContextf(ctx, "BatchAddGroupMember update db error(%v) user info:%+v", err, groupMembers)
 		return err
 	}
 
-	log.Infof("BatchAddGroupMember update db ok, add user size:%d", len(groupMembers))
+	log.InfoContextf(ctx, "BatchAddGroupMember update db ok, add user size:%d", len(groupMembers))
 	return nil
 }
 
 func (d *Dao) GetGroupMemberList(ctx context.Context, groupId int64) (error, []*model.GroupMembers) {
 	r := d.db(ctx)
 	if groupId == 0 {
-		log.Error("group id is invalid")
+		log.ErrorContextf(ctx, "group id is invalid")
 		return errors.New("group id is invalid"), nil
 	}
 
 	groupMembers := make([]*model.GroupMembers, 0)
 	if err := r.Table(model.GroupMembers{}.TableName()).Where("group_id=?", groupId).Scan(&groupMembers).Error; err != nil {
-		log.Infof("GetGroupMemberList read db error(%v) groupId(%d)", err, groupId)
+		log.InfoContextf(ctx, "GetGroupMemberList read db error(%v) groupId(%d)", err, groupId)
 		return err, nil
 	}
 
-	log.Infof("GetGroupInfo read db ok groupId(%d), members size:%d", groupId, len(groupMembers))
+	log.InfoContextf(ctx, "GetGroupInfo read db ok groupId(%d), members size:%d", groupId, len(groupMembers))
 	return nil, groupMembers
 }
 
 func (d *Dao) GetGroupMemberInfoList(ctx context.Context, groupId, sequence int64) (error, []*model.GroupMemberInfoList) {
 	r := d.db(ctx)
 	if groupId == 0 {
-		log.Error("group id is invalid")
+		log.ErrorContextf(ctx, "group id is invalid")
 		return errors.New("group id is invalid"), nil
 	}
 
@@ -114,21 +114,21 @@ func (d *Dao) GetGroupMemberInfoList(ctx context.Context, groupId, sequence int6
 	groupUserInfos := make([]*model.GroupMemberInfoList, 0)
 	if err := r.Scan(&groupUserInfos).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			log.Infof("record not exist, group id:%d", groupId)
+			log.InfoContextf(ctx, "record not exist, group id:%d", groupId)
 		} else {
 			log.Errorf("GetGroupMemberInfoList read db error(%v) group id(%d)", err, groupId)
 		}
 		return err, nil
 	}
 
-	log.Infof("GetGroupMemberInfoList read db ok uid(%d)", groupId)
+	log.InfoContextf(ctx, "GetGroupMemberInfoList read db ok uid(%d)", groupId)
 	return nil, groupUserInfos
 }
 
 func (d *Dao) GetGroupMemberInfo(ctx context.Context, groupId, uid int64) (error, *model.GroupMembers) {
 	r := d.db(ctx)
 	if groupId == 0 {
-		log.Error("group id is invalid")
+		log.ErrorContextf(ctx, "group id is invalid")
 		return errors.New("group id is invalid"), nil
 	}
 
@@ -137,21 +137,21 @@ func (d *Dao) GetGroupMemberInfo(ctx context.Context, groupId, uid int64) (error
 	groupUserInfo := &model.GroupMembers{}
 	if err := r.First(&groupUserInfo).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			log.Infof("record not exist, group id:%d, uid:%d", groupId, uid)
+			log.InfoContextf(ctx, "record not exist, group id:%d, uid:%d", groupId, uid)
 		} else {
 			log.Errorf("GetGroupMemberInfo read db error(%v) group id(%d)", err, groupId)
 		}
 		return err, nil
 	}
 
-	log.Infof("GetGroupMemberInfo read db ok uid(%d)", groupId)
+	log.InfoContextf(ctx, "GetGroupMemberInfo read db ok uid(%d)", groupId)
 	return nil, groupUserInfo
 }
 
 func (d *Dao) SetGroupMemberInfo(ctx context.Context, groupUserInfo *model.GroupMembers) error {
 	r := d.db(ctx)
 	if groupUserInfo.GroupID == 0 || groupUserInfo.Uid == 0 {
-		log.Error("group id or uid invalid")
+		log.ErrorContextf(ctx, "group id or uid invalid")
 		return errors.New("group id or uid invalid")
 	}
 
@@ -163,11 +163,11 @@ func (d *Dao) SetGroupMemberInfo(ctx context.Context, groupUserInfo *model.Group
 	}).Create(groupUserInfo)
 
 	if err := r.Error; err != nil {
-		log.Infof("SetGroupMemberInfo update db error(%v) user info:%+v", err, groupUserInfo)
+		log.InfoContextf(ctx, "SetGroupMemberInfo update db error(%v) user info:%+v", err, groupUserInfo)
 		return err
 	}
 
-	log.Infof("SetGroupMemberInfo update db ok user info:%+v", groupUserInfo)
+	log.InfoContextf(ctx, "SetGroupMemberInfo update db ok user info:%+v", groupUserInfo)
 	return nil
 
 }
@@ -175,7 +175,7 @@ func (d *Dao) SetGroupMemberInfo(ctx context.Context, groupUserInfo *model.Group
 func (d *Dao) GetGroupList(ctx context.Context, uid int64) (err error, groupList []*model.GroupInfoList) {
 	r := d.db(ctx)
 	if uid == 0 {
-		log.Error("uid is invalid")
+		log.ErrorContextf(ctx, "uid is invalid")
 		return errors.New("uid is invalid"), nil
 	}
 	type Result struct {
@@ -187,7 +187,7 @@ func (d *Dao) GetGroupList(ctx context.Context, uid int64) (err error, groupList
 	err = r.Table("group_members").Select([]string{"group_id"}).
 		Where("uid=?", uid).Scan(&res).Error
 	if err == gorm.ErrRecordNotFound {
-		log.Infof("user not exist")
+		log.InfoContextf(ctx, "user not exist")
 		return err, nil
 	}
 
@@ -199,7 +199,7 @@ func (d *Dao) GetGroupList(ctx context.Context, uid int64) (err error, groupList
 	groupList = make([]*model.GroupInfoList, 0)
 	err = r.Table("groups").Where("group_id in ?", groupIds).Scan(&groupList).Error
 	if err != nil {
-		log.Infof("query group list failed, err:%+v", err)
+		log.InfoContextf(ctx, "query group list failed, err:%+v", err)
 		return err, nil
 	}
 
@@ -211,7 +211,7 @@ func (d *Dao) GetGroupList(ctx context.Context, uid int64) (err error, groupList
 	err = r.Table("group_members").Select([]string{"group_id", "uid"}).
 		Where("group_id in ? and user_role=2", groupIds).Scan(&leaders).Error
 	if err == gorm.ErrRecordNotFound {
-		log.Infof("user not exist")
+		log.InfoContextf(ctx, "user not exist")
 		//return err, nil
 	}
 
@@ -230,7 +230,7 @@ func (d *Dao) GetGroupList(ctx context.Context, uid int64) (err error, groupList
 func (d *Dao) GetGroupDetailInfo(ctx context.Context, groupId, uid int64) (error, *model.GroupDetailInfo) {
 	r := d.db(ctx)
 	if groupId == 0 {
-		log.Error("group id is invalid")
+		log.ErrorContextf(ctx, "group id is invalid")
 		return errors.New("group id is invalid"), nil
 	}
 
@@ -242,7 +242,7 @@ func (d *Dao) GetGroupDetailInfo(ctx context.Context, groupId, uid int64) (error
 			groupId, uid).Scan(&groupDetailInfo).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			log.Infof("record not exist, group id:%d", groupId)
+			log.InfoContextf(ctx, "record not exist, group id:%d", groupId)
 		} else {
 			log.Errorf("GetGroupDetailInfo read db error(%v) group id(%d)", err, groupId)
 		}
@@ -258,7 +258,7 @@ func (d *Dao) GetGroupDetailInfo(ctx context.Context, groupId, uid int64) (error
 	err = r.Table(model.GroupMembers{}.TableName()).Select([]string{"group_id", "uid", "remark_name"}).
 		Where("group_id = ? and user_role=2", groupId).First(&leaders).Error
 	if err == gorm.ErrRecordNotFound {
-		log.Infof("not found manager in group id:%d", groupId)
+		log.InfoContextf(ctx, "not found manager in group id:%d", groupId)
 	} else if err == nil {
 		groupDetailInfo.ManagerName = leaders.RemarkName
 		if leaders.Uid == uid {
@@ -268,6 +268,6 @@ func (d *Dao) GetGroupDetailInfo(ctx context.Context, groupId, uid int64) (error
 		}
 	}
 
-	log.Infof("GetGroupDetailInfo read db ok group id(%d), uid(%d)", groupId, uid)
+	log.InfoContextf(ctx, "GetGroupDetailInfo read db ok group id(%d), uid(%d)", groupId, uid)
 	return nil, groupDetailInfo
 }

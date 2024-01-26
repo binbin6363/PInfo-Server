@@ -14,7 +14,7 @@ import (
 func (s *Service) GetContactList(ctx context.Context, uid int64, status model.ContactType) (error, []*api.ContactInfo) {
 	err, userContacts := s.dao.GetContactList(ctx, uid, int(status))
 	if err != nil {
-		log.Infof("query contact info failed, err:%v", err)
+		log.InfoContextf(ctx, "query contact info failed, err:%v", err)
 		return err, nil
 	}
 
@@ -46,7 +46,7 @@ func (s *Service) ContactSearch(ctx context.Context, req *api.ContactSearchReq) 
 	if err != nil {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("search user by user name failed, err:%v, user:%s", err, req.UserName)
+		log.InfoContextf(ctx, "search user by user name failed, err:%v, user:%s", err, req.UserName)
 		return err, rsp
 	}
 
@@ -54,7 +54,7 @@ func (s *Service) ContactSearch(ctx context.Context, req *api.ContactSearchReq) 
 		Uid: info.Uid,
 	}
 
-	log.Infof("search user ok, username:%s, rsp:%+v", req.UserName, rsp)
+	log.InfoContextf(ctx, "search user ok, username:%s, rsp:%+v", req.UserName, rsp)
 	return nil, rsp
 }
 
@@ -75,7 +75,7 @@ func (s *Service) ContactDetail(ctx context.Context, req *api.ContactDetailReq) 
 	if err != nil {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("get user detail by uid failed, err:%v, user:%d", err, req.Uid)
+		log.InfoContextf(ctx, "get user detail by uid failed, err:%v, user:%d", err, req.Uid)
 		return err, rsp
 	}
 
@@ -135,7 +135,7 @@ func (s *Service) ContactDetail(ctx context.Context, req *api.ContactDetailReq) 
 		NickNameRemark: friendRemark,
 	}
 
-	log.Infof("search user ok, username:%d, rsp:%+v", req.Uid, rsp)
+	log.InfoContextf(ctx, "search user ok, username:%d, rsp:%+v", req.Uid, rsp)
 	return nil, rsp
 }
 
@@ -152,11 +152,11 @@ func (s *Service) AddContact(ctx context.Context, req *api.AddContactReq) (err e
 	if err != nil && err != gorm.ErrRecordNotFound {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("get forward contact failed, err:%v, %d => %d", err, req.Uid, req.ContactID)
+		log.InfoContextf(ctx, "get forward contact failed, err:%v, %d => %d", err, req.Uid, req.ContactID)
 		return err, rsp
 	}
 	if forwardInfo != nil && forwardInfo.ContactID != 0 && forwardInfo.Status != 0 {
-		log.Infof("[forward] [%d] is [%d] friend, status:%d", req.ContactID, req.Uid, forwardInfo.Status)
+		log.InfoContextf(ctx, "[forward] [%d] is [%d] friend, status:%d", req.ContactID, req.Uid, forwardInfo.Status)
 		isMyContact = true
 	}
 
@@ -166,16 +166,16 @@ func (s *Service) AddContact(ctx context.Context, req *api.AddContactReq) (err e
 	if err != nil && err != gorm.ErrRecordNotFound {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("get reverse contact failed, err:%v, %d => %d", err, req.ContactID, req.Uid)
+		log.InfoContextf(ctx, "get reverse contact failed, err:%v, %d => %d", err, req.ContactID, req.Uid)
 		return err, rsp
 	}
 	if reverseInfo != nil && reverseInfo.ContactID != 0 && reverseInfo.Status != 0 {
-		log.Infof("[reverse] [%d] is [%d] friend, status:%d", req.Uid, req.ContactID, reverseInfo.Status)
+		log.InfoContextf(ctx, "[reverse] [%d] is [%d] friend, status:%d", req.Uid, req.ContactID, reverseInfo.Status)
 		isHisContact = true
 	}
 
 	if isMyContact && isHisContact {
-		log.Infof("already each other contact friend, uid:%d, contact id:%d, status:%d", req.Uid, req.ContactID, reverseInfo.Status)
+		log.InfoContextf(ctx, "already each other contact friend, uid:%d, contact id:%d, status:%d", req.Uid, req.ContactID, reverseInfo.Status)
 		return nil, rsp
 	}
 	nowTimme := time.Now().Unix()
@@ -195,7 +195,7 @@ func (s *Service) AddContact(ctx context.Context, req *api.AddContactReq) (err e
 		if err != nil {
 			rsp.Code = 400
 			rsp.Message = "内部错误"
-			log.Infof("SetContactInfo mine failed, err:%v, user:%d", err, req.ContactID)
+			log.InfoContextf(ctx, "SetContactInfo mine failed, err:%v, user:%d", err, req.ContactID)
 			return err, rsp
 		}
 	}
@@ -216,12 +216,12 @@ func (s *Service) AddContact(ctx context.Context, req *api.AddContactReq) (err e
 		if err != nil {
 			rsp.Code = 400
 			rsp.Message = "内部错误"
-			log.Infof("SetContactInfo peer failed, err:%v, user:%d", err, req.ContactID)
+			log.InfoContextf(ctx, "SetContactInfo peer failed, err:%v, user:%d", err, req.ContactID)
 			return err, rsp
 		}
 	}
 
-	log.Infof("add each other contact ok, req:%+v, rsp:%+v", req, rsp)
+	log.InfoContextf(ctx, "add each other contact ok, req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }
 
@@ -236,11 +236,11 @@ func (s *Service) ApplyAddContact(ctx context.Context, req *api.ApplyAddContactR
 	if err != nil {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("get my contact by contact failed, err:%v, %d => %d", err, req.Uid, req.ApplyId)
+		log.InfoContextf(ctx, "get my contact by contact failed, err:%v, %d => %d", err, req.Uid, req.ApplyId)
 		return err, rsp
 	}
 	if forwardInfo.Status == int(model.ContactFriend) {
-		log.Infof("contact[%d] is my[%d] friend already, status:%d", req.ApplyId, req.Uid, forwardInfo.Status)
+		log.InfoContextf(ctx, "contact[%d] is my[%d] friend already, status:%d", req.ApplyId, req.Uid, forwardInfo.Status)
 		return nil, rsp
 	}
 
@@ -258,11 +258,11 @@ func (s *Service) ApplyAddContact(ctx context.Context, req *api.ApplyAddContactR
 	if err != nil {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("SetContactInfo mine failed, err:%v, user:%d", err, req.ApplyId)
+		log.InfoContextf(ctx, "SetContactInfo mine failed, err:%v, user:%d", err, req.ApplyId)
 		return err, rsp
 	}
 
-	log.Infof("apply contact ok, req:%+v, rsp:%+v", req, rsp)
+	log.InfoContextf(ctx, "apply contact ok, req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }
 
@@ -277,11 +277,11 @@ func (s *Service) DeclineAddContact(ctx context.Context, req *api.ApplyAddContac
 	if err != nil {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("get my contact by contact failed, err:%v, %d => %d", err, req.Uid, req.ApplyId)
+		log.InfoContextf(ctx, "get my contact by contact failed, err:%v, %d => %d", err, req.Uid, req.ApplyId)
 		return err, rsp
 	}
 	if forwardInfo.Status == int(model.ContactStranger) {
-		log.Infof("contact[%d] is decline by me[%d] already, status:%d", req.ApplyId, req.Uid, forwardInfo.Status)
+		log.InfoContextf(ctx, "contact[%d] is decline by me[%d] already, status:%d", req.ApplyId, req.Uid, forwardInfo.Status)
 		return nil, rsp
 	}
 
@@ -299,11 +299,11 @@ func (s *Service) DeclineAddContact(ctx context.Context, req *api.ApplyAddContac
 	if err != nil {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("SetContactInfo mine failed, err:%v, user:%d", err, req.ApplyId)
+		log.InfoContextf(ctx, "SetContactInfo mine failed, err:%v, user:%d", err, req.ApplyId)
 		return err, rsp
 	}
 
-	log.Infof("decline contact ok, req:%+v, rsp:%+v", req, rsp)
+	log.InfoContextf(ctx, "decline contact ok, req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }
 
@@ -319,11 +319,11 @@ func (s *Service) EditContactInfo(ctx context.Context, req *api.EditContactInfoR
 	if err != nil {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("get my contact by contact failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
+		log.InfoContextf(ctx, "get my contact by contact failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
 		return err, rsp
 	}
 	if contactInfo.Uid == 0 || contactInfo.ContactID == 0 {
-		log.Infof("contact not exist, uid:%d, contact:%d", req.Uid, req.ContactId)
+		log.InfoContextf(ctx, "contact not exist, uid:%d, contact:%d", req.Uid, req.ContactId)
 		rsp.Code = 4005
 		rsp.Message = "contact not exist"
 		return nil, rsp
@@ -334,10 +334,10 @@ func (s *Service) EditContactInfo(ctx context.Context, req *api.EditContactInfoR
 	if err != nil {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("EditContactInfo failed, err:%v, contact:%d", err, req.ContactId)
+		log.InfoContextf(ctx, "EditContactInfo failed, err:%v, contact:%d", err, req.ContactId)
 		return err, rsp
 	}
 
-	log.Infof("edit contact info ok, req:%+v, rsp:%+v", req, rsp)
+	log.InfoContextf(ctx, "edit contact info ok, req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }

@@ -30,7 +30,7 @@ func (d *Dao) MakeRawUrl(ctx context.Context, disableSSL bool, domain, bucket, k
 
 // GetPresignUrl .
 func (d *Dao) GetPresignUrl(ctx context.Context, bucket, key string, expireHour time.Duration) (string, error) {
-	log.Debugf("Create Presign client, key:%s", key)
+	log.DebugContextf(ctx, "Create Presign client, key:%s", key)
 
 	if !config.AppConfig().CosInfo.SignFlag {
 		return d.MakeRawUrl(ctx, config.AppConfig().CosInfo.DisableSSL,
@@ -44,9 +44,9 @@ func (d *Dao) GetPresignUrl(ctx context.Context, bucket, key string, expireHour 
 	urlStr, err := req.Presign(expireHour * time.Hour)
 
 	if err != nil {
-		log.Errorf("Create Presigned URL fail:%v", err)
+		log.ErrorContextf(ctx, "Create Presigned URL fail:%v", err)
 	} else {
-		log.Infof("Presigned URL For object: %s, expire in: %dh", urlStr, expireHour)
+		log.InfoContextf(ctx, "Presigned URL For object: %s, expire in: %dh", urlStr, expireHour)
 	}
 
 	return urlStr, err
@@ -69,10 +69,10 @@ func (d *Dao) UploadFile(ctx context.Context, bucket, key string, reader io.Read
 	}
 	_, err := uploader.Upload(ui)
 	if err != nil {
-		log.Errorf("Unable to upload %q to %q, %v", key, bucket, err)
+		log.ErrorContextf(ctx, "Unable to upload %q to %q, %v", key, bucket, err)
 		return err
 	}
-	log.Infof("Successfully uploaded %q to %q", key, bucket)
+	log.InfoContextf(ctx, "Successfully uploaded %q to %q", key, bucket)
 	return err
 }
 
@@ -93,12 +93,12 @@ func (d *Dao) Download(ctx context.Context, bucket, key string, timeout int) ([]
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			default:
-				log.Errorf("GetObject err, bucket:%s, key:%s, err:%+v", bucket, key, err)
+				log.ErrorContextf(ctx, "GetObject err, bucket:%s, key:%s, err:%+v", bucket, key, err)
 			}
 		}
 		return nil, err
 	} else {
-		log.Infof("GetObject ok, bucket:%s, key:%s", bucket, key)
+		log.InfoContextf(ctx, "GetObject ok, bucket:%s, key:%s", bucket, key)
 		return io.ReadAll(result.Body)
 	}
 }
@@ -108,7 +108,7 @@ func (d *Dao) DownloadFile(ctx context.Context, bucket, key string) error {
 
 	file, err := os.Create(key)
 	if err != nil {
-		log.Errorf("Unable to open file %q, %v\n", key, err)
+		log.ErrorContextf(ctx, "Unable to open file %q, %v\n", key, err)
 		return err
 	}
 	defer file.Close()
@@ -119,10 +119,10 @@ func (d *Dao) DownloadFile(ctx context.Context, bucket, key string) error {
 			Key:    aws.String(key),
 		})
 	if err != nil {
-		log.Errorf("Unable to download key %q, %v", key, err)
+		log.ErrorContextf(ctx, "Unable to download key %q, %v", key, err)
 		return err
 	}
-	log.Infof("Downloaded %s %d bytes", file.Name(), numBytes)
+	log.InfoContextf(ctx, "Downloaded %s %d bytes", file.Name(), numBytes)
 	return err
 }
 
@@ -130,7 +130,7 @@ func (d *Dao) DownloadFile(ctx context.Context, bucket, key string) error {
 func (d *Dao) ParseUrlKey(ctx context.Context, urlStr string) (string, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
-		log.Errorf("parse url failed, url: %s", urlStr)
+		log.ErrorContextf(ctx, "parse url failed, url: %s", urlStr)
 		return "", errors.New("parse url failed")
 	}
 
@@ -138,21 +138,21 @@ func (d *Dao) ParseUrlKey(ctx context.Context, urlStr string) (string, error) {
 }
 
 // RawDownload 直接从url下载字节流
-func (d *Dao) RawDownload(_ context.Context, url string) ([]byte, error) {
+func (d *Dao) RawDownload(ctx context.Context, url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	if resp != nil {
 		defer func() {
-			log.Infof("done download data")
+			log.InfoContextf(ctx, "done download data")
 			resp.Body.Close()
 		}()
 	} else {
-		log.Errorf("resp err: %v", err)
+		log.ErrorContextf(ctx, "resp err: %v", err)
 		return nil, err
 	}
 
-	log.Infof("start download data from url:%s", url)
+	log.InfoContextf(ctx, "start download data from url:%s", url)
 	return io.ReadAll(resp.Body)
 }

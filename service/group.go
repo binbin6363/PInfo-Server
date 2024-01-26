@@ -6,9 +6,10 @@ import (
 	"PInfo-server/model"
 	"context"
 	"errors"
-	"github.com/spf13/cast"
 	"strings"
 	"time"
+
+	"github.com/spf13/cast"
 )
 
 // GetGroupList 获取群列表
@@ -37,7 +38,7 @@ func (s *Service) GetGroupList(ctx context.Context, req *api.GroupListReq) (err 
 			IsDisturb: 0, // 免打扰
 		}
 		groupListRsp.GroupInfoList = append(groupListRsp.GroupInfoList, groupRspInfo)
-		log.Infof("==== group info:%+v", groupRspInfo)
+		log.InfoContextf(ctx, "==== group info:%+v", groupRspInfo)
 	}
 
 	rsp.Data = groupListRsp
@@ -68,7 +69,7 @@ func (s *Service) InviteGroupMember(ctx context.Context, req *api.GroupMembersRe
 			IsOnline:     1,
 		}
 		inviteGroupRsp = append(inviteGroupRsp, mem)
-		log.Infof("==== group mem:%+v", mem)
+		log.InfoContextf(ctx, "==== group mem:%+v", mem)
 	}
 
 	rsp.Data = inviteGroupRsp
@@ -107,7 +108,7 @@ func (s *Service) GetGroupMembers(ctx context.Context, req *api.GroupMembersReq)
 			mem.FriendRemark = mem.Nickname
 		}
 		inviteGroupRsp = append(inviteGroupRsp, mem)
-		log.Infof("==== group mem:%+v", mem)
+		log.InfoContextf(ctx, "==== group mem:%+v", mem)
 
 	}
 
@@ -115,7 +116,7 @@ func (s *Service) GetGroupMembers(ctx context.Context, req *api.GroupMembersReq)
 		return errors.New("user not in group"), nil
 	}
 
-	log.Infof("get group members ok, group id:%d, member size:%d", req.GroupId, len(inviteGroupRsp))
+	log.InfoContextf(ctx, "get group members ok, group id:%d, member size:%d", req.GroupId, len(inviteGroupRsp))
 	rsp.Data = inviteGroupRsp
 	return nil, rsp
 }
@@ -165,7 +166,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *api.CreateGroupReq) (err
 		CreateTime: nowTime,
 		UpdateTime: nowTime,
 	})
-	log.Infof("create group, admin:%v", groupMembers[0])
+	log.InfoContextf(ctx, "create group, admin:%v", groupMembers[0])
 
 	idList := strings.Split(req.Ids, ",")
 	for _, id := range idList {
@@ -180,7 +181,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *api.CreateGroupReq) (err
 			UpdateTime: nowTime,
 		}
 		groupMembers = append(groupMembers, groupMember)
-		log.Infof("create group, add group user:%v", groupMember)
+		log.InfoContextf(ctx, "create group, add group user:%v", groupMember)
 	}
 
 	if err = s.dao.BatchAddGroupMember(ctx, groupMembers); err != nil {
@@ -204,13 +205,13 @@ func (s *Service) CreateGroup(ctx context.Context, req *api.CreateGroupReq) (err
 	}
 
 	if err := s.dao.UpdateConversationGroupMsg(ctx, []*model.Conversations{con}); err != nil {
-		log.Infof("save msg for Conversation failed! group id:%d, group name:%s", createGroupRsp.GroupId, groupInfo.GroupName)
+		log.InfoContextf(ctx, "save msg for Conversation failed! group id:%d, group name:%s", createGroupRsp.GroupId, groupInfo.GroupName)
 		return err, nil
 	}
 
 	rsp.Data = createGroupRsp
 
-	log.Infof("create group ok, req:%+v, rsp:%+v", req, createGroupRsp)
+	log.InfoContextf(ctx, "create group ok, req:%+v, rsp:%+v", req, createGroupRsp)
 	return nil, rsp
 }
 
@@ -232,7 +233,7 @@ func (s *Service) InviteGroup(ctx context.Context, req *api.InviteGroupReq) (err
 			UpdateTime: nowTime,
 		}
 		groupMembers = append(groupMembers, groupMember)
-		log.Infof("invite group, add group user:%v", groupMember)
+		log.InfoContextf(ctx, "invite group, add group user:%v", groupMember)
 	}
 
 	if err = s.dao.BatchAddGroupMember(ctx, groupMembers); err != nil {
@@ -241,7 +242,7 @@ func (s *Service) InviteGroup(ctx context.Context, req *api.InviteGroupReq) (err
 		return err, rsp
 	}
 
-	log.Infof("InviteGroup ok, req:%+v, rsp:%+v", req, rsp)
+	log.InfoContextf(ctx, "InviteGroup ok, req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }
 
@@ -272,7 +273,7 @@ func (s *Service) RemarkNameInGroup(ctx context.Context, req *api.RemarkNameInGr
 		return err, rsp
 	}
 
-	log.Infof("RemarkNameInGroup ok, req:%+v, rsp:%+v", req, rsp)
+	log.InfoContextf(ctx, "RemarkNameInGroup ok, req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }
 
@@ -305,7 +306,7 @@ func (s *Service) GetGroupDetail(ctx context.Context, req *api.GroupDetailReq) (
 	}
 	rsp.Data = groupDetailRsp
 
-	log.Infof("GetGroupDetail ok, req:%+v, rsp:%+v", req, groupDetailRsp)
+	log.InfoContextf(ctx, "GetGroupDetail ok, req:%+v, rsp:%+v", req, groupDetailRsp)
 	return nil, rsp
 }
 
@@ -359,6 +360,6 @@ func (s *Service) SetGroupInfo(ctx context.Context, req *api.SetGroupInfoReq) (e
 		}
 	}
 
-	log.Infof("SetGroupInfo ok, req:%+v, rsp:%+v", req, rsp)
+	log.InfoContextf(ctx, "SetGroupInfo ok, req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }

@@ -26,21 +26,21 @@ func (d *Dao) CheckUserExist(ctx context.Context, username string) (err error, e
 	err = r.Table("user_infos").Select([]string{"username", "create_time"}).
 		Where("username=?", username).First(&res).Error
 	if err == gorm.ErrRecordNotFound {
-		log.Infof("user not exist")
+		log.InfoContextf(ctx, "user not exist")
 		return err, false
 	}
 
 	if err != nil {
-		log.Infof("query user name failed, err:%+v", err)
+		log.InfoContextf(ctx, "query user name failed, err:%+v", err)
 		return err, false
 	}
 
 	if res.UserName == "" {
-		log.Infof("user %s not exist", username)
+		log.InfoContextf(ctx, "user %s not exist", username)
 		return nil, false
 	}
 
-	log.Infof("user exist, name:%s, create time:%d", res.UserName, res.CreateTime)
+	log.InfoContextf(ctx, "user exist, name:%s, create time:%d", res.UserName, res.CreateTime)
 	return nil, true
 }
 
@@ -69,7 +69,7 @@ func (d *Dao) AllocNewUserID(ctx context.Context) (uid int64, err error) {
 		Desc: true,
 	}).Select([]string{"uid"}).First(&res).Error
 	if err != nil {
-		log.Infof("select max uid failed, err:%+v", err)
+		log.InfoContextf(ctx, "select max uid failed, err:%+v", err)
 		tx.Rollback()
 		return 0, err
 	}
@@ -81,17 +81,17 @@ func (d *Dao) AllocNewUserID(ctx context.Context) (uid int64, err error) {
 	userInfo.CreateTime = time.Now().Unix()
 	err = r.Model(&model.UserInfo{}).Create(userInfo).Error
 	if err != nil {
-		log.Infof("alloc user id failed, err:%+v", err)
+		log.InfoContextf(ctx, "alloc user id failed, err:%+v", err)
 		tx.Rollback()
 		return 0, err
 	}
 
 	err = tx.Commit().Error
 	if err == nil {
-		log.Infof("alloc user id ok, id:%d", uid)
+		log.InfoContextf(ctx, "alloc user id ok, id:%d", uid)
 	} else {
 		uid = 0
-		log.Errorf("alloc user id failed, err:%v", err)
+		log.ErrorContextf(ctx, "alloc user id failed, err:%v", err)
 	}
 
 	return uid, err
@@ -107,12 +107,12 @@ func (d *Dao) GetUserInfoByUserName(ctx context.Context, username string) (error
 
 	userInfo := &model.UserInfo{}
 	if err := r.Where("username=?", username).Limit(1).Find(&userInfo).Error; err != nil {
-		log.Infof("GetUserInfoByUserName read db error(%v) username(%s)", err, username)
+		log.InfoContextf(ctx, "GetUserInfoByUserName read db error(%v) username(%s)", err, username)
 		return err, nil
 	}
 	userInfo.Avatar = d.makeFullAvatar(ctx, userInfo.Avatar)
 
-	log.Infof("GetUserInfoByUserName read db ok username(%s), info:%+v", username, userInfo)
+	log.InfoContextf(ctx, "GetUserInfoByUserName read db ok username(%s), info:%+v", username, userInfo)
 	return nil, userInfo
 }
 
@@ -126,14 +126,14 @@ func (d *Dao) GetUserInfoByUid(ctx context.Context, uid int64) (error, *model.Us
 
 	userInfo := &model.UserInfo{}
 	if err := r.Where("uid=?", uid).Limit(1).Find(&userInfo).Error; err != nil {
-		log.Infof("GetUserInfoByUid read db error(%v) uid(%d)", err, uid)
+		log.InfoContextf(ctx, "GetUserInfoByUid read db error(%v) uid(%d)", err, uid)
 		return err, nil
 	}
 
 	// 根据key生成URL
 	userInfo.Avatar = d.makeFullAvatar(ctx, userInfo.Avatar)
 
-	log.Infof("GetUserInfoByUid read db ok uid(%d)", uid)
+	log.InfoContextf(ctx, "GetUserInfoByUid read db ok uid(%d)", uid)
 	return nil, userInfo
 }
 
@@ -157,11 +157,11 @@ func (d *Dao) SetUserInfo(ctx context.Context, userInfo *model.UserInfo) error {
 	}).Create(userInfo)
 
 	if err := r.Error; err != nil {
-		log.Infof("SetUserInfo update db error(%v) user info:%+v", err, userInfo)
+		log.InfoContextf(ctx, "SetUserInfo update db error(%v) user info:%+v", err, userInfo)
 		return err
 	}
 
-	log.Infof("SetUserInfo update db ok user info:%+v", userInfo)
+	log.InfoContextf(ctx, "SetUserInfo update db ok user info:%+v", userInfo)
 	return nil
 }
 
@@ -172,7 +172,7 @@ func (d *Dao) parseShortAvatar(ctx context.Context, avatarUrl string) string {
 		if ava, err := d.ParseUrlKey(ctx, avatarUrl); err == nil {
 			shortAvatar = ava
 		} else {
-			log.Errorf("parse url failed, use ori: %s", avatarUrl)
+			log.ErrorContextf(ctx, "parse url failed, use ori: %s", avatarUrl)
 		}
 	}
 	return shortAvatar
@@ -184,20 +184,20 @@ func (d *Dao) makeFullAvatar(ctx context.Context, avatar string) string {
 	// 根据key生成URL
 	if len(avatar) > 0 {
 		if _, key, ok := strings.Cut(avatar, config.AppConfig().CosInfo.AvatarBucket); !ok {
-			log.Errorf("parse key fail")
+			log.ErrorContextf(ctx, "parse key fail")
 		} else {
-			log.Infof("after cut, key: %s", key)
+			log.InfoContextf(ctx, "after cut, key: %s", key)
 			str, e := d.GetPresignUrl(ctx, config.AppConfig().CosInfo.AvatarBucket,
 				key, time.Duration(config.AppConfig().CosInfo.Expire))
 			if e == nil {
 				return str
 			} else {
-				log.Errorf("get avatar url err: %v", e)
+				log.ErrorContextf(ctx, "get avatar url err: %v", e)
 			}
 		}
 
 	}
 
-	log.Errorf("makeFullAvatar fail, use ori:%s", avatar)
+	log.ErrorContextf(ctx, "makeFullAvatar fail, use ori:%s", avatar)
 	return avatar
 }

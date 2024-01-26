@@ -42,7 +42,7 @@ func (s *Service) HttpPost(ctx context.Context, url string, data []byte, timeout
 	// 创建 POST 请求
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
-		log.Errorf("http.NewRequest err: %v", err)
+		log.ErrorContextf(ctx, "http.NewRequest err: %v", err)
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
@@ -53,7 +53,7 @@ func (s *Service) HttpPost(ctx context.Context, url string, data []byte, timeout
 		defer resp.Body.Close()
 	}
 	if err != nil {
-		log.Errorf("post err: %v", err)
+		log.ErrorContextf(ctx, "post err: %v", err)
 		return nil, err
 	} else {
 		log.Infof("post ok, url: %s", url)
@@ -62,7 +62,7 @@ func (s *Service) HttpPost(ctx context.Context, url string, data []byte, timeout
 	buffer := bytes.Buffer{}
 	cnt, err := io.Copy(&buffer, resp.Body)
 	if err != nil {
-		log.Errorf("post copy err: %v", err)
+		log.ErrorContextf(ctx, "post copy err: %v", err)
 	} else {
 		log.Infof("recv post rsp data len: %d", cnt)
 	}

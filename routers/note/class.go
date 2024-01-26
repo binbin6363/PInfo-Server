@@ -10,7 +10,7 @@ import (
 )
 
 func classListHandler(c *gin.Context) {
-	log.Infof("classListHandler")
+	log.InfoContextf(c, "classListHandler")
 
 	req := &api.ClassListReq{}
 
@@ -29,11 +29,11 @@ func classListHandler(c *gin.Context) {
 		"message": "success",
 		"data":    rsp,
 	})
-	log.Infof("done classListHandler")
+	log.InfoContextf(c, "done classListHandler")
 }
 
 func classEditorHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -42,7 +42,7 @@ func classEditorHandler(c *gin.Context) {
 	})
 }
 func classDeleteHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -51,7 +51,7 @@ func classDeleteHandler(c *gin.Context) {
 	})
 }
 func classSortHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
@@ -60,7 +60,7 @@ func classSortHandler(c *gin.Context) {
 	})
 }
 func classMergeHandler(c *gin.Context) {
-	log.Infof("unimplemented")
+	log.InfoContextf(c, "unimplemented")
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,

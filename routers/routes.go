@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"PInfo-server/config"
 	"PInfo-server/log"
 	"PInfo-server/service"
@@ -70,7 +72,7 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 			return
 		}
 		// parts[1]是获取到的tokenString，我们使用之前定义好的解析JWT的函数来解析它
-		mc, err := service.DefaultService.ParseToken(parts[1])
+		mc, err := service.DefaultService.ParseToken(c, parts[1])
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"code": 4002,
@@ -98,6 +100,7 @@ func Init(serviceName string) *gin.Engine {
 	r.Use(Cors())
 	r.Use(JWTAuthMiddleware())
 	r.Use(otelgin.Middleware(serviceName))
+	r.Use(ZapTraceLogger())
 	if config.AppConfig().ServerInfo.DebugReqRsp {
 		log.Infof("open req/rsp debug log")
 		r.Use(gindump.DumpWithOptions(true, true, true, false, false, func(dumpStr string) {
@@ -108,4 +111,21 @@ func Init(serviceName string) *gin.Engine {
 		opt(r)
 	}
 	return r
+}
+
+// ZapTraceLogger 创建一个 ZapTraceLogger 中间件
+func ZapTraceLogger() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 从 Gin Context 中获取 Trace ID（假设 Trace ID 存储在 Header 中）
+		traceID := c.Request.Header.Get(log.LoggerTraceID)
+
+		// 将 Trace ID 添加到 Zap Logger 的上下文字段中
+		loggerWithTraceID := log.GetLogger().With(zap.String(log.LoggerTraceID, traceID))
+
+		// 将 Zap Logger 添加到 Gin Context 中，以便在请求处理程序中使用
+		c.Set(log.LoggerTag, loggerWithTraceID)
+
+		// 继续处理请求
+		c.Next()
+	}
 }

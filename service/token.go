@@ -13,7 +13,7 @@ import (
 )
 
 // CreateJwt 生成token信息
-func (s *Service) CreateJwt(_ context.Context, userInfo *model.UserInfo) (error, string) {
+func (s *Service) CreateJwt(ctx context.Context, userInfo *model.UserInfo) (error, string) {
 	expiresTime := time.Now().Unix() + int64(config.AppConfig().ServerInfo.TokenExpire)
 	claims := jwt.StandardClaims{
 		Audience:  userInfo.UserName,               // 受众
@@ -27,15 +27,15 @@ func (s *Service) CreateJwt(_ context.Context, userInfo *model.UserInfo) (error,
 	var jwtSecret = []byte(config.AppConfig().ServerInfo.Secret)
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	if token, err := tokenClaims.SignedString(jwtSecret); err == nil {
-		log.Infof("gen token ok, %s(%d) token:[%s]", userInfo.UserName, userInfo.Uid, token)
+		log.InfoContextf(ctx, "gen token ok, %s(%d) token:[%s]", userInfo.UserName, userInfo.Uid, token)
 		return nil, token
 	} else {
-		log.Infof("gen token failed, %s(%d) err:%v", userInfo.UserName, userInfo.Uid, err)
+		log.InfoContextf(ctx, "gen token failed, %s(%d) err:%v", userInfo.UserName, userInfo.Uid, err)
 		return err, ""
 	}
 }
 
-func (s *Service) ParseToken(token string) (*jwt.StandardClaims, error) {
+func (s *Service) ParseToken(ctx context.Context, token string) (*jwt.StandardClaims, error) {
 	jwtToken, err := jwt.ParseWithClaims(token, &jwt.StandardClaims{}, func(token *jwt.Token) (i interface{}, e error) {
 		return []byte(config.AppConfig().ServerInfo.Secret), nil
 	})
@@ -45,6 +45,6 @@ func (s *Service) ParseToken(token string) (*jwt.StandardClaims, error) {
 		}
 	}
 
-	log.Infof("token invalid, token:%s, jwtToken:%+v", token, jwtToken)
+	log.InfoContextf(ctx, "token invalid, token:%s, jwtToken:%+v", token, jwtToken)
 	return nil, err
 }

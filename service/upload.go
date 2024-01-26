@@ -26,26 +26,26 @@ func (s *Service) UploadAvatar(ctx context.Context, req *api.UploadReq) (err err
 		for _, file := range fileHeaders {
 			inFile, err := file.Open()
 			if err != nil {
-				log.Errorf("open infile failed, path:%s, err:%v", file.Filename, err)
+				log.ErrorContextf(ctx, "open infile failed, path:%s, err:%v", file.Filename, err)
 				continue
 			}
 			defer inFile.Close()
 			key := fmt.Sprintf("avatar/%d/%s", req.Uid, file.Filename)
 			err = s.dao.UploadFile(ctx, bucket, key, inFile, "", "")
 			if err != nil {
-				log.Errorf("UploadFile failed, path:%s, err:%v", key, err)
+				log.ErrorContextf(ctx, "UploadFile failed, path:%s, err:%v", key, err)
 				uploadOK = false
 				break
 			} else {
-				log.Infof("UploadFile ok, name:%s, size:%d", file.Filename, file.Size)
+				log.InfoContextf(ctx, "UploadFile ok, name:%s, size:%d", file.Filename, file.Size)
 				uploadOK = true
 			}
 
 			if p, e := s.dao.GetPresignUrl(ctx, bucket, key, time.Duration(expireHour)); e == nil {
 				uploadRsp.Avatar = p
-				log.Infof("get presign ok, key:%s, url:%s", key, uploadRsp.Avatar)
+				log.InfoContextf(ctx, "get presign ok, key:%s, url:%s", key, uploadRsp.Avatar)
 			} else {
-				log.Errorf("get presign fail, key:%s, err: %v", key, e)
+				log.ErrorContextf(ctx, "get presign fail, key:%s, err: %v", key, e)
 			}
 			break
 		}
@@ -58,7 +58,7 @@ func (s *Service) UploadAvatar(ctx context.Context, req *api.UploadReq) (err err
 		rsp.Message = "文件上传失败"
 	}
 
-	log.Infof("UploadAvatar ok, req:%+v, rsp:%+v", req, uploadRsp)
+	log.InfoContextf(ctx, "UploadAvatar ok, req:%+v, rsp:%+v", req, uploadRsp)
 	return nil, rsp
 }
 
@@ -71,7 +71,7 @@ func (s *Service) DownloadAvatar(ctx context.Context, req *api.DownloadReq) (err
 
 	data, err := s.dao.RawDownload(ctx, req.Url)
 	if err != nil {
-		log.Errorf("RawDownload err:%v", err)
+		log.ErrorContextf(ctx, "RawDownload err:%v", err)
 		return err, rsp
 	}
 
@@ -79,6 +79,6 @@ func (s *Service) DownloadAvatar(ctx context.Context, req *api.DownloadReq) (err
 		Data: base64.StdEncoding.EncodeToString(data),
 	}
 
-	log.Infof("DownloadAvatar ok")
+	log.InfoContextf(ctx, "DownloadAvatar ok")
 	return nil, rsp
 }

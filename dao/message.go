@@ -15,16 +15,16 @@ import (
 func (d *Dao) AddOneSingleMessage(ctx context.Context, msg *model.SingleMessages) error {
 	r := d.db(ctx)
 	if msg.Uid == 0 || msg.MsgID == 0 {
-		log.Error("uid|msgid invalid")
+		log.ErrorContextf(ctx, "uid|msgid invalid")
 		return errors.New("uid|msgid invalid")
 	}
 
 	if err := r.Create(msg).Error; err != nil {
-		log.Infof("AddOneSingleMessage insert db error(%v) msg:%+v", err, msg)
+		log.InfoContextf(ctx, "AddOneSingleMessage insert db error(%v) msg:%+v", err, msg)
 		return err
 	}
 
-	log.Infof("AddOneSingleMessage insert db ok msg:%+v", msg)
+	log.InfoContextf(ctx, "AddOneSingleMessage insert db ok msg:%+v", msg)
 	return nil
 }
 
@@ -32,16 +32,16 @@ func (d *Dao) AddOneSingleMessage(ctx context.Context, msg *model.SingleMessages
 func (d *Dao) AddOneGroupMessage(ctx context.Context, msg *model.GroupMessages) error {
 	r := d.db(ctx)
 	if msg.GroupID == 0 || msg.MsgID == 0 {
-		log.Error("group id|msgid invalid")
+		log.ErrorContextf(ctx, "group id|msgid invalid")
 		return errors.New("group id|msgid invalid")
 	}
 
 	if err := r.Create(msg).Error; err != nil {
-		log.Infof("AddOneGroupMessage insert db error(%v) msg:%+v", err, msg)
+		log.InfoContextf(ctx, "AddOneGroupMessage insert db error(%v) msg:%+v", err, msg)
 		return err
 	}
 
-	log.Infof("AddOneGroupMessage insert db ok msg:%+v", msg)
+	log.InfoContextf(ctx, "AddOneGroupMessage insert db ok msg:%+v", msg)
 	return nil
 }
 
@@ -49,7 +49,7 @@ func (d *Dao) AddOneGroupMessage(ctx context.Context, msg *model.GroupMessages) 
 func (d *Dao) UpdateConversationSingleMsg(ctx context.Context, con *model.Conversations) error {
 	r := d.db(ctx)
 	if con.Uid == 0 || con.ContactID == 0 {
-		log.Error("uid invalid")
+		log.ErrorContextf(ctx, "uid invalid")
 		return errors.New("uid invalid")
 	}
 
@@ -63,7 +63,7 @@ func (d *Dao) UpdateConversationSingleMsg(ctx context.Context, con *model.Conver
 	// 未读数加1
 	r.UpdateColumn("unread", gorm.Expr("unread + ?", 1))
 
-	log.Infof("UpdateConversationSingleMsg update db ok conversations info:%+v", con)
+	log.InfoContextf(ctx, "UpdateConversationSingleMsg update db ok conversations info:%+v", con)
 	return nil
 }
 
@@ -71,7 +71,7 @@ func (d *Dao) UpdateConversationSingleMsg(ctx context.Context, con *model.Conver
 func (d *Dao) UpdateConversationGroupMsg(ctx context.Context, con []*model.Conversations) error {
 	r := d.db(ctx)
 	if len(con) == 0 {
-		log.Error("group id invalid")
+		log.ErrorContextf(ctx, "group id invalid")
 		return errors.New("group id invalid")
 	}
 
@@ -86,7 +86,7 @@ func (d *Dao) UpdateConversationGroupMsg(ctx context.Context, con []*model.Conve
 	// 群成员未读数加1
 	r.Table(model.Conversations{}.TableName()).Where("contact_id=?", con[0].ContactID).UpdateColumn("unread", gorm.Expr("unread + ?", 1))
 
-	log.Infof("UpdateConversationGroupMsg update db ok conversations info:%+v", con)
+	log.InfoContextf(ctx, "UpdateConversationGroupMsg update db ok conversations info:%+v", con)
 	return nil
 }
 
@@ -94,7 +94,7 @@ func (d *Dao) UpdateConversationGroupMsg(ctx context.Context, con []*model.Conve
 func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int64, limit, msgType int) (error, []*model.SingleMessages) {
 	r := d.db(ctx)
 	if uid == 0 || peerUid == 0 {
-		log.Error("uid|msgid invalid")
+		log.ErrorContextf(ctx, "uid|msgid invalid")
 		return errors.New("uid|msgid invalid"), nil
 	}
 
@@ -116,11 +116,11 @@ func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int
 
 	msgList := make([]*model.SingleMessages, 0)
 	if err := r.Find(&msgList).Error; err != nil {
-		log.Infof("QuerySingleMessage read db error(%v)", err)
+		log.InfoContextf(ctx, "QuerySingleMessage read db error(%v)", err)
 		return err, nil
 	}
 
-	log.Infof("QuerySingleMessage ok, msg size:%d", len(msgList))
+	log.InfoContextf(ctx, "QuerySingleMessage ok, msg size:%d", len(msgList))
 	return nil, msgList
 }
 
@@ -128,7 +128,7 @@ func (d *Dao) QuerySingleMessage(ctx context.Context, uid, peerUid, minMsgId int
 func (d *Dao) QueryGroupMessage(ctx context.Context, groupId, minMsgId int64, limit, msgType int) (error, []*model.GroupMessages) {
 	r := d.db(ctx)
 	if groupId == 0 {
-		log.Error("groupId invalid")
+		log.ErrorContextf(ctx, "groupId invalid")
 		return errors.New("groupId invalid"), nil
 	}
 
@@ -147,10 +147,10 @@ func (d *Dao) QueryGroupMessage(ctx context.Context, groupId, minMsgId int64, li
 
 	msgList := make([]*model.GroupMessages, 0)
 	if err := r.Find(&msgList).Error; err != nil {
-		log.Infof("QueryGroupMessage read db error(%v)", err)
+		log.InfoContextf(ctx, "QueryGroupMessage read db error(%v)", err)
 		return err, nil
 	}
 
-	log.Infof("QueryGroupMessage ok, msg size:%d", len(msgList))
+	log.InfoContextf(ctx, "QueryGroupMessage ok, msg size:%d", len(msgList))
 	return nil, msgList
 }

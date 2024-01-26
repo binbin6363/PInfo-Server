@@ -23,7 +23,7 @@ func (s *Service) GetConversationList(ctx context.Context, req *api.TalkListReq)
 	if err != nil {
 		rsp.Code = 400
 		rsp.Message = "内部错误"
-		log.Infof("search user by user name failed, err:%v, user:%s", err, req.UserName)
+		log.InfoContextf(ctx, "search user by user name failed, err:%v, user:%s", err, req.UserName)
 		return err, rsp
 	}
 
@@ -52,7 +52,7 @@ func (s *Service) GetConversationList(ctx context.Context, req *api.TalkListReq)
 
 	rsp.Data = listRsp
 
-	log.Infof("get conversation req:%+v, rsp:%+v", req, rsp)
+	log.InfoContextf(ctx, "get conversation req:%+v, rsp:%+v", req, rsp)
 	return nil, rsp
 }
 
@@ -66,11 +66,11 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 	err, conversationInfo := s.dao.GetConversation(ctx, req.Uid, req.ContactId)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			log.Infof("conversation not exist, need create")
+			log.InfoContextf(ctx, "conversation not exist, need create")
 		} else {
 			rsp.Code = 400
 			rsp.Message = "内部错误"
-			log.Infof("search user by user name failed, err:%v, user:%s", err, req.UserName)
+			log.InfoContextf(ctx, "search user by user name failed, err:%v, user:%s", err, req.UserName)
 			return err, rsp
 		}
 	}
@@ -81,7 +81,7 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 		if err != nil {
 			rsp.Code = 400
 			rsp.Message = "联系人获取失败"
-			log.Infof("get contact info failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
+			log.InfoContextf(ctx, "get contact info failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
 			return err, rsp
 		}
 		conversationAvatar := userInfo.Avatar
@@ -114,7 +114,7 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 		if err != nil {
 			rsp.Code = 400
 			rsp.Message = "联系人获取失败"
-			log.Infof("get contact info failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
+			log.InfoContextf(ctx, "get contact info failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
 			return err, rsp
 		}
 		conversationName = contactInfo.RemarkName
@@ -122,7 +122,7 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 		if err != nil {
 			rsp.Code = 400
 			rsp.Message = "联系人获取失败"
-			log.Infof("get contact info failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
+			log.InfoContextf(ctx, "get contact info failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
 			return err, rsp
 		}
 		conversationAvatar = userInfo.Avatar
@@ -131,7 +131,7 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 		if err != nil {
 			rsp.Code = 400
 			rsp.Message = "群信息获取失败"
-			log.Infof("get group info failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
+			log.InfoContextf(ctx, "get group info failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
 			return err, rsp
 		}
 		conversationName = groupInfo.GroupName
@@ -156,7 +156,7 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 	if err != nil {
 		rsp.Code = 400
 		rsp.Message = "会话创建失败"
-		log.Infof("create conversation failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
+		log.InfoContextf(ctx, "create conversation failed, err:%v, %d => %d", err, req.Uid, req.ContactId)
 		return err, rsp
 	}
 
@@ -177,6 +177,6 @@ func (s *Service) CreateConversation(ctx context.Context, req *api.CreateTalkReq
 		CreatedAt:  utils.FormatTimeStr(nowTime),
 	}
 
-	log.Infof("create conversation req:%+v, rsp:%+v", req, *rsp)
+	log.InfoContextf(ctx, "create conversation req:%+v, rsp:%+v", req, *rsp)
 	return nil, rsp
 }
