@@ -26,7 +26,9 @@ type Dao struct {
 func New(dbInfo *config.DBInfo, svrInfo *config.ServerInfo, cosInfo *config.CosInfo) *Dao {
 	d := &Dao{}
 
-	cli, err := gorm.Open(mysql.Open(dbInfo.Dsn), &gorm.Config{})
+	cli, err := gorm.Open(mysql.Open(dbInfo.Dsn), &gorm.Config{
+		Logger: log.NewZapLogger(),
+	})
 	if err != nil {
 		log.Fatalf("dao: New db gorm client error(%v)", err)
 	}

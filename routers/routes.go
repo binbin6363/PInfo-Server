@@ -8,6 +8,7 @@ import (
 	"PInfo-server/log"
 	"PInfo-server/service"
 
+	"github.com/feymanlee/logit"
 	"github.com/gin-gonic/gin"
 	gindump "github.com/tpkeeper/gin-dump"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
@@ -95,6 +96,7 @@ func Register(opts ...Option) {
 func Init(serviceName string) *gin.Engine {
 
 	r := gin.Default()
+	r.Use(logit.GinLogger())
 	r.Use(Cors())
 	r.Use(JWTAuthMiddleware())
 	r.Use(otelgin.Middleware(serviceName))
