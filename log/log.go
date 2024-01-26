@@ -221,7 +221,7 @@ func getContextFields(ctx context.Context) []zap.Field {
 	return fields
 }
 
-// NewZapLogger New一个logger实例
-func NewZapLogger() logger.Interface {
+// NewZapGormLogger New一个logger实例
+func NewZapGormLogger() logger.Interface {
 	return ZapGormLogger{logger: GetLogger().Desugar()}
 }

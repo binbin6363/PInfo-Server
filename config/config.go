@@ -15,7 +15,6 @@ type ServerInfo struct {
 	Secret        string `yaml:"secret"`
 	TokenExpire   int    `yaml:"token_expire"`
 	DataCenterId  int64  `yaml:"data_center_id"`
-	WorkerId      int64  `yaml:"worker_id"`
 	DebugReqRsp   bool   `yaml:"debug_req_rsp"`
 	ResourceRoot  string `yaml:"resource_root"`
 	RemoteUrlRoot string `yaml:"remote_url_root"`
@@ -61,8 +60,8 @@ type CosInfo struct {
 type LogInfo struct {
 	Path       string `yaml:"path"`
 	Level      int    `yaml:"level"`
-	MaxSize    int    `yaml:"max_size"`
-	MaxAge     int    `yaml:"max_age"`
+	MaxSize    int    `yaml:"max_size"` // mb
+	MaxAge     int    `yaml:"max_age"`  // day
 	MaxBackUps int    `yaml:"max_backups"`
 	CallerSkip int    `yaml:"caller_skip"`
 }

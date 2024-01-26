@@ -27,19 +27,18 @@ func New(dbInfo *config.DBInfo, svrInfo *config.ServerInfo, cosInfo *config.CosI
 	d := &Dao{}
 
 	cli, err := gorm.Open(mysql.Open(dbInfo.Dsn), &gorm.Config{
-		Logger: log.NewZapLogger(),
+		Logger: log.NewZapGormLogger(),
 	})
 	if err != nil {
 		log.Fatalf("dao: New db gorm client error(%v)", err)
 	}
 	d.commDB = cli
 
-	s, err := utils.NewSnowflake(svrInfo.DataCenterId, svrInfo.WorkerId)
+	s, err := utils.NewSnowflake(svrInfo.DataCenterId)
 	if err != nil {
-		log.Fatalf("dao: NewSnowflake error(%v), dataCenterId:%d, WorkerId:%d",
-			err, svrInfo.DataCenterId, svrInfo.WorkerId)
+		log.Fatalf("dao: NewSnowflake error(%v), dataCenterId:%d", err, svrInfo.DataCenterId)
 	}
-	log.Infof("dao: NewSnowflake dataCenterId:%d, WorkerId:%d", svrInfo.DataCenterId, svrInfo.WorkerId)
+	log.Infof("dao: NewSnowflake dataCenterId:%d", svrInfo.DataCenterId)
 	d.sf = s
 
 	d.sess, _ = session.NewSession(&aws.Config{
@@ -54,7 +53,7 @@ func New(dbInfo *config.DBInfo, svrInfo *config.ServerInfo, cosInfo *config.CosI
 }
 
 func (d *Dao) db(ctx context.Context) *gorm.DB {
-	return d.commDB.Debug()
+	return d.commDB.WithContext(ctx).Debug()
 }
 
 // GenMsgID 生成消息ID。雪花算法，保证递增
