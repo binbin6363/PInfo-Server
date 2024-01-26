@@ -26,7 +26,15 @@ import (
 
 func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMsgReq) (error, *api.SendTextMsgRsp) {
 	err, myFriendInfo := s.dao.GetContactDetailInfo(ctx, req.Uid, req.ReceiverId)
-	if err == nil && (myFriendInfo.Status != int(model.ContactFriend)) {
+	if err != nil {
+		if gorm.ErrRecordNotFound == err {
+			log.Errorf("对方不是你的好友")
+			return errors.New("对方不是你的好友"), nil
+		}
+		log.Errorf("GetContactDetailInfo err: %v", err)
+		return errors.New("服务器内部异常"), nil
+	}
+	if myFriendInfo.Status != int(model.ContactFriend) {
 		log.Errorf("i(%d) am not your(%d) friend, send message failed", req.Uid, req.ReceiverId)
 		return errors.New("我不是对方的好友"), nil
 	}
