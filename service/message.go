@@ -28,20 +28,32 @@ func (s *Service) sendSingleTextMessage(ctx context.Context, req *api.SendTextMs
 	err, myFriendInfo := s.dao.GetContactDetailInfo(ctx, req.Uid, req.ReceiverId)
 	if err != nil {
 		if gorm.ErrRecordNotFound == err {
-			log.Errorf("对方不是你的好友")
-			return errors.New("对方不是你的好友"), nil
+			tips := fmt.Sprintf("对方%d不是你%d的好友，无法收消息，发送失败", req.ReceiverId, req.Uid)
+			log.Errorf(tips)
+			return errors.New(tips), nil
 		}
 		log.Errorf("GetContactDetailInfo err: %v", err)
 		return errors.New("服务器内部异常"), nil
 	}
 	if myFriendInfo.Status != int(model.ContactFriend) {
-		log.Errorf("i(%d) am not your(%d) friend, send message failed", req.Uid, req.ReceiverId)
-		return errors.New("我不是对方的好友"), nil
+		tips := fmt.Sprintf("对方%d暂未同意你%d的好友请求，无法收消息，发送失败", req.ReceiverId, req.Uid)
+		log.Errorf(tips)
+		return errors.New(tips), nil
 	}
 	err, yourFriendInfo := s.dao.GetContactDetailInfo(ctx, req.ReceiverId, req.Uid)
+	if err != nil {
+		if gorm.ErrRecordNotFound == err {
+			tips := fmt.Sprintf("你%d不是对方%d的好友，无法发送消息", req.Uid, req.ReceiverId)
+			log.Errorf(tips)
+			return errors.New(tips), nil
+		}
+		log.Errorf("GetContactDetailInfo err: %v", err)
+		return errors.New("服务器内部异常"), nil
+	}
 	if err == nil && (yourFriendInfo.Status != int(model.ContactFriend)) {
-		log.Errorf("peer(%d) is not your(%d) friend, send message failed", req.ReceiverId, req.Uid)
-		return errors.New("对方不是你的好友"), nil
+		tips := fmt.Sprintf("你%d暂未同意对方%d的好友请求，无法发送消息", req.Uid, req.ReceiverId)
+		log.Errorf(tips)
+		return errors.New(tips), nil
 	}
 
 	msg := &model.SingleMessages{
