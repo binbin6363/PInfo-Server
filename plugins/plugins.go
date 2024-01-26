@@ -34,6 +34,7 @@ func Init(serviceName string) *gin.Engine {
 			log.Infof("dump: [%s]", dumpStr)
 		}))
 	}
+	log.Infof("show routes: %v", routers.Routes())
 	for _, opt := range routers.Routes() {
 		opt(r)
 	}
