@@ -2,7 +2,6 @@ package users
 
 import (
 	"PInfo-server/api"
-	"PInfo-server/routers"
 	"PInfo-server/service"
 
 	"net/http"
@@ -10,10 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 )
-
-func init() {
-	routers.Register(Routers)
-}
 
 func usersSettingHandler(c *gin.Context) {
 	username, ok := c.Get("username")

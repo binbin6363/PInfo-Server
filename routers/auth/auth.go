@@ -5,7 +5,6 @@ import (
 	"PInfo-server/config"
 	"PInfo-server/log"
 	"PInfo-server/model"
-	"PInfo-server/routers"
 	"PInfo-server/service"
 	"PInfo-server/utils"
 	"context"
@@ -13,10 +12,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
-func init() {
-	routers.Register(Routers)
-}
 
 func loginHandler(c *gin.Context) {
 	loginReq := &api.LoginReq{}

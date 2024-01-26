@@ -1,15 +1,10 @@
 package im
 
 import (
-	"PInfo-server/routers"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-func init() {
-	routers.Register(Routers)
-}
 
 func addFriendHandler(c *gin.Context) {
 	result := make(map[string]string)
