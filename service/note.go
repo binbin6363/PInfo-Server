@@ -7,8 +7,13 @@ import (
 	"PInfo-server/utils"
 	"context"
 	"errors"
+	"time"
 
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	DefaultClassName = "默认分类"
 )
 
 // ArticleEdit 新增/更新文章
@@ -97,6 +102,14 @@ func (s *Service) ClassList(ctx context.Context, req *api.ClassListReq) (*api.Cl
 			UpdatedAt: utils.FormatTimeStr(d.UpdateTime),
 		})
 	}
+	// 添加默认分类
+	rsp.ClassItems = append([]api.ClassItem{{
+		Id:        0,
+		ClassName: DefaultClassName,
+		Count:     0,
+		IsDefault: true,
+		UpdatedAt: utils.FormatTimeStr(time.Now().Unix()),
+	}}, rsp.ClassItems...)
 	return rsp, nil
 }
 
