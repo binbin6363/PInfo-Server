@@ -156,7 +156,7 @@ func (s *Service) TagList(ctx context.Context, req *api.TagListReq) (*api.TagLis
 	for _, d := range data {
 		rsp.TagItems = append(rsp.TagItems, api.TagItem{
 			Id:        d.ID,
-			ClassName: d.Name,
+			TagName:   d.Name,
 			Count:     0,
 			IsDefault: d.Flag == 0,
 			UpdatedAt: utils.FormatTimeStr(d.UpdateTime),

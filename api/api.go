@@ -572,7 +572,7 @@ type ClassListRsp struct {
 
 type TagItem struct {
 	Id        int64  `json:"id"`
-	ClassName string `json:"class_name"`
+	TagName   string `json:"tag_name"`
 	Count     int    `json:"count"`
 	IsDefault bool   `json:"is_default"`
 	UpdatedAt string `json:"updated_at"`
