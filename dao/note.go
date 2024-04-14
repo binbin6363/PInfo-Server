@@ -64,10 +64,13 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 	}
 
 	r = r.Where("uid=? and id>?", uid, page)
+	// 分页，取第index页的count条数据。倒序
+	limit := 10
+	orderField := "id"
 
 	switch FindType(findType) {
 	case Recently:
-		r = r.Where("update_time>?", time.Now().Add(-24*time.Hour).Unix()) // 24小时内编辑的当作最近编辑
+		orderField = "update_time"
 	case Marked:
 	// r = r.Where("")
 	// do nothing
@@ -86,12 +89,8 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 		log.ErrorContextf(ctx, "unknown search type: %d", findType)
 		return nil, errors.New("unknown search type")
 	}
-
-	// 分页，取第index页的count条数据。倒序
-	limit := 10
-	r = r.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: true})
+	r = r.Order(clause.OrderByColumn{Column: clause.Column{Name: orderField}, Desc: true})
 	r = r.Limit(limit)
-
 	articleList := make([]*model.Articles, 0)
 	if err := r.Select([]string{"id", "class_id", "title", "update_time"}).Find(&articleList).Error; err != nil {
 		log.InfoContextf(ctx, "ArticleList read db error(%v)", err)
@@ -286,7 +285,7 @@ func (d *Dao) ArticleMove(ctx context.Context, article *model.Articles) error {
 
 	var err error
 	log.InfoContextf(ctx, "ArticleMove, uid: %d, article id: %d, to class id: %d",
-		article.Uid, article.ID)
+		article.Uid, article.ID, article.ClassId)
 	err = r.Select("class_id", "update_time").Updates(article).Error
 
 	if err != nil {

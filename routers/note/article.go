@@ -12,7 +12,7 @@ import (
 )
 
 func articleListHandler(c *gin.Context) {
-	log.InfoContextf(c, "articleEditorHandler")
+	log.InfoContextf(c, "articleListHandler")
 
 	req := &api.ArticleListReq{}
 
@@ -55,7 +55,7 @@ func articleListHandler(c *gin.Context) {
 		"message": "success",
 		"data":    rsp,
 	})
-	log.InfoContextf(c, "done articleEditorHandler")
+	log.InfoContextf(c, "done articleListHandler")
 }
 
 func articleDetailHandler(c *gin.Context) {

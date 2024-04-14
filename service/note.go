@@ -215,8 +215,9 @@ func (s *Service) TagDelete(ctx context.Context, req *api.TagDeleteReq) (*api.Ta
 func (s *Service) ArticleMoveClass(ctx context.Context, req *api.ArticleMoveClassReq) (*api.ArticleMoveClassRsp, error) {
 	uid := utils.GetUid(ctx)
 	cla := &model.Articles{
-		ID:  req.ArticleId,
-		Uid: uid,
+		ID:      req.ArticleId,
+		Uid:     uid,
+		ClassId: req.ClassId,
 	}
 
 	if err := s.dao.ArticleMove(ctx, cla); err != nil {
