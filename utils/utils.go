@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -26,11 +27,16 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 // GetUid 从上下文获取uid
-func GetUid(c *gin.Context) (uid int64) {
-	if aUid, ok := c.Get("uid"); ok {
-		uid = cast.ToInt64(aUid)
-		return uid
+func GetUid(c context.Context) (uid int64) {
+	if ginC, ok := c.(*gin.Context); ok {
+		if aUid, ok := ginC.Get("uid"); ok {
+			uid = cast.ToInt64(aUid)
+			return uid
+		}
+	} else {
+		log.ErrorContextf(c, "invalid gin.Context")
 	}
+
 	return 0
 }
 

@@ -10,8 +10,12 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// EditArticle 新增/更新
-func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) error {
+const (
+	MaxClassNum = 100
+)
+
+// ArticleEdit 新增/更新
+func (d *Dao) ArticleEdit(ctx context.Context, articleInfo *model.Articles) error {
 	r := d.db(ctx)
 	if articleInfo.Uid == 0 {
 		log.ErrorContextf(ctx, "uid invalid")
@@ -19,7 +23,7 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 	}
 
 	articleInfo.UpdateTime = time.Now().Unix()
-	if articleInfo.CreateTime == 0 {
+	if articleInfo.ID == 0 {
 		articleInfo.CreateTime = articleInfo.UpdateTime
 	}
 	var err error
@@ -31,9 +35,9 @@ func (d *Dao) EditArticle(ctx context.Context, articleInfo *model.Articles) erro
 		err = r.Updates(articleInfo).Error
 	}
 	if err != nil {
-		log.ErrorContextf(ctx, "EditArticle err: %v, uid: %d", err, articleInfo.Uid)
+		log.ErrorContextf(ctx, "ArticleEdit err: %v, uid: %d", err, articleInfo.Uid)
 	} else {
-		log.InfoContextf(ctx, "EditArticle ok, uid: %d, id: %d", articleInfo.Uid, articleInfo.ID)
+		log.InfoContextf(ctx, "ArticleEdit ok, uid: %d, id: %d", articleInfo.Uid, articleInfo.ID)
 	}
 
 	return nil
@@ -67,6 +71,7 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 	return articleList, nil
 }
 
+// ArticleDetail 查询文章详情
 func (d *Dao) ArticleDetail(ctx context.Context, uid, articleId int64) (*model.Articles, error) {
 	r := d.db(ctx)
 	if uid == 0 || articleId == 0 {
@@ -82,4 +87,154 @@ func (d *Dao) ArticleDetail(ctx context.Context, uid, articleId int64) (*model.A
 	}
 	log.InfoContextf(ctx, "ArticleDetail ok id: %d", articleId)
 	return info, nil
+}
+
+// ClassList 查询分类列表
+func (d *Dao) ClassList(ctx context.Context, uid int64) ([]*model.Classes, error) {
+	r := d.db(ctx)
+	r = r.Where("uid=?", uid)
+
+	// 倒序
+	limit := MaxClassNum
+	r = r.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: true})
+	r = r.Limit(limit)
+
+	cList := make([]*model.Classes, 0)
+	if err := r.Select([]string{"id", "uid", "flag", "name", "update_time"}).Find(&cList).Error; err != nil {
+		log.InfoContextf(ctx, "ClassList read db error(%v)", err)
+		return nil, err
+	}
+
+	log.InfoContextf(ctx, "ClassList ok, size:%d", len(cList))
+	return cList, nil
+}
+
+// ClassEdit 编辑或新增分类
+func (d *Dao) ClassEdit(ctx context.Context, cla *model.Classes) error {
+	r := d.db(ctx)
+	if cla.Uid == 0 {
+		log.ErrorContextf(ctx, "uid invalid")
+		return errors.New("uid invalid")
+	}
+	r = r.Where("uid=?", cla.Uid)
+
+	cla.UpdateTime = time.Now().Unix()
+	if cla.ID == 0 {
+		cla.CreateTime = cla.UpdateTime // 首次则添加创建时间
+	}
+
+	var err error
+	if cla.ID == 0 {
+		log.InfoContextf(ctx, "create class, uid: %d, title: %s", cla.Uid, cla.Name)
+		err = r.Create(cla).Error
+	} else {
+		log.InfoContextf(ctx, "update class, uid: %d, id: %d", cla.Uid, cla.ID)
+		err = r.Updates(cla).Error
+	}
+	if err != nil {
+		log.ErrorContextf(ctx, "ClassEdit err: %v, uid: %d", err, cla.Uid)
+	} else {
+		log.InfoContextf(ctx, "ClassEdit ok, uid: %d, id: %d", cla.Uid, cla.ID)
+	}
+
+	return err
+}
+
+// ClassDelete 删除分类
+func (d *Dao) ClassDelete(ctx context.Context, cla *model.Classes) error {
+	r := d.db(ctx)
+	if cla.Uid == 0 {
+		log.ErrorContextf(ctx, "uid invalid")
+		return errors.New("uid invalid")
+	}
+	r = r.Where("uid=?", cla.Uid)
+
+	if cla.ID == 0 {
+		return errors.New("delete class but id not set")
+	}
+
+	err := r.Delete(cla).Limit(1).Error
+	if err != nil {
+		log.ErrorContextf(ctx, "ClassDelete err: %v, uid: %d", err, cla.Uid)
+	} else {
+		log.InfoContextf(ctx, "ClassDelete ok, uid: %d, id: %d", cla.Uid, cla.ID)
+	}
+
+	return err
+}
+
+// ==== tag
+
+// TagList 查询分类列表
+func (d *Dao) TagList(ctx context.Context, uid int64) ([]*model.Tags, error) {
+	r := d.db(ctx)
+	r = r.Where("uid=?", uid)
+
+	// 倒序
+	limit := MaxClassNum
+	r = r.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: true})
+	r = r.Limit(limit)
+
+	tList := make([]*model.Tags, 0)
+	if err := r.Select([]string{"id", "uid", "flag", "name", "update_time"}).Find(&tList).Error; err != nil {
+		log.InfoContextf(ctx, "TagList read db error(%v)", err)
+		return nil, err
+	}
+
+	log.InfoContextf(ctx, "TagList ok, size:%d", len(tList))
+	return tList, nil
+}
+
+// TagEdit 编辑或新增分类
+func (d *Dao) TagEdit(ctx context.Context, tag *model.Tags) error {
+	r := d.db(ctx)
+	if tag.Uid == 0 {
+		log.ErrorContextf(ctx, "uid invalid")
+		return errors.New("uid invalid")
+	}
+	r = r.Where("uid=?", tag.Uid)
+
+	tag.UpdateTime = time.Now().Unix()
+	if tag.ID == 0 {
+		tag.CreateTime = tag.UpdateTime // 首次则添加创建时间
+	}
+
+	var err error
+	if tag.ID == 0 {
+		log.InfoContextf(ctx, "create tag, uid: %d, title: %s", tag.Uid, tag.Name)
+		err = r.Create(tag).Error
+	} else {
+		log.InfoContextf(ctx, "update tag, uid: %d, id: %d", tag.Uid, tag.ID)
+		err = r.Updates(tag).Error
+	}
+	if err != nil {
+		log.ErrorContextf(ctx, "TagEdit err: %v, uid: %d", err, tag.Uid)
+	} else {
+		log.InfoContextf(ctx, "TagEdit ok, uid: %d, id: %d", tag.Uid, tag.ID)
+	}
+
+	return err
+}
+
+// TagDelete 删除分类
+func (d *Dao) TagDelete(ctx context.Context, tag *model.Tags) error {
+	r := d.db(ctx)
+	if tag.Uid == 0 {
+		log.ErrorContextf(ctx, "uid invalid")
+		return errors.New("uid invalid")
+	}
+	r = r.Where("uid=?", tag.Uid)
+
+	if tag.ID == 0 {
+		return errors.New("delete tag but id not set")
+	}
+
+	err := r.Delete(tag).Limit(1).Error
+	if err != nil {
+		log.ErrorContextf(ctx, "TagDelete err: %v, uid: %d", err, tag.Uid)
+	} else {
+		log.InfoContextf(ctx, "TagDelete ok, uid: %d, id: %d", tag.Uid, tag.ID)
+	}
+
+	return err
 }
