@@ -582,5 +582,5 @@ type TagListReq struct {
 }
 
 type TagListRsp struct {
-	TagItems []TagItem `json:"rows"`
+	TagItems []TagItem `json:"tags"`
 }
