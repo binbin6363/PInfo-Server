@@ -445,11 +445,63 @@ type TagEditReq struct {
 	TagName   string `json:"tag_name"`
 	UpdatedAt string `json:"updated_at"`
 }
+type TagEditRsp struct {
+	TagId     int64  `json:"tag_id"`
+	TagName   string `json:"tag_name"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type TagDeleteReq struct {
+	TagId int64 `json:"tag_id"` // 待删除的分类ID
+}
+type TagDeleteRsp struct {
+	TagId int64 `json:"tag_id"` // 成功删除的分类ID
+}
+
+type TagSortReq struct {
+	TagId int64 `json:"tag_id"` // 待sort的分类ID
+}
+type TagSortRsp struct {
+	TagId int64 `json:"tag_id"` // 成功sort的分类ID
+}
+
+type TagMergeReq struct {
+	ClassId int64 `json:"tag_id"` // 待Merge的分类ID
+}
+type TagMergeRsp struct {
+	TagMId int64 `json:"tag_id"` // 成功Merge的分类ID
+}
 
 type ClassEditReq struct {
 	ClassId   int64  `json:"class_id"`
 	ClassName string `json:"class_name"`
 	UpdatedAt string `json:"updated_at"`
+}
+
+type ClassEditRsp struct {
+	ClassId   int64  `json:"class_id"`
+	ClassName string `json:"class_name"`
+	UpdatedAt string `json:"updated_at"`
+}
+type ClassDeleteReq struct {
+	ClassId int64 `json:"class_id"` // 待删除的分类ID
+}
+type ClassDeleteRsp struct {
+	ClassId int64 `json:"class_id"` // 成功删除的分类ID
+}
+
+type ClassSortReq struct {
+	ClassId int64 `json:"class_id"` // 待sort的分类ID
+}
+type ClassSortRsp struct {
+	ClassId int64 `json:"class_id"` // 成功sort的分类ID
+}
+
+type ClassMergeReq struct {
+	ClassId int64 `json:"class_id"` // 待Merge的分类ID
+}
+type ClassMergeRsp struct {
+	ClassId int64 `json:"class_id"` // 成功Merge的分类ID
 }
 
 type ArticleInfo struct {
@@ -462,21 +514,6 @@ type ArticleInfo struct {
 	ClassId   int64   `json:"class_id"`
 	Status    int     `json:"status"`
 	MdContent *string `json:"md_content"` // 可选返回
-}
-
-type ClassItem struct {
-	Id        int64  `json:"id"`
-	ClassName string `json:"class_name"`
-	Count     int    `json:"count"`
-	IsDefault bool   `json:"is_default"`
-	UpdatedAt string `json:"updated_at"`
-}
-
-type ClassListReq struct {
-}
-
-type ClassListRsp struct {
-	ClassItems []ClassItem `json:"rows"`
 }
 
 type ArticleEditReq struct {
@@ -516,4 +553,34 @@ type ArticleDetailRsp struct {
 	IsAsterisk int     `json:"is_asterisk"`
 	MdContent  *string `json:"md_content"` // 可选返回
 	UpdatedAt  string  `json:"updated_at"`
+}
+
+type ClassItem struct {
+	Id        int64  `json:"id"`
+	ClassName string `json:"class_name"`
+	Count     int    `json:"count"`
+	IsDefault bool   `json:"is_default"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type ClassListReq struct {
+}
+
+type ClassListRsp struct {
+	ClassItems []ClassItem `json:"rows"`
+}
+
+type TagItem struct {
+	Id        int64  `json:"id"`
+	ClassName string `json:"class_name"`
+	Count     int    `json:"count"`
+	IsDefault bool   `json:"is_default"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type TagListReq struct {
+}
+
+type TagListRsp struct {
+	TagItems []TagItem `json:"rows"`
 }

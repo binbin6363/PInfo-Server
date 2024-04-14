@@ -13,6 +13,14 @@ func classListHandler(c *gin.Context) {
 	log.InfoContextf(c, "classListHandler")
 
 	req := &api.ClassListReq{}
+	if err := c.ShouldBind(req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
 
 	rsp, err := service.DefaultService.ClassList(c, req)
 	if err != nil {
@@ -33,38 +41,125 @@ func classListHandler(c *gin.Context) {
 }
 
 func classEditorHandler(c *gin.Context) {
-	log.InfoContextf(c, "unimplemented")
+	log.InfoContextf(c, "classEditorHandler")
+
+	req := &api.ClassEditReq{}
+	if err := c.ShouldBind(req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	rsp, err := service.DefaultService.ClassEdit(c, req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "内部错误",
+			"data":    nil,
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
+		"message": "success",
+		"data":    rsp,
 	})
+	log.InfoContextf(c, "done classEditorHandler")
 }
+
 func classDeleteHandler(c *gin.Context) {
-	log.InfoContextf(c, "unimplemented")
+	log.InfoContextf(c, "classDeleteHandler")
+
+	req := &api.ClassDeleteReq{}
+	if err := c.ShouldBind(req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	rsp, err := service.DefaultService.ClassDelete(c, req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "内部错误",
+			"data":    nil,
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
+		"message": "success",
+		"data":    rsp,
 	})
+	log.InfoContextf(c, "done classDeleteHandler")
 }
+
 func classSortHandler(c *gin.Context) {
-	log.InfoContextf(c, "unimplemented")
+	log.InfoContextf(c, "classSortHandler")
+
+	req := &api.ClassSortReq{}
+	if err := c.ShouldBind(req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	rsp, err := service.DefaultService.ClassSort(c, req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "内部错误",
+			"data":    nil,
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
+		"message": "success",
+		"data":    rsp,
 	})
+	log.InfoContextf(c, "done classSortHandler")
 }
+
 func classMergeHandler(c *gin.Context) {
-	log.InfoContextf(c, "unimplemented")
+	log.InfoContextf(c, "classMergeHandler")
+
+	req := &api.ClassMergeReq{}
+	if err := c.ShouldBind(req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	rsp, err := service.DefaultService.ClassMerge(c, req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "内部错误",
+			"data":    nil,
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
+		"message": "success",
+		"data":    rsp,
 	})
+	log.InfoContextf(c, "done classMergeHandler")
 }

@@ -6,7 +6,9 @@ import (
 	"PInfo-server/model"
 	"PInfo-server/utils"
 	"context"
-	"time"
+	"errors"
+
+	"github.com/gin-gonic/gin"
 )
 
 // ArticleEdit 新增/更新文章
@@ -18,7 +20,7 @@ func (s *Service) ArticleEdit(ctx context.Context, req *api.ArticleEditReq) (*ap
 		Title:     req.Title,
 		MdContent: req.MdContent,
 	}
-	if err := s.dao.EditArticle(ctx, article); err != nil {
+	if err := s.dao.ArticleEdit(ctx, article); err != nil {
 		log.ErrorContextf(ctx, "ArticleEdit err: %v, uid: %d", err, req.Uid)
 		return nil, err
 	}
@@ -26,20 +28,7 @@ func (s *Service) ArticleEdit(ctx context.Context, req *api.ArticleEditReq) (*ap
 	return nil, nil
 }
 
-func (s *Service) ClassList(ctx context.Context, req *api.ClassListReq) (*api.ClassListRsp, error) {
-	rsp := &api.ClassListRsp{}
-
-	rsp.ClassItems = append(rsp.ClassItems, api.ClassItem{
-		Id:        1,
-		ClassName: "默认分组",
-		Count:     0,
-		IsDefault: true,
-		UpdatedAt: utils.FormatTimeStr(time.Now().Unix()),
-	})
-	log.InfoContextf(ctx, "done ClassList, rsp: %v", rsp)
-	return rsp, nil
-}
-
+// ArticleList 拉取文章列表
 func (s *Service) ArticleList(ctx context.Context, req *api.ArticleListReq) (*api.ArticleListRsp, error) {
 	rsp := &api.ArticleListRsp{}
 
@@ -65,6 +54,7 @@ func (s *Service) ArticleList(ctx context.Context, req *api.ArticleListReq) (*ap
 	return rsp, nil
 }
 
+// ArticleDetail 拉取文章详情
 func (s *Service) ArticleDetail(ctx context.Context, req *api.ArticleDetailReq) (*api.ArticleDetailRsp, error) {
 
 	result, err := s.dao.ArticleDetail(ctx, req.Uid, req.ArticleId)
@@ -87,4 +77,124 @@ func (s *Service) ArticleDetail(ctx context.Context, req *api.ArticleDetailReq) 
 
 	log.InfoContextf(ctx, "done ClassList, rsp: %v", rsp)
 	return rsp, nil
+}
+
+// ClassList 拉取分类列表
+func (s *Service) ClassList(ctx context.Context, req *api.ClassListReq) (*api.ClassListRsp, error) {
+	rsp := &api.ClassListRsp{}
+	data, err := s.dao.ClassList(ctx, utils.GetUid(ctx))
+	if err != nil {
+		log.ErrorContextf(ctx, "ClassList err: %v, uid: %d", err, utils.GetUid(ctx))
+		return nil, err
+	}
+	log.InfoContextf(ctx, "ClassList ok")
+	for _, d := range data {
+		rsp.ClassItems = append(rsp.ClassItems, api.ClassItem{
+			Id:        d.ID,
+			ClassName: d.Name,
+			Count:     0,
+			IsDefault: d.Flag == 0,
+			UpdatedAt: utils.FormatTimeStr(d.UpdateTime),
+		})
+	}
+	return rsp, nil
+}
+
+// ClassEdit 新增/更新分类
+func (s *Service) ClassEdit(ctx context.Context, req *api.ClassEditReq) (*api.ClassEditRsp, error) {
+	uid := utils.GetUid(ctx)
+	cla := &model.Classes{
+		ID:   req.ClassId,
+		Uid:  uid,
+		Flag: 1,
+		Name: req.ClassName,
+	}
+
+	if err := s.dao.ClassEdit(ctx, cla); err != nil {
+		log.ErrorContextf(ctx, "ClassEdit err: %v, uid: %d", err, uid)
+		return nil, err
+	}
+	log.InfoContextf(ctx, "ClassEdit ok")
+	return &api.ClassEditRsp{ClassId: req.ClassId}, nil
+}
+
+// ClassDelete 删除分类
+func (s *Service) ClassDelete(ctx context.Context, req *api.ClassDeleteReq) (*api.ClassDeleteRsp, error) {
+	uid := utils.GetUid(ctx)
+	cla := &model.Classes{
+		ID:  req.ClassId,
+		Uid: uid,
+	}
+
+	if err := s.dao.ClassDelete(ctx, cla); err != nil {
+		log.ErrorContextf(ctx, "ClassDelete err: %v, uid: %d", err, uid)
+		return nil, err
+	}
+	log.InfoContextf(ctx, "ClassDelete ok")
+	return &api.ClassDeleteRsp{ClassId: req.ClassId}, nil
+}
+
+func (s *Service) ClassSort(c *gin.Context, req *api.ClassSortReq) (*api.ClassSortRsp, error) {
+	return nil, errors.New("no implemented")
+}
+
+func (s *Service) ClassMerge(c *gin.Context, req *api.ClassMergeReq) (*api.ClassMergeRsp, error) {
+	return nil, errors.New("no implemented")
+}
+
+// ========== tag ==========
+
+// TagList 拉取tag列表
+func (s *Service) TagList(ctx context.Context, req *api.TagListReq) (*api.TagListRsp, error) {
+	rsp := &api.TagListRsp{}
+	data, err := s.dao.TagList(ctx, utils.GetUid(ctx))
+	if err != nil {
+		log.ErrorContextf(ctx, "TagList err: %v, uid: %d", err, utils.GetUid(ctx))
+		return nil, err
+	}
+	log.InfoContextf(ctx, "TagList ok")
+	for _, d := range data {
+		rsp.TagItems = append(rsp.TagItems, api.TagItem{
+			Id:        d.ID,
+			ClassName: d.Name,
+			Count:     0,
+			IsDefault: d.Flag == 0,
+			UpdatedAt: utils.FormatTimeStr(d.UpdateTime),
+		})
+	}
+	return rsp, nil
+}
+
+// TagEdit 新增/更新分类
+func (s *Service) TagEdit(ctx context.Context, req *api.TagEditReq) (*api.TagEditRsp, error) {
+	uid := utils.GetUid(ctx)
+	cla := &model.Tags{
+		ID:   req.TagId,
+		Uid:  uid,
+		Flag: 1,
+		Name: req.TagName,
+	}
+
+	if err := s.dao.TagEdit(ctx, cla); err != nil {
+		log.ErrorContextf(ctx, "TagEdit err: %v, uid: %d", err, uid)
+		return nil, err
+	}
+	log.InfoContextf(ctx, "TagEdit ok")
+	return &api.TagEditRsp{TagId: req.TagId}, nil
+}
+
+// TagDelete 删除分类
+func (s *Service) TagDelete(ctx context.Context, req *api.TagDeleteReq) (*api.TagDeleteRsp, error) {
+	uid := utils.GetUid(ctx)
+	cla := &model.Tags{
+		ID:  req.TagId,
+		Uid: uid,
+	}
+
+	if err := s.dao.TagDelete(ctx, cla); err != nil {
+		log.ErrorContextf(ctx, "TagDelete err: %v, uid: %d", err, uid)
+		return nil, err
+	}
+	log.InfoContextf(ctx, "TagDelete ok")
+	return &api.TagDeleteRsp{TagId: req.TagId}, nil
 }
