@@ -14,6 +14,17 @@ const (
 	MaxClassNum = 100
 )
 
+type FindType int
+
+const (
+	Recently FindType = 1
+	Marked   FindType = 2
+	Classfy  FindType = 3
+	Tag      FindType = 4
+	Recyle   FindType = 5
+	KeyWord  FindType = 6
+)
+
 // ArticleEdit 新增/更新
 func (d *Dao) ArticleEdit(ctx context.Context, articleInfo *model.Articles) error {
 	r := d.db(ctx)
@@ -53,9 +64,29 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 	}
 
 	r = r.Where("uid=? and id>?", uid, page)
-	if len(kw) > 0 {
-		r = r.Where("title like ?", "%"+kw+"%")
+
+	switch FindType(findType) {
+	case Recently:
+		r = r.Where("update_time>?", time.Now().Add(-24*time.Hour).Unix()) // 24小时内编辑的当作最近编辑
+	case Marked:
+	// r = r.Where("")
+	// do nothing
+	case Classfy:
+		r = r.Where("class_id=?", cid)
+	case Tag:
+	// r = r.Where("class_id=?", cid)
+	// todo: 待实现
+	case Recyle:
+	// todo: 待实现
+	case KeyWord:
+		if len(kw) > 0 {
+			r = r.Where("title like ?", "%"+kw+"%")
+		}
+	default:
+		log.ErrorContextf(ctx, "unknown search type: %d", findType)
+		return nil, errors.New("unknown search type")
 	}
+
 	// 分页，取第index页的count条数据。倒序
 	limit := 10
 	r = r.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: true})
@@ -234,6 +265,34 @@ func (d *Dao) TagDelete(ctx context.Context, tag *model.Tags) error {
 		log.ErrorContextf(ctx, "TagDelete err: %v, uid: %d", err, tag.Uid)
 	} else {
 		log.InfoContextf(ctx, "TagDelete ok, uid: %d, id: %d", tag.Uid, tag.ID)
+	}
+
+	return err
+}
+
+// ArticleMove 修改文章分类
+func (d *Dao) ArticleMove(ctx context.Context, article *model.Articles) error {
+	r := d.db(ctx)
+	if article.Uid == 0 {
+		log.ErrorContextf(ctx, "uid invalid")
+		return errors.New("uid invalid")
+	}
+	if article.ID == 0 {
+		log.ErrorContextf(ctx, "article id invalid")
+		return errors.New("article id invalid")
+	}
+	r = r.Where("id=? AND uid=?", article.ID, article.Uid)
+	article.UpdateTime = time.Now().Unix()
+
+	var err error
+	log.InfoContextf(ctx, "ArticleMove, uid: %d, article id: %d, to class id: %d",
+		article.Uid, article.ID)
+	err = r.Select("class_id", "update_time").Updates(article).Error
+
+	if err != nil {
+		log.ErrorContextf(ctx, "ArticleMove err: %v, uid: %d", err, article.Uid)
+	} else {
+		log.InfoContextf(ctx, "ArticleMove ok, uid: %d, id: %d", article.Uid, article.ID)
 	}
 
 	return err

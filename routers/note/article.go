@@ -163,13 +163,34 @@ func articleAsteriskHandler(c *gin.Context) {
 	})
 }
 func articleMoveHandler(c *gin.Context) {
-	log.InfoContextf(c, "unimplemented")
+	log.InfoContextf(c, "articleMoveHandler")
+
+	req := &api.ArticleMoveClassReq{} // 移动到另外分类
+	if err := c.ShouldBind(req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+
+	rsp, err := service.DefaultService.ArticleMoveClass(c, req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "内部错误",
+			"data":    nil,
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
+		"message": "success",
+		"data":    rsp,
 	})
+	log.InfoContextf(c, "done articleMoveHandler")
 }
 func articleUploadImgHandler(c *gin.Context) {
 	log.InfoContextf(c, "unimplemented")

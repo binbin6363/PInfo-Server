@@ -211,3 +211,18 @@ func (s *Service) TagDelete(ctx context.Context, req *api.TagDeleteReq) (*api.Ta
 	log.InfoContextf(ctx, "TagDelete ok")
 	return &api.TagDeleteRsp{TagId: req.TagId}, nil
 }
+
+func (s *Service) ArticleMoveClass(ctx context.Context, req *api.ArticleMoveClassReq) (*api.ArticleMoveClassRsp, error) {
+	uid := utils.GetUid(ctx)
+	cla := &model.Articles{
+		ID:  req.ArticleId,
+		Uid: uid,
+	}
+
+	if err := s.dao.ArticleMove(ctx, cla); err != nil {
+		log.ErrorContextf(ctx, "ArticleMoveClass err: %v, uid: %d", err, uid)
+		return nil, err
+	}
+	log.InfoContextf(ctx, "ArticleMoveClass ok")
+	return &api.ArticleMoveClassRsp{ArticleId: req.ArticleId}, nil
+}

@@ -529,9 +529,9 @@ type ArticleEditRsp struct {
 type ArticleListReq struct {
 	Uid      int64  // 我的ID
 	Page     int    `json:"page"`
-	Keyword  string `json:"keyword"`
-	FindType int    `json:"find_type"`
-	Cid      int64  `json:"cid"`
+	FindType int    `json:"find_type"` // 1 按近期编辑搜索，2 按星标搜索，3 按分类搜索，4 按标签搜索，5 回收站搜索，6 关键词搜索
+	Cid      int64  `json:"cid"`       // 上述取值3、4时生效，代表分类ID或者标签ID
+	Keyword  string `json:"keyword"`   // 上述6时生效，搜索的关键词
 }
 
 type ArticleListRsp struct {
@@ -553,6 +553,16 @@ type ArticleDetailRsp struct {
 	IsAsterisk int     `json:"is_asterisk"`
 	MdContent  *string `json:"md_content"` // 可选返回
 	UpdatedAt  string  `json:"updated_at"`
+}
+
+// ArticleMoveClassReq 移动文章分类
+type ArticleMoveClassReq struct {
+	ArticleId int64 `json:"article_id"`
+	ClassId   int64 `json:"class_id"`
+}
+
+type ArticleMoveClassRsp struct {
+	ArticleId int64 `json:"article_id"`
 }
 
 type ClassItem struct {
