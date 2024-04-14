@@ -136,13 +136,33 @@ func articleEditorHandler(c *gin.Context) {
 }
 
 func articleDeleteHandler(c *gin.Context) {
-	log.InfoContextf(c, "unimplemented")
+	log.InfoContextf(c, "articleDeleteHandler")
+
+	req := &api.ArticleDeleteReq{}
+	if err := c.ShouldBind(req); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "参数错误",
+			"data":    nil,
+		})
+		return
+	}
+	rsp, err := service.DefaultService.ArticleDelete(c, req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "内部错误",
+			"data":    nil,
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "Hello Welcome to PIM",
-		"data":    nil,
+		"message": "success",
+		"data":    rsp,
 	})
+	log.InfoContextf(c, "done articleDeleteHandler")
 }
 func articleRecoverHandler(c *gin.Context) {
 	log.InfoContextf(c, "unimplemented")

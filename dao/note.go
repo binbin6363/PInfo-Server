@@ -11,7 +11,10 @@ import (
 )
 
 const (
-	MaxClassNum = 100
+	MaxClassNum            = 100
+	ArticlleStatusOk       = 0 // 正常
+	ArticlleStatusInRecyle = 1 // 回收站
+	ArticlleStatusDelete   = 2 // 彻底删除
 )
 
 type FindType int
@@ -63,10 +66,10 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 		return nil, errors.New("page invalid")
 	}
 
-	r = r.Where("uid=? and id>?", uid, page)
 	// 分页，取第index页的count条数据。倒序
 	limit := 10
 	orderField := "id"
+	status := ArticlleStatusOk
 
 	switch FindType(findType) {
 	case Recently:
@@ -80,7 +83,7 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 	// r = r.Where("class_id=?", cid)
 	// todo: 待实现
 	case Recyle:
-	// todo: 待实现
+		status = ArticlleStatusInRecyle
 	case KeyWord:
 		if len(kw) > 0 {
 			r = r.Where("title like ?", "%"+kw+"%")
@@ -89,6 +92,8 @@ func (d *Dao) ArticleList(ctx context.Context, page, findType int, uid, cid int6
 		log.ErrorContextf(ctx, "unknown search type: %d", findType)
 		return nil, errors.New("unknown search type")
 	}
+
+	r = r.Where("uid=? and id>? and status=?", uid, page, status)
 	r = r.Order(clause.OrderByColumn{Column: clause.Column{Name: orderField}, Desc: true})
 	r = r.Limit(limit)
 	articleList := make([]*model.Articles, 0)
@@ -117,6 +122,34 @@ func (d *Dao) ArticleDetail(ctx context.Context, uid, articleId int64) (*model.A
 	}
 	log.InfoContextf(ctx, "ArticleDetail ok id: %d", articleId)
 	return info, nil
+}
+
+// ArticleDelete 删除文章，标记删除，进入回收站
+func (d *Dao) ArticleDelete(ctx context.Context, uid int64, article *model.Articles) error {
+	r := d.db(ctx)
+	if uid == 0 {
+		log.ErrorContextf(ctx, "uid invalid")
+		return errors.New("uid invalid")
+	}
+
+	var err error
+	if article.ID == 0 {
+		log.InfoContextf(ctx, "invalid article id, uid: %d, id: %d", article.Uid, article.ID)
+		return errors.New("invalid article id")
+	}
+
+	article.UpdateTime = time.Now().Unix()
+	article.Status = ArticlleStatusInRecyle
+	log.InfoContextf(ctx, "delete article, uid: %d, id: %d", article.Uid, article.ID)
+	err = r.Select("status", "update_time").Updates(article).Error
+
+	if err != nil {
+		log.ErrorContextf(ctx, "ArticleDelete err: %v, uid: %d", err, article.Uid)
+	} else {
+		log.InfoContextf(ctx, "ArticleDelete ok, uid: %d, id: %d", article.Uid, article.ID)
+	}
+
+	return nil
 }
 
 // ClassList 查询分类列表

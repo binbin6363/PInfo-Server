@@ -84,6 +84,19 @@ func (s *Service) ArticleDetail(ctx context.Context, req *api.ArticleDetailReq) 
 	return rsp, nil
 }
 
+func (s *Service) ArticleDelete(ctx context.Context, req *api.ArticleDeleteReq) (*api.ArticleDeleteRsp, error) {
+	uid := utils.GetUid(ctx)
+	article := &model.Articles{
+		ID: req.ArticleId,
+	}
+	if err := s.dao.ArticleDelete(ctx, uid, article); err != nil {
+		log.ErrorContextf(ctx, "ArticleDelete err: %v, uid: %d", err, uid)
+		return nil, err
+	}
+	log.InfoContextf(ctx, "ArticleDelete ok")
+	return &api.ArticleDeleteRsp{ArticleId: req.ArticleId}, nil
+}
+
 // ClassList 拉取分类列表
 func (s *Service) ClassList(ctx context.Context, req *api.ClassListReq) (*api.ClassListRsp, error) {
 	rsp := &api.ClassListRsp{}

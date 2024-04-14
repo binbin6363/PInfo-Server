@@ -265,6 +265,7 @@ type Articles struct {
 	Title      string `gorm:"column:title"`      // 文章标题
 	Content    string `gorm:"column:content"`    // html格式内容
 	MdContent  string `gorm:"column:md_content"` // md格式内容
+	Status     int    `gorm:"column:status"`     // 文章状态，0正常，1进入回收站，2彻底删除
 	CreateTime int64  `gorm:"column:create_time"`
 	UpdateTime int64  `gorm:"column:update_time"`
 }

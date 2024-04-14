@@ -555,6 +555,13 @@ type ArticleDetailRsp struct {
 	UpdatedAt  string  `json:"updated_at"`
 }
 
+type ArticleDeleteReq struct {
+	ArticleId int64 `json:"article_id"`
+}
+type ArticleDeleteRsp struct {
+	ArticleId int64 `json:"article_id"`
+}
+
 // ArticleMoveClassReq 移动文章分类
 type ArticleMoveClassReq struct {
 	ArticleId int64 `json:"article_id"`
