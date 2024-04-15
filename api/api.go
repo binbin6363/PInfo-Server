@@ -524,6 +524,8 @@ type ArticleEditReq struct {
 	MdContent string `json:"md_content"`
 }
 type ArticleEditRsp struct {
+	ArticleId int64  `json:"id"`
+	MdContent string `json:"md_content"`
 }
 
 type ArticleListReq struct {

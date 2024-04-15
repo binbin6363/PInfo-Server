@@ -30,7 +30,7 @@ func (s *Service) ArticleEdit(ctx context.Context, req *api.ArticleEditReq) (*ap
 		return nil, err
 	}
 	log.InfoContextf(ctx, "ArticleEdit ok")
-	return nil, nil
+	return &api.ArticleEditRsp{ArticleId: article.ID, MdContent: article.MdContent}, nil
 }
 
 // ArticleList 拉取文章列表
