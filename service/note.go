@@ -141,7 +141,7 @@ func (s *Service) ClassEdit(ctx context.Context, req *api.ClassEditReq) (*api.Cl
 		return nil, err
 	}
 	log.InfoContextf(ctx, "ClassEdit ok")
-	return &api.ClassEditRsp{ClassId: req.ClassId}, nil
+	return &api.ClassEditRsp{ClassId: cla.ID}, nil
 }
 
 // ClassDelete 删除分类
@@ -194,19 +194,19 @@ func (s *Service) TagList(ctx context.Context, req *api.TagListReq) (*api.TagLis
 // TagEdit 新增/更新分类
 func (s *Service) TagEdit(ctx context.Context, req *api.TagEditReq) (*api.TagEditRsp, error) {
 	uid := utils.GetUid(ctx)
-	cla := &model.Tags{
+	tag := &model.Tags{
 		ID:   req.TagId,
 		Uid:  uid,
 		Flag: 1,
 		Name: req.TagName,
 	}
 
-	if err := s.dao.TagEdit(ctx, cla); err != nil {
+	if err := s.dao.TagEdit(ctx, tag); err != nil {
 		log.ErrorContextf(ctx, "TagEdit err: %v, uid: %d", err, uid)
 		return nil, err
 	}
 	log.InfoContextf(ctx, "TagEdit ok")
-	return &api.TagEditRsp{TagId: req.TagId}, nil
+	return &api.TagEditRsp{TagId: tag.ID}, nil
 }
 
 // TagDelete 删除分类
